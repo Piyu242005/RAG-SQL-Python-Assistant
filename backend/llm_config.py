@@ -22,7 +22,7 @@ class OllamaManager:
             response = ollama.list()
             return True
         except Exception as e:
-            print(f"⚠️  Ollama connection error: {str(e)}")
+            print(f"[!] Ollama connection error: {str(e)}")
             return False
     
     def check_model_available(self, model_name: Optional[str] = None) -> bool:
@@ -37,8 +37,14 @@ class OllamaManager:
         model_name = model_name or self.model
         
         try:
-            models = ollama.list()
-            available_models = [m['name'] for m in models.get('models', [])]
+            response = ollama.list()
+            # Handle both old dict-style and new object-style API
+            model_list = response.get('models', []) if isinstance(response, dict) else getattr(response, 'models', [])
+            available_models = []
+            for m in model_list:
+                name = m.get('name', '') if isinstance(m, dict) else getattr(m, 'model', getattr(m, 'name', ''))
+                if name:
+                    available_models.append(name)
             
             # Check for exact match or base model name
             for available in available_models:
@@ -47,7 +53,7 @@ class OllamaManager:
             
             return False
         except Exception as e:
-            print(f"⚠️  Error checking models: {str(e)}")
+            print(f"[!] Error checking models: {str(e)}")
             return False
     
     def list_models(self) -> list:
@@ -57,8 +63,14 @@ class OllamaManager:
             List of available model names
         """
         try:
-            models = ollama.list()
-            return [m['name'] for m in models.get('models', [])]
+            response = ollama.list()
+            model_list = response.get('models', []) if isinstance(response, dict) else getattr(response, 'models', [])
+            names = []
+            for m in model_list:
+                name = m.get('name', '') if isinstance(m, dict) else getattr(m, 'model', getattr(m, 'name', ''))
+                if name:
+                    names.append(name)
+            return names
         except Exception as e:
             print(f"Error listing models: {str(e)}")
             return []
@@ -75,7 +87,7 @@ class OllamaManager:
         model_name = model_name or self.model
         
         try:
-            print(f"📥 Pulling model: {model_name}...")
+            print(f"[*] Pulling model: {model_name}...")
             print("This may take a few minutes...")
             ollama.pull(model_name)
             print(f"✓ Model {model_name} pulled successfully")
@@ -152,30 +164,30 @@ class OllamaManager:
 # Example usage and testing
 if __name__ == "__main__":
     print("=" * 60)
-    print("🦙 Ollama Setup Validation")
+    print("Ollama Setup Validation")
     print("=" * 60)
     
     manager = OllamaManager()
     status = manager.validate_setup()
     
-    print(f"\n✓ Ollama Running: {status['ollama_running']}")
-    print(f"✓ Model Available: {status['model_available']}")
-    print(f"✓ Configured Model: {status['configured_model']}")
+    print(f"\n[OK] Ollama Running: {status['ollama_running']}")
+    print(f"[OK] Model Available: {status['model_available']}")
+    print(f"[OK] Configured Model: {status['configured_model']}")
     
     if status['available_models']:
-        print(f"\n📋 Available Models:")
+        print(f"\n[*] Available Models:")
         for model in status['available_models']:
             print(f"  - {model}")
     
     if status['errors']:
-        print("\n⚠️  Errors:")
+        print("\n[!] Errors:")
         for error in status['errors']:
             print(f"  - {error}")
     else:
-        print("\n✅ Ollama setup is valid!")
+        print("\n[OK] Ollama setup is valid!")
         
         # Test generation
-        print("\n🧪 Testing generation...")
+        print("\n[*] Testing generation...")
         try:
             response = manager.generate("Say 'Hello, World!' in one sentence.")
             print(f"Response: {response}")

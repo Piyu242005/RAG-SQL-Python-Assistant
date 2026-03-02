@@ -27,28 +27,28 @@ class RAGPipeline:
     
     def _initialize_llm(self):
         """Initialize Ollama LLM."""
-        print("🔄 Initializing Ollama LLM...")
+        print(" Initializing Ollama LLM...")
         self.llm = Ollama(
             base_url=settings.ollama_base_url,
             model=settings.ollama_model,
             temperature=0.3,  # Lower temperature for more factual responses
             num_ctx=2048,  # Context window size
         )
-        print("✓ LLM initialized")
+        print("[OK] LLM initialized")
     
     def _initialize_retriever(self):
         """Initialize document retriever."""
-        print("🔄 Initializing retriever...")
+        print(" Initializing retriever...")
         self.vector_store_manager.initialize_vectorstore()
         self.retriever = self.vector_store_manager.get_retriever(
             k=4,  # Retrieve top 4 relevant chunks
             search_type="mmr"  # Maximum Marginal Relevance for diversity
         )
-        print("✓ Retriever initialized")
+        print("[OK] Retriever initialized")
     
     def _initialize_chain(self):
         """Initialize RAG chain."""
-        print("🔄 Initializing RAG chain...")
+        print(" Initializing RAG chain...")
         
         # Create prompt template
         template = """You are an expert assistant specializing in SQL (MySQL) and Python programming. Your role is to answer questions based ONLY on the provided context from the MySQL Handbook and The Ultimate Python Handbook.
@@ -81,7 +81,7 @@ Answer:"""
             | StrOutputParser()
         )
         
-        print("✓ RAG chain initialized")
+        print("[OK] RAG chain initialized")
     
     def _format_docs(self, docs: List[Document]) -> str:
         """Format retrieved documents for context.
@@ -205,7 +205,7 @@ Answer:"""
 # Example usage and testing
 if __name__ == "__main__":
     print("=" * 60)
-    print("🤖 Testing RAG Pipeline")
+    print(" Testing RAG Pipeline")
     print("=" * 60)
     
     # Initialize pipeline

@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     """Handle startup and shutdown events."""
     # Startup
     print("=" * 60)
-    print("🚀 Starting RAG System API")
+    print("[*] Starting RAG System API")
     print("=" * 60)
     
     # Validate Ollama setup
@@ -23,30 +23,30 @@ async def lifespan(app: FastAPI):
     status = ollama_manager.validate_setup()
     
     if not status['ollama_running']:
-        print("⚠️  WARNING: Ollama is not running!")
+        print("[!] WARNING: Ollama is not running!")
         print("   Please start Ollama: ollama serve")
     elif not status['model_available']:
-        print(f"⚠️  WARNING: Model '{settings.ollama_model}' not found!")
+        print(f"[!] WARNING: Model '{settings.ollama_model}' not found!")
         print(f"   Please pull the model: ollama pull {settings.ollama_model}")
     else:
-        print("✅ Ollama setup validated")
+        print("[OK] Ollama setup validated")
     
     # Check vector store
     vector_manager = VectorStoreManager()
     if vector_manager._vectorstore_exists():
-        print("✅ Vector store found")
+        print("[OK] Vector store found")
     else:
-        print("⚠️  WARNING: Vector store not initialized!")
+        print("[!] WARNING: Vector store not initialized!")
         print("   Please run: python initialize_db.py")
     
     print("=" * 60)
-    print(f"🌐 API running on http://{settings.api_host}:{settings.api_port}")
+    print(f"[*] API running on http://{settings.api_host}:{settings.api_port}")
     print("=" * 60)
     
     yield
     
     # Shutdown
-    print("\n👋 Shutting down RAG System API")
+    print("\n[*] Shutting down RAG System API")
 
 # Create FastAPI app
 app = FastAPI(
@@ -110,7 +110,7 @@ async def initialize_system() -> InitializeResponse:
         InitializeResponse with initialization status
     """
     try:
-        print("\n🔄 Starting system initialization...")
+        print("\n[*] Starting system initialization...")
         
         # Process documents
         processor = DocumentProcessor()

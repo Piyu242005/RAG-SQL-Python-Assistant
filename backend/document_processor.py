@@ -56,10 +56,10 @@ class DocumentProcessor:
                     })
             
             doc.close()
-            print(f"✓ Extracted {len(pages_data)} pages from {pdf_path.name}")
+            print(f"[OK] Extracted {len(pages_data)} pages from {pdf_path.name}")
             
         except Exception as e:
-            print(f"✗ Error extracting text from {pdf_path.name}: {str(e)}")
+            print(f"[X] Error extracting text from {pdf_path.name}: {str(e)}")
             raise
         
         return pages_data
@@ -105,7 +105,7 @@ class DocumentProcessor:
         Returns:
             List of processed Document objects
         """
-        print(f"\n📄 Processing {pdf_path.name}...")
+        print(f"\n Processing {pdf_path.name}...")
         
         # Extract text from PDF
         pages_data = self.extract_text_from_pdf(pdf_path)
@@ -113,7 +113,7 @@ class DocumentProcessor:
         # Chunk documents
         documents = self.chunk_documents(pages_data, doc_type)
         
-        print(f"✓ Created {len(documents)} chunks from {pdf_path.name}")
+        print(f"[OK] Created {len(documents)} chunks from {pdf_path.name}")
         
         return documents
     
@@ -124,7 +124,7 @@ class DocumentProcessor:
             List of all processed Document objects
         """
         print("=" * 60)
-        print("📚 Starting PDF Processing")
+        print(" Starting PDF Processing")
         print("=" * 60)
         
         all_documents = []
@@ -139,17 +139,17 @@ class DocumentProcessor:
             pdf_path = settings.pdf_directory / config["filename"]
             
             if not pdf_path.exists():
-                print(f"⚠️  Warning: {config['filename']} not found at {pdf_path}")
+                print(f"[!]  Warning: {config['filename']} not found at {pdf_path}")
                 continue
             
             try:
                 documents = self.process_pdf(pdf_path, config["doc_type"])
                 all_documents.extend(documents)
             except Exception as e:
-                print(f"✗ Failed to process {config['filename']}: {str(e)}")
+                print(f"[X] Failed to process {config['filename']}: {str(e)}")
         
         print("\n" + "=" * 60)
-        print(f"✅ Processing Complete: {len(all_documents)} total chunks")
+        print(f"[OK] Processing Complete: {len(all_documents)} total chunks")
         print("=" * 60)
         
         return all_documents

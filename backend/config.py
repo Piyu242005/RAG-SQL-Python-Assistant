@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     
     # Ollama Configuration
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama2")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.2")
     
     # Embedding Model
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")

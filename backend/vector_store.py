@@ -25,13 +25,13 @@ class VectorStoreManager:
     def _initialize_embeddings(self):
         """Initialize HuggingFace embeddings."""
         if self.embeddings is None:
-            print(f"🔄 Loading embedding model: {self.embedding_model_name}")
+            print(f" Loading embedding model: {self.embedding_model_name}")
             self.embeddings = HuggingFaceEmbeddings(
                 model_name=self.embedding_model_name,
                 model_kwargs={'device': 'cpu'},
                 encode_kwargs={'normalize_embeddings': True}
             )
-            print("✓ Embedding model loaded")
+            print("[OK] Embedding model loaded")
     
     def initialize_vectorstore(self, documents: Optional[List[Document]] = None) -> Chroma:
         """Initialize or load ChromaDB vector store.
@@ -46,32 +46,32 @@ class VectorStoreManager:
         
         # Check if vectorstore already exists
         if self._vectorstore_exists() and documents is None:
-            print("📦 Loading existing vector store...")
+            print(" Loading existing vector store...")
             self.vectorstore = Chroma(
                 persist_directory=self.persist_directory,
                 embedding_function=self.embeddings,
                 collection_name="rag_documents"
             )
-            print(f"✓ Loaded vector store from {self.persist_directory}")
+            print(f"[OK] Loaded vector store from {self.persist_directory}")
         else:
             if documents:
-                print(f"🔄 Creating new vector store with {len(documents)} documents...")
+                print(f" Creating new vector store with {len(documents)} documents...")
                 self.vectorstore = Chroma.from_documents(
                     documents=documents,
                     embedding=self.embeddings,
                     persist_directory=self.persist_directory,
                     collection_name="rag_documents"
                 )
-                print(f"✓ Vector store created and persisted to {self.persist_directory}")
+                print(f"[OK] Vector store created and persisted to {self.persist_directory}")
             else:
                 # Create empty vectorstore
-                print("🔄 Creating empty vector store...")
+                print(" Creating empty vector store...")
                 self.vectorstore = Chroma(
                     persist_directory=self.persist_directory,
                     embedding_function=self.embeddings,
                     collection_name="rag_documents"
                 )
-                print("✓ Empty vector store created")
+                print("[OK] Empty vector store created")
         
         return self.vectorstore
     
@@ -93,9 +93,9 @@ class VectorStoreManager:
         if self.vectorstore is None:
             self.initialize_vectorstore()
         
-        print(f"➕ Adding {len(documents)} documents to vector store...")
+        print(f"[+] Adding {len(documents)} documents to vector store...")
         self.vectorstore.add_documents(documents)
-        print("✓ Documents added successfully")
+        print("[OK] Documents added successfully")
     
     def similarity_search(
         self, 
@@ -192,10 +192,10 @@ class VectorStoreManager:
         
         if Path(self.persist_directory).exists():
             shutil.rmtree(self.persist_directory)
-            print(f"✓ Vector store deleted: {self.persist_directory}")
+            print(f"[OK] Vector store deleted: {self.persist_directory}")
         
         self.vectorstore = None
-        print("✓ Vector store reset complete")
+        print("[OK] Vector store reset complete")
 
 
 # Example usage
