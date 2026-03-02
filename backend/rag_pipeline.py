@@ -111,7 +111,7 @@ Answer:"""
         """
         try:
             # Retrieve relevant documents
-            docs = self.retriever.get_relevant_documents(question)
+            docs = self.retriever.invoke(question)
             
             # Generate answer
             answer = self.chain.invoke(question)
@@ -163,7 +163,7 @@ Answer:"""
                     filter={"doc_type": doc_type}
                 )
             else:
-                docs = self.retriever.get_relevant_documents(question)
+                docs = self.retriever.invoke(question)
             
             # Format context
             context = self._format_docs(docs)

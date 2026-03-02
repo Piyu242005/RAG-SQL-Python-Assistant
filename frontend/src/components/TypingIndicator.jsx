@@ -1,52 +1,30 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bot } from 'lucide-react';
 
-/**
- * Animated typing indicator — themed for light and dark mode.
- */
-const TypingIndicator = () => {
-    const dotVariants = {
-        initial: { y: 0 },
-        animate: (i) => ({
-            y: [0, -6, 0],
-            transition: {
-                duration: 0.6,
-                repeat: Infinity,
-                repeatDelay: 0.2,
-                delay: i * 0.15,
-                ease: 'easeInOut',
-            },
-        }),
-    };
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="flex gap-3 mb-6"
-        >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/20">
-                <Bot className="w-4 h-4 text-white" />
+const TypingIndicator = () => (
+    <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="flex items-center gap-3 mb-5"
+    >
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-violet-600
+      flex items-center justify-center shadow-glow-primary">
+            <span className="text-white text-[10px] font-bold">AI</span>
+        </div>
+        <div className="bg-white dark:bg-[#151A22] border border-black/5 dark:border-white/[0.04] rounded-2xl rounded-bl-md px-5 py-3">
+            <div className="flex items-center gap-1.5">
+                {[0, 1, 2].map((i) => (
+                    <motion.div
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full bg-primary-400"
+                        animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+                    />
+                ))}
             </div>
-            <div className="glass-card rounded-2xl rounded-tl-sm px-5 py-4">
-                <div className="flex items-center gap-1.5">
-                    {[0, 1, 2].map((i) => (
-                        <motion.span
-                            key={i}
-                            custom={i}
-                            variants={dotVariants}
-                            initial="initial"
-                            animate="animate"
-                            className="w-2 h-2 rounded-full bg-primary-500 dark:bg-primary-400"
-                        />
-                    ))}
-                </div>
-            </div>
-        </motion.div>
-    );
-};
+        </div>
+    </motion.div>
+);
 
 export default TypingIndicator;

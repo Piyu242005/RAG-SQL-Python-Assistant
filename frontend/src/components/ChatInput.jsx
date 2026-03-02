@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Loader2, Mic, Paperclip } from 'lucide-react';
 
-/**
- * Floating premium input bar with focus glow, animated placeholder, mic/attach placeholders.
- */
 const ChatInput = ({ onSendMessage, isLoading, disabled, docFilter, onDocFilterChange }) => {
   const [input, setInput] = useState('');
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
@@ -12,27 +9,20 @@ const ChatInput = ({ onSendMessage, isLoading, disabled, docFilter, onDocFilterC
 
   const placeholders = [
     'Ask about SQL JOINs...',
-    'How do Python list comprehensions work?',
+    'How do Python decorators work?',
     'Explain MySQL indexing...',
-    'What are Python decorators?',
+    'What are Python list comprehensions?',
   ];
 
-  // Rotate placeholder text
   useEffect(() => {
     if (input) return;
-    const interval = setInterval(() => {
-      setPlaceholderIdx((prev) => (prev + 1) % placeholders.length);
-    }, 3500);
-    return () => clearInterval(interval);
+    const iv = setInterval(() => setPlaceholderIdx((p) => (p + 1) % placeholders.length), 3500);
+    return () => clearInterval(iv);
   }, [input]);
 
-  // Auto-resize
   useEffect(() => {
     const el = textareaRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = Math.min(el.scrollHeight, 160) + 'px';
-    }
+    if (el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
   }, [input]);
 
   const handleSubmit = (e) => {
@@ -45,10 +35,7 @@ const ChatInput = ({ onSendMessage, isLoading, disabled, docFilter, onDocFilterC
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }
   };
 
   const filters = [
@@ -61,46 +48,41 @@ const ChatInput = ({ onSendMessage, isLoading, disabled, docFilter, onDocFilterC
 
   return (
     <div className="relative">
-      {/* Subtle top shadow for floating effect */}
-      <div className="absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-surface-50 dark:from-surface-950 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-[#F3F4F6] dark:from-[#0B0D11] to-transparent pointer-events-none" />
 
-      <div className="border-t border-surface-200/40 dark:border-surface-800/40 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-xl">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          {/* Filter chips */}
+      <div className="bg-[#F3F4F6] dark:bg-[#0B0D11] px-4 py-3">
+        <div className="max-w-3xl mx-auto">
+          {/* Chips */}
           <div className="flex items-center gap-1.5 mb-2.5">
             {filters.map((f) => (
-              <button
+              <motion.button
                 key={f.label}
                 type="button"
                 onClick={() => onDocFilterChange(f.value)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${docFilter === f.value
-                    ? 'bg-primary-100 dark:bg-primary-600/20 text-primary-700 dark:text-primary-300 ring-1 ring-primary-300/60 dark:ring-primary-500/30 shadow-sm'
-                    : 'text-surface-400 dark:text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800/40'
+                whileTap={{ scale: 0.93 }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                  ${docFilter === f.value
+                    ? 'bg-primary-500/10 text-primary-400 ring-1 ring-primary-500/20'
+                    : 'text-dark-300 hover:text-dark-50 hover:bg-white/[0.04]'
                   }`}
               >
                 <span className="text-[10px]">{f.icon}</span>
                 {f.label}
-              </button>
+              </motion.button>
             ))}
           </div>
 
-          {/* Input form */}
-          <form onSubmit={handleSubmit} className="relative">
-            <div className="rounded-2xl flex items-end gap-1.5 p-2
-              bg-white dark:bg-surface-900/60
-              border border-surface-200/80 dark:border-surface-800/60
-              shadow-lg shadow-surface-900/[0.03] dark:shadow-black/10
-              focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-300/50 dark:focus-within:border-primary-500/30
+          {/* Input bar */}
+          <form onSubmit={handleSubmit}>
+            <div className="bg-white dark:bg-[#111318] rounded-xl flex items-end gap-1 p-1.5
+              border border-black/5 dark:border-white/[0.04]
+              shadow-depth-sm
+              focus-within:border-primary-500/30 focus-within:shadow-[0_0_0_1px_rgba(99,102,241,0.15),0_0_20px_rgba(99,102,241,0.06)]
               transition-all duration-300">
 
-              {/* Attachment button (future) */}
-              <button
-                type="button"
-                disabled
-                className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center
-                  text-surface-300 dark:text-surface-600 cursor-not-allowed opacity-50"
-                title="Attachments (coming soon)"
-              >
+              <button type="button" disabled
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-dark-400 opacity-30 cursor-not-allowed"
+                title="Attachments (coming soon)">
                 <Paperclip className="w-4 h-4" />
               </button>
 
@@ -112,47 +94,39 @@ const ChatInput = ({ onSendMessage, isLoading, disabled, docFilter, onDocFilterC
                 placeholder={placeholders[placeholderIdx]}
                 disabled={disabled || isLoading}
                 rows={1}
-                className="flex-1 bg-transparent text-surface-800 dark:text-surface-100 placeholder-surface-300 dark:placeholder-surface-600 px-2 py-2 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed resize-none text-sm leading-relaxed"
-                style={{ minHeight: '36px', maxHeight: '160px' }}
+                className="flex-1 bg-transparent text-dark-600 dark:text-dark-50
+                  placeholder-dark-400 px-1.5 py-1.5
+                  focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed
+                  resize-none text-sm leading-relaxed"
+                style={{ minHeight: '32px', maxHeight: '160px' }}
               />
 
-              {/* Mic button (future) */}
-              <button
-                type="button"
-                disabled
-                className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center
-                  text-surface-300 dark:text-surface-600 cursor-not-allowed opacity-50"
-                title="Voice input (coming soon)"
-              >
+              <button type="button" disabled
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-dark-400 opacity-30 cursor-not-allowed"
+                title="Voice (coming soon)">
                 <Mic className="w-4 h-4" />
               </button>
 
-              {/* Send button */}
               <motion.button
                 type="submit"
                 disabled={!canSend}
                 whileHover={canSend ? { scale: 1.05 } : {}}
-                whileTap={canSend ? { scale: 0.92 } : {}}
-                className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${canSend
-                    ? 'bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-500/25'
-                    : 'bg-surface-100 dark:bg-surface-800/40 text-surface-300 dark:text-surface-600 cursor-not-allowed'
+                whileTap={canSend ? { scale: 0.9 } : {}}
+                className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 ${canSend
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-500/35'
+                    : 'bg-transparent text-dark-400 cursor-not-allowed opacity-30'
                   }`}
               >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </motion.button>
             </div>
 
-            {/* Keyboard hints */}
             <div className="flex items-center justify-center gap-3 mt-2">
-              <span className="text-[10px] text-surface-300 dark:text-surface-600">
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800/50 text-surface-400 dark:text-surface-500 font-mono text-[9px]">Enter</kbd> send
+              <span className="text-[10px] text-dark-400">
+                <kbd className="px-1 py-0.5 rounded bg-white/[0.04] text-dark-300 font-mono text-[9px]">Enter</kbd> send
               </span>
-              <span className="text-[10px] text-surface-300 dark:text-surface-600">
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800/50 text-surface-400 dark:text-surface-500 font-mono text-[9px]">⇧ Enter</kbd> new line
+              <span className="text-[10px] text-dark-400">
+                <kbd className="px-1 py-0.5 rounded bg-white/[0.04] text-dark-300 font-mono text-[9px]">⇧ Enter</kbd> new line
               </span>
             </div>
           </form>

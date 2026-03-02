@@ -1,87 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import ChatContainer from './components/ChatContainer';
-import Sidebar from './components/Sidebar';
-import ToastProvider from './components/ToastProvider';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeContext';
-import { getHealthStatus } from './services/api';
-import { useChat } from './hooks/useChat';
-import { Loader2, Sparkles } from 'lucide-react';
+import Sidebar from './components/Sidebar';
+import ChatContainer from './components/ChatContainer';
+import ToastProvider from './components/ToastProvider';
 
 function AppContent() {
   const [healthStatus, setHealthStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [docFilter, setDocFilter] = useState(null);
-
-  const {
-    conversations,
-    activeConversationId,
-    startNewChat,
-    selectConversation,
-    deleteConversation,
-  } = useChat();
 
   useEffect(() => {
     const checkHealth = async () => {
       try {
-        const status = await getHealthStatus();
-        setHealthStatus(status);
+        const response = await fetch('http://localhost:8000/api/health');
+        const data = await response.json();
+        setHealthStatus(data);
       } catch (error) {
-        console.error('Failed to check health:', error);
-        setHealthStatus({ status: 'error' });
+        setHealthStatus({ status: 'error', ollama_running: false, model_available: false, vectorstore_initialized: false });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
     checkHealth();
-    const interval = setInterval(checkHealth, 30000);
-    return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center shadow-2xl shadow-primary-500/30 mb-5">
-            <Sparkles className="w-7 h-7 text-white animate-pulse" />
+      <div className="h-screen flex items-center justify-center bg-[#F3F4F6] dark:bg-[#0B0D11]">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center shadow-glow-primary mb-5">
+            <Sparkles className="w-6 h-6 text-white animate-pulse" />
           </div>
-          <Loader2 className="w-5 h-5 text-primary-500 dark:text-primary-400 animate-spin mx-auto mb-3" />
-          <p className="text-surface-500 text-sm font-medium">Initializing Aurora…</p>
+          <Loader2 className="w-5 h-5 text-primary-400 animate-spin mx-auto mb-3" />
+          <p className="text-dark-300 text-sm font-medium">Initializing Piyu RAG...</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-surface-50 dark:bg-surface-950 flex overflow-hidden">
-      <ToastProvider />
-
+    <div className="h-screen flex bg-[#F3F4F6] dark:bg-[#0B0D11] overflow-hidden">
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         conversations={conversations}
         activeConversationId={activeConversationId}
-        onNewChat={startNewChat}
-        onSelectConversation={selectConversation}
-        onDeleteConversation={deleteConversation}
+        onNewChat={() => setActiveConversationId(null)}
+        onSelectConversation={setActiveConversationId}
+        onDeleteConversation={(id) => {
+          setConversations(conversations.filter((c) => c.id !== id));
+          if (activeConversationId === id) setActiveConversationId(null);
+        }}
         docFilter={docFilter}
         onDocFilterChange={setDocFilter}
       />
-
-      <main className="flex-1 min-w-0">
-        <ChatContainer
-          healthStatus={healthStatus}
-          docFilter={docFilter}
-          onDocFilterChange={setDocFilter}
-        />
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <ChatContainer healthStatus={healthStatus} docFilter={docFilter} onDocFilterChange={setDocFilter} />
       </main>
+      <ToastProvider />
     </div>
   );
 }

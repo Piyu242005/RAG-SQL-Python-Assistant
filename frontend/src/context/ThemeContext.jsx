@@ -9,7 +9,7 @@ const ThemeContext = createContext(undefined);
 export const ThemeProvider = ({ children }) => {
     const [theme, setThemeState] = useState(() => {
         if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('aurora-theme');
+            const stored = localStorage.getItem('piyu-theme');
             if (stored === 'light' || stored === 'dark') return stored;
             return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
@@ -29,7 +29,7 @@ export const ThemeProvider = ({ children }) => {
             root.classList.remove('dark');
         }
 
-        localStorage.setItem('aurora-theme', theme);
+        localStorage.setItem('piyu-theme', theme);
 
         // Remove transition class after animation completes
         const timeout = setTimeout(() => {

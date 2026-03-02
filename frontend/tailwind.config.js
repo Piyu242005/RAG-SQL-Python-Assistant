@@ -9,9 +9,24 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Courier New', 'monospace'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
+        // Deep dark base palette (charcoal → near-black)
+        dark: {
+          50: '#E5E7EB',   // primary text
+          100: '#D1D5DB',
+          200: '#9CA3AF',   // secondary text
+          300: '#6B7280',   // muted
+          400: '#4B5563',
+          500: '#374151',
+          600: '#1F2937',
+          700: '#151A22',   // card surface
+          800: '#111318',   // elevated surface
+          900: '#0D0F13',   // sidebar
+          950: '#0B0D11',   // deepest base
+        },
+        // Primary — electric indigo/violet
         primary: {
           50: '#eef2ff',
           100: '#e0e7ff',
@@ -23,72 +38,53 @@ export default {
           700: '#4338ca',
           800: '#3730a3',
           900: '#312e81',
-          950: '#1e1b4b',
         },
+        // Surface aliases
         surface: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          850: '#172033',
-          900: '#0f172a',
-          950: '#020617',
-        }
+          50: '#E5E7EB',
+          100: '#D1D5DB',
+          200: '#9CA3AF',
+          300: '#6B7280',
+          400: '#4B5563',
+          500: '#374151',
+          600: '#1F2937',
+          700: '#171B22',
+          800: '#12151B',
+          900: '#0D0F13',
+          950: '#0B0D11',
+        },
+      },
+      boxShadow: {
+        // Depth layers — subtle, not heavy
+        'depth-sm': '0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.15)',
+        'depth-md': '0 4px 6px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15)',
+        'depth-lg': '0 10px 20px rgba(0, 0, 0, 0.3), 0 6px 6px rgba(0, 0, 0, 0.15)',
+        'depth-xl': '0 20px 40px rgba(0, 0, 0, 0.35), 0 12px 12px rgba(0, 0, 0, 0.15)',
+        // Inner depth
+        'inner-sm': 'inset 0 1px 3px rgba(0, 0, 0, 0.3)',
+        'inner-md': 'inset 0 2px 6px rgba(0, 0, 0, 0.35)',
+        // Glow accents
+        'glow-primary': '0 0 20px rgba(99, 102, 241, 0.15), 0 0 50px rgba(99, 102, 241, 0.06)',
+        'glow-primary-strong': '0 0 20px rgba(99, 102, 241, 0.25), 0 0 60px rgba(99, 102, 241, 0.1)',
+        'glow-emerald': '0 0 12px rgba(52, 211, 153, 0.15)',
+        'glow-rose': '0 0 12px rgba(251, 113, 133, 0.15)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-out',
-        'slide-up': 'slideUp 0.4s ease-out',
-        'slide-in-left': 'slideInLeft 0.3s ease-out',
-        'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
-        'bounce-dot': 'bounceDot 1.4s ease-in-out infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
+        'gradient-x': 'gradient-x 4s ease infinite',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+        'gradient-x': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
         },
-        slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideInLeft: {
-          '0%': { opacity: '0', transform: 'translateX(-16px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        pulseSoft: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.5' },
-        },
-        bounceDot: {
-          '0%, 80%, 100%': { transform: 'scale(0)' },
-          '40%': { transform: 'scale(1)' },
-        },
-        glow: {
-          '0%': { boxShadow: '0 0 5px rgba(99, 102, 241, 0.2)' },
-          '100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' },
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.15)' },
+          '50%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.25)' },
         },
       },
-      typography: {
-        DEFAULT: {
-          css: {
-            maxWidth: 'none',
-            code: {
-              backgroundColor: '#1e293b',
-              color: '#e2e8f0',
-              padding: '0.25rem 0.5rem',
-              borderRadius: '0.25rem',
-              fontWeight: '400',
-            },
-            'code::before': { content: '""' },
-            'code::after': { content: '""' },
-          },
-        },
+      borderRadius: {
+        '4xl': '2rem',
       },
     },
   },
