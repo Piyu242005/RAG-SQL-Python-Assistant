@@ -1,405 +1,416 @@
-# RAG System - SQL & Python Documentation Assistant
+<div align="center">
 
-A production-ready Retrieval-Augmented Generation (RAG) system that provides intelligent question-answering for SQL (MySQL) and Python programming using local PDF handbooks. Built with React, FastAPI, LangChain, and Ollama.
+# ✨ Aurora — RAG SQL & Python Assistant
 
-## 🌟 Features
+**An AI-powered, privacy-first assistant that answers SQL & Python questions from PDF handbooks using local LLMs.**
 
-- **Intelligent Q&A**: Ask questions about SQL or Python and get accurate answers with source citations
-- **Local LLM**: Uses Ollama for completely free, privacy-focused AI responses
-- **Document Filtering**: Filter searches to specific documentation (MySQL only, Python only, or both)
-- **Source Attribution**: Every answer includes references to the source PDF and page numbers
-- **Modern UI**: Clean, responsive chat interface built with React and Tailwind CSS
-- **Production-Ready**: FastAPI backend with proper error handling and validation
-- **Semantic Search**: ChromaDB vector store with HuggingFace embeddings for accurate retrieval
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Ollama](https://img.shields.io/badge/Ollama-Local_LLM-000000?style=flat-square&logo=ollama&logoColor=white)](https://ollama.ai)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
-## 📋 Prerequisites
+[Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Contributing](#-contributing)
 
-- **Python 3.8+** - [Download](https://www.python.org/)
-- **Node.js 18+** - [Download](https://nodejs.org/)
-- **Ollama** - [Download](https://ollama.ai/)
-- **PDF Documents**:
-  - MySQL Handbook.pdf
-  - The Ultimate Python Handbook.pdf
-  
-  *(Place these files in the workspace root directory)*
+</div>
 
-## 🚀 Quick Start
+---
 
-### Option 1: Automated Setup (Recommended)
+## 📖 Table of Contents
+
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Screenshots](#-screenshots)
+- [Getting Started](#-getting-started)
+- [Usage](#-usage)
+- [Architecture](#-architecture)
+- [API Reference](#-api-reference)
+- [Configuration](#-configuration)
+- [Troubleshooting](#-troubleshooting)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [Acknowledgements](#-acknowledgements)
+- [License](#-license)
+
+---
+
+## 🧠 Overview
+
+**Aurora** is a production-grade **Retrieval-Augmented Generation (RAG)** system that provides intelligent question-answering for **MySQL** and **Python** programming using local PDF handbooks. It runs entirely on your machine — no API keys, no cloud costs, no data leaks.
+
+> Ask a question → Aurora searches the handbooks → Returns an accurate answer with page-level source citations.
+
+---
+
+## 🚀 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🤖 **Intelligent Q&A** | Ask questions about SQL or Python and get accurate, context-aware answers |
+| 🔒 **100% Local & Private** | Runs entirely on your machine via Ollama — zero API costs, zero data leaks |
+| 📄 **Source Citations** | Every answer includes PDF name + page number for verification |
+| 🔍 **Semantic Search** | ChromaDB vector store with HuggingFace embeddings for precise retrieval |
+| 🎯 **Document Filtering** | Filter to MySQL only, Python only, or search both |
+| 💬 **Premium Chat UI** | Dark-mode glassmorphism interface with animations, sidebar, and code copy |
+| ⚡ **Fast Setup** | One-command setup script gets you running in ~5 minutes |
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+
+| Welcome Screen | Chat in Action |
+|:-:|:-:|
+| ![Welcome](https://via.placeholder.com/400x260/0f172a/6366f1?text=Welcome+Screen) | ![Chat](https://via.placeholder.com/400x260/0f172a/6366f1?text=Chat+Demo) |
+
+> *Replace with actual screenshots after running the app locally.*
+
+</div>
+
+---
+
+## 🏁 Getting Started
+
+### Prerequisites
+
+| Tool | Version | Link |
+|------|---------|------|
+| Python | 3.8+ | [python.org](https://www.python.org/) |
+| Node.js | 18+ | [nodejs.org](https://nodejs.org/) |
+| Ollama | Latest | [ollama.ai](https://ollama.ai/) |
+
+You also need these PDFs in the project root:
+- `MySQL Handbook.pdf`
+- `The Ultimate Python Handbook.pdf`
+
+### Quick Setup (Recommended)
 
 **Windows:**
-```bash
-setup.bat
+```powershell
+.\setup.bat
 ```
 
-**Linux/Mac:**
+**Linux / macOS:**
 ```bash
-chmod +x setup.sh
-./setup.sh
+chmod +x setup.sh && ./setup.sh
 ```
 
-The setup script will:
-1. ✅ Check Python and Node.js installations
-2. ✅ Set up Python virtual environment and install dependencies
-3. ✅ Install Node.js dependencies
-4. ✅ Check and configure Ollama
-5. ✅ Process PDFs and create vector store
-6. ✅ Validate the system
+The script automatically installs dependencies, configures Ollama, processes PDFs, and validates everything.
 
-### Option 2: Manual Setup
+### Manual Setup
 
-#### 1. Install Ollama and Pull Model
+<details>
+<summary>Click to expand manual steps</summary>
+
+#### 1. Start Ollama & pull a model
 
 ```bash
-# Start Ollama service
-ollama serve
-
-# In another terminal, pull the model
-ollama pull llama2
-# or for better performance: ollama pull mistral
+ollama serve            # Terminal 1
+ollama pull llama2      # Terminal 2 — or `mistral` for faster responses
 ```
 
-#### 2. Backend Setup
+#### 2. Backend
 
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
 
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
+# Activate
+venv\Scripts\activate     # Windows
+source venv/bin/activate  # macOS/Linux
 
-# Install dependencies
 pip install -r requirements.txt
-
-# Create .env file
-copy .env.example .env  # Windows
-# or
-cp .env.example .env    # Linux/Mac
-
-# Initialize database (process PDFs and create vector store)
-python initialize_db.py
+copy .env.example .env    # Windows (or `cp` on Unix)
+python initialize_db.py   # Process PDFs → vector store
 ```
 
-#### 3. Frontend Setup
+#### 3. Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
 ```
 
-## 🎯 Running the Application
+</details>
 
-### Terminal 1: Start Backend
+---
 
-```bash
-cd backend
-# Activate virtual environment first
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
+## 🎮 Usage
 
-# Start FastAPI server
-python main.py
-# or
-uvicorn main:app --reload
-```
+### Running the App
 
-Backend will be available at: http://localhost:8000
-
-API Documentation: http://localhost:8000/docs
-
-### Terminal 2: Start Frontend
+Open **three terminals**:
 
 ```bash
-cd frontend
-
-# Start development server
-npm run dev
-```
-
-Frontend will be available at: http://localhost:5173
-
-### Terminal 3: Ollama (if not running as service)
-
-```bash
+# Terminal 1 — Ollama (skip if running as service)
 ollama serve
+
+# Terminal 2 — Backend
+cd backend && venv\Scripts\activate && python main.py
+# → http://localhost:8000
+
+# Terminal 3 — Frontend
+cd frontend && npm run dev
+# → http://localhost:5173
 ```
 
-## 📁 Project Structure
+### Demo Queries
+
+**SQL:**
+```
+What are SQL JOINs and when should I use each type?
+How do I create a MySQL table with constraints?
+Explain the SELECT statement with examples
+```
+
+**Python:**
+```
+How do I create a Python class with inheritance?
+What are list comprehensions and how do they work?
+Explain Python decorators with examples
+```
+
+> **Tip:** Use the filter chips (All / MySQL / Python) to narrow results to a specific handbook.
+
+---
+
+## 🏗 Architecture
 
 ```
-RAG System/
+┌─────────────┐       ┌──────────────────┐       ┌──────────────┐
+│   React UI  │──────→│  FastAPI Backend  │──────→│   Ollama     │
+│  (Vite +    │  REST │                  │ Local │  (llama2 /   │
+│  Tailwind)  │←──────│  RAG Pipeline    │←──────│   mistral)   │
+└─────────────┘       └────────┬─────────┘       └──────────────┘
+                               │
+                     ┌─────────▼─────────┐
+                     │    ChromaDB       │
+                     │  Vector Store     │
+                     │  (HuggingFace     │
+                     │   Embeddings)     │
+                     └───────────────────┘
+```
+
+### Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | React 18, Tailwind CSS, Framer Motion | Premium dark-mode chat UI |
+| **Backend** | FastAPI, LangChain, Pydantic | API server & RAG orchestration |
+| **Vector DB** | ChromaDB, HuggingFace Embeddings | Semantic document search |
+| **LLM** | Ollama (llama2 / mistral) | Local language model inference |
+| **PDF Processing** | PyMuPDF, LangChain Text Splitters | Extract & chunk PDF content |
+
+### Project Structure
+
+```
+aurora-rag/
 ├── backend/
-│   ├── main.py                 # FastAPI application entry point
-│   ├── config.py               # Configuration management
-│   ├── document_processor.py  # PDF extraction and chunking
-│   ├── vector_store.py         # ChromaDB vector store management
-│   ├── llm_config.py           # Ollama LLM configuration
-│   ├── rag_pipeline.py         # RAG chain implementation
-│   ├── models.py               # Pydantic models for validation
-│   ├── initialize_db.py        # Database initialization script
-│   ├── requirements.txt        # Python dependencies
-│   ├── .env.example            # Environment variables template
-│   └── routers/
-│       ├── __init__.py
-│       └── chat.py             # Chat API endpoints
+│   ├── main.py                 # FastAPI entry point
+│   ├── rag_pipeline.py         # Core RAG chain logic
+│   ├── vector_store.py         # ChromaDB management
+│   ├── document_processor.py   # PDF extraction & chunking
+│   ├── llm_config.py           # Ollama configuration
+│   ├── models.py               # Pydantic schemas
+│   ├── initialize_db.py        # One-time DB setup
+│   └── routers/chat.py         # Chat API endpoints
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── Sidebar.jsx         # Collapsible sidebar
 │   │   │   ├── ChatContainer.jsx   # Main chat layout
-│   │   │   ├── ChatMessage.jsx     # Message display
-│   │   │   ├── ChatInput.jsx       # User input
-│   │   │   └── SourceCard.jsx      # Source citations
-│   │   ├── hooks/
-│   │   │   └── useChat.js          # Chat state management
-│   │   ├── services/
-│   │   │   └── api.js              # API client
-│   │   ├── App.jsx                 # Main app component
-│   │   ├── main.jsx                # React entry point
-│   │   └── index.css               # Global styles
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   └── postcss.config.js
+│   │   │   ├── ChatMessage.jsx     # Animated message bubbles
+│   │   │   ├── ChatInput.jsx       # Auto-resize input bar
+│   │   │   ├── CodeBlock.jsx       # Syntax highlight + copy
+│   │   │   ├── SourceCard.jsx      # Expandable citations
+│   │   │   ├── TypingIndicator.jsx # Loading animation
+│   │   │   └── ToastProvider.jsx   # Toast notifications
+│   │   ├── hooks/useChat.js        # Chat state management
+│   │   ├── services/api.js         # Axios API client
+│   │   ├── App.jsx                 # Root component
+│   │   └── index.css               # Design system
+│   └── tailwind.config.js
 │
-├── MySQL Handbook.pdf          # SQL knowledge base
-├── The Ultimate Python Handbook.pdf  # Python knowledge base
-├── setup.bat                   # Windows setup script
-├── setup.sh                    # Linux/Mac setup script
-└── README.md                   # This file
+├── MySQL Handbook.pdf
+├── The Ultimate Python Handbook.pdf
+├── setup.bat / setup.sh
+└── README.md
 ```
 
-## 🔧 Configuration
+---
 
-### Backend Configuration (`.env` file)
+## 📡 API Reference
 
-```env
-# Ollama Configuration
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama2  # or mistral, llama3, etc.
-
-# Embedding Model
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-
-# Vector Store
-CHROMA_PERSIST_DIRECTORY=./chroma_db
-
-# Document Processing
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
-
-# API Configuration
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# CORS
-CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
-```
-
-### Frontend Configuration
-
-Edit `frontend/src/services/api.js` to change the API base URL if needed:
-
-```javascript
-const API_BASE_URL = 'http://localhost:8000';
-```
-
-## 🔍 API Endpoints
-
-### POST `/api/chat`
-Send a query to the RAG system.
+### `POST /api/chat` — Send a query
 
 **Request:**
 ```json
 {
   "query": "What is a SQL JOIN?",
-  "doc_type": "mysql"  // optional: "mysql" or "python"
+  "doc_type": "mysql"
 }
 ```
+> `doc_type` is optional — omit to search all documents.
 
 **Response:**
 ```json
 {
-  "answer": "A SQL JOIN clause...",
+  "answer": "A SQL JOIN clause combines rows from two or more tables...",
   "sources": [
     {
       "source": "MySQL Handbook.pdf",
       "page": 42,
       "doc_type": "mysql",
-      "content_preview": "..."
+      "content_preview": "JOIN operations allow you to..."
     }
   ],
   "success": true
 }
 ```
 
-### GET `/api/health`
-Check system health status.
+### `GET /api/health` — System status
 
-### GET `/api/documents`
-Get statistics about indexed documents.
+Returns Ollama status, model availability, and vector store health.
 
-### POST `/api/initialize`
-Reinitialize the system (reprocess PDFs).
+### `GET /api/documents` — Document statistics
 
-## 🧪 Testing
+Returns counts and metadata about indexed documents.
 
-### Test Backend
+### `POST /api/initialize` — Reinitialize system
 
-```bash
-cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+Reprocesses PDFs and rebuilds the vector store.
 
-# Test document processing
-python document_processor.py
-
-# Test vector store
-python vector_store.py
-
-# Test Ollama connection
-python llm_config.py
-
-# Test RAG pipeline
-python rag_pipeline.py
-```
-
-### Test Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-Open http://localhost:5173 and try sample queries:
-- "What are SQL JOINs?"
-- "How do I create a Python class?"
-- "Explain SELECT statement in SQL"
-
-## 🐛 Troubleshooting
-
-### Issue: "Ollama is not running"
-
-**Solution:**
-```bash
-# Start Ollama in a separate terminal
-ollama serve
-```
-
-### Issue: "Model not found"
-
-**Solution:**
-```bash
-# Pull the required model
-ollama pull llama2
-# or
-ollama pull mistral
-```
-
-### Issue: "No PDF files found"
-
-**Solution:**
-- Ensure `MySQL Handbook.pdf` and `The Ultimate Python Handbook.pdf` are in the workspace root directory
-- Run `python backend/initialize_db.py` to reprocess documents
-
-### Issue: "Vector store not initialized"
-
-**Solution:**
-```bash
-cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-python initialize_db.py
-```
-
-### Issue: "Frontend can't connect to backend"
-
-**Solution:**
-- Ensure backend is running on port 8000
-- Check CORS settings in `backend/config.py`
-- Verify proxy settings in `frontend/vite.config.js`
-
-### Issue: "Slow responses"
-
-**Solutions:**
-- Use a smaller model: `ollama pull mistral` (faster than llama2)
-- Reduce `k` parameter in `backend/rag_pipeline.py` (retrieve fewer documents)
-- Increase `CHUNK_SIZE` in `.env` (fewer, larger chunks)
-
-## 📊 Performance
-
-- **Document Processing**: ~2-5 minutes for both PDFs (one-time)
-- **Embedding Generation**: ~3-8 minutes (one-time)
-- **Query Response Time**: 5-15 seconds (depends on model and hardware)
-- **Memory Usage**: ~2-4 GB RAM (with llama2)
-
-## 🔒 Privacy & Security
-
-- **100% Local**: All processing happens on your machine
-- **No API Costs**: Uses free, open-source Ollama models
-- **No Data Sent**: Your documents and queries never leave your computer
-- **No API Keys**: No registration or API keys required
-
-## 🚢 Deployment
-
-### Production Build
-
-**Backend:**
-```bash
-cd backend
-pip install gunicorn
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm run build
-# Serve the 'dist' folder with any static file server
-```
-
-### Docker (Optional)
-
-Create `Dockerfile` for backend and frontend, then:
-```bash
-docker-compose up
-```
-
-## 🤝 Contributing
-
-This is a standalone RAG system. To customize:
-
-1. **Add More PDFs**: Update `backend/document_processor.py` to process additional documents
-2. **Change Models**: Edit `OLLAMA_MODEL` in `.env` file
-3. **Customize UI**: Modify React components in `frontend/src/components/`
-4. **Adjust Chunking**: Change `CHUNK_SIZE` and `CHUNK_OVERLAP` in `.env`
-
-## 📝 License
-
-This project is provided as-is for educational and personal use.
-
-## 🙏 Acknowledgments
-
-- **LangChain**: RAG framework
-- **Ollama**: Local LLM runtime
-- **ChromaDB**: Vector database
-- **FastAPI**: Backend framework
-- **React**: Frontend framework
-- **Tailwind CSS**: Styling
-
-## 📞 Support
-
-For issues or questions:
-1. Check the troubleshooting section above
-2. Review Ollama documentation: https://ollama.ai/
-3. Check LangChain docs: https://python.langchain.com/
+> 📘 **Interactive docs:** Visit `http://localhost:8000/docs` for the Swagger UI.
 
 ---
 
-**Enjoy your local RAG system! 🚀**
+## ⚙️ Configuration
+
+### Backend (`.env`)
+
+```env
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama2                              # or mistral, llama3
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+CHROMA_PERSIST_DIRECTORY=./chroma_db
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+API_HOST=0.0.0.0
+API_PORT=8000
+CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
+```
+
+### Frontend
+
+The API base URL defaults to `http://localhost:8000` and can be overridden via the `VITE_API_URL` env variable.
+
+---
+
+## 🐛 Troubleshooting
+
+<details>
+<summary><strong>Ollama is not running</strong></summary>
+
+```bash
+ollama serve
+```
+</details>
+
+<details>
+<summary><strong>Model not found</strong></summary>
+
+```bash
+ollama pull llama2    # or: ollama pull mistral
+```
+</details>
+
+<details>
+<summary><strong>Vector store not initialized</strong></summary>
+
+```bash
+cd backend
+venv\Scripts\activate   # or source venv/bin/activate
+python initialize_db.py
+```
+</details>
+
+<details>
+<summary><strong>Frontend can't connect to backend</strong></summary>
+
+- Ensure backend is running on port `8000`
+- Check CORS settings in `backend/config.py`
+- Verify proxy in `frontend/vite.config.js`
+</details>
+
+<details>
+<summary><strong>Slow responses</strong></summary>
+
+- Use a faster model: `ollama pull mistral`
+- Reduce `k` in `backend/rag_pipeline.py`
+- Increase `CHUNK_SIZE` in `.env`
+</details>
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] 🔄 Streaming responses (real-time token output)
+- [ ] 💾 Conversation memory (multi-turn context)
+- [ ] 🔍 Hybrid search (BM25 + semantic)
+- [ ] 📤 User PDF uploads
+- [ ] 🌐 Multi-language support
+- [ ] 🧪 Automated test suite
+- [ ] 🐳 Docker Compose deployment
+- [ ] 📊 Usage analytics dashboard
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feat/my-feature`
+3. **Commit** with clear messages: `git commit -m "feat: add streaming responses"`
+4. **Push** and open a **Pull Request**
+
+### Code Style
+
+- **Python:** Follow PEP 8, use type hints, write docstrings
+- **JavaScript/React:** Functional components, hooks, ES6+
+- **CSS:** Tailwind utility classes, use design tokens from `tailwind.config.js`
+- **Commits:** Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`)
+
+---
+
+## 🙏 Acknowledgements
+
+| Tool | Role |
+|------|------|
+| [LangChain](https://langchain.com) | RAG framework & chain orchestration |
+| [Ollama](https://ollama.ai) | Local LLM runtime |
+| [ChromaDB](https://www.trychroma.com) | Vector database |
+| [FastAPI](https://fastapi.tiangolo.com) | Backend framework |
+| [React](https://react.dev) | Frontend library |
+| [Tailwind CSS](https://tailwindcss.com) | Utility-first CSS |
+| [Framer Motion](https://www.framer.com/motion) | Animations |
+| [HuggingFace](https://huggingface.co) | Embedding models |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ by [Piyu](https://github.com/Piyu242005)**
+
+⭐ Star this repo if you found it useful!
+
+</div>

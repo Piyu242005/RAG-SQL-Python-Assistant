@@ -1,119 +1,121 @@
-# 🚀 Quick Start Guide
+# ⚡ Quick Start Guide
 
-## Prerequisites Check
-
-✅ Python 3.8+ installed
-✅ Node.js 18+ installed  
-✅ Ollama installed
-✅ PDF files in workspace root:
-   - MySQL Handbook.pdf
-   - The Ultimate Python Handbook.pdf
-
-## Setup (5 minutes)
-
-### Windows
-
-```powershell
-# Run automated setup
-.\setup.bat
-```
-
-### Linux/Mac
-
-```bash
-# Make executable and run
-chmod +x setup.sh
-./setup.sh
-```
-
-## Running the System
-
-### 1. Start Ollama (if not running)
-
-```bash
-ollama serve
-```
-
-### 2. Start Backend
-
-Open Terminal 1:
-
-```bash
-cd backend
-
-# Windows
-venv\Scripts\activate
-
-# Linux/Mac
-source venv/bin/activate
-
-# Start server
-python main.py
-```
-
-➡️ Backend ready at: http://localhost:8000
-
-### 3. Start Frontend
-
-Open Terminal 2:
-
-```bash
-cd frontend
-npm run dev
-```
-
-➡️ Frontend ready at: http://localhost:5173
-
-## Test It Out
-
-Open http://localhost:5173 in your browser and try:
-
-**SQL Questions:**
-- "What is a SQL JOIN?"
-- "How do I create a table in MySQL?"
-- "Explain the SELECT statement"
-
-**Python Questions:**
-- "How do I create a Python class?"
-- "What are list comprehensions?"
-- "Explain Python decorators"
-
-## Common Issues
-
-### "Ollama not running"
-```bash
-ollama serve
-```
-
-### "Model not found"
-```bash
-ollama pull llama2
-```
-
-### "Vector store not initialized"
-```bash
-cd backend
-venv\Scripts\activate  # or source venv/bin/activate
-python initialize_db.py
-```
-
-## Architecture
-
-```
-User Query → React UI → FastAPI Backend → RAG Pipeline
-                                         ↓
-                         Vector Search (ChromaDB) + LLM (Ollama)
-                                         ↓
-                         Answer + Source Citations → User
-```
-
-## Key Files
-
-- `backend/main.py` - API server
-- `backend/rag_pipeline.py` - RAG logic
-- `frontend/src/App.jsx` - UI entry point
-- `README.md` - Full documentation
+Get Aurora up and running in under 5 minutes.
 
 ---
 
-**Need help?** Check the full README.md for detailed troubleshooting.
+## Prerequisites
+
+| Requirement | Check |
+|-------------|-------|
+| Python 3.8+ | `python --version` |
+| Node.js 18+ | `node --version` |
+| Ollama installed | [ollama.ai](https://ollama.ai) |
+| PDF files in project root | `MySQL Handbook.pdf`, `The Ultimate Python Handbook.pdf` |
+
+---
+
+## 1 → Setup
+
+### Automated (Recommended)
+
+```powershell
+# Windows
+.\setup.bat
+
+# Linux / macOS
+chmod +x setup.sh && ./setup.sh
+```
+
+### Manual
+
+<details>
+<summary>Expand manual setup</summary>
+
+```bash
+# Ollama
+ollama serve              # Terminal 1
+ollama pull llama2        # Terminal 2
+
+# Backend
+cd backend
+python -m venv venv
+venv\Scripts\activate     # Windows (or `source venv/bin/activate`)
+pip install -r requirements.txt
+copy .env.example .env    # Windows (or `cp`)
+python initialize_db.py
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+</details>
+
+---
+
+## 2 → Run
+
+Open three terminals:
+
+```bash
+# Terminal 1 — Ollama (skip if it's already a service)
+ollama serve
+```
+
+```bash
+# Terminal 2 — Backend
+cd backend
+venv\Scripts\activate          # or source venv/bin/activate
+python main.py
+# → http://localhost:8000
+```
+
+```bash
+# Terminal 3 — Frontend
+cd frontend
+npm install                    # first time only
+npm run dev
+# → http://localhost:5173
+```
+
+---
+
+## 3 → Try It
+
+Open **http://localhost:5173** and try these queries:
+
+| Type | Example Query |
+|------|--------------|
+| 🗄️ SQL | *What are SQL JOINs and when to use each type?* |
+| 🗄️ SQL | *How do I create a table in MySQL?* |
+| 🐍 Python | *How do I create a Python class?* |
+| 🐍 Python | *What are list comprehensions?* |
+
+Use the **filter chips** to narrow results to a specific handbook.
+
+---
+
+## Common Issues
+
+| Issue | Fix |
+|-------|-----|
+| Ollama not running | `ollama serve` |
+| Model not found | `ollama pull llama2` |
+| Vector store not initialized | `cd backend && venv\Scripts\activate && python initialize_db.py` |
+| Frontend can't connect | Ensure backend is on port `8000`, check CORS/proxy config |
+
+---
+
+## Architecture (TL;DR)
+
+```
+User → React UI → FastAPI → RAG Pipeline → Answer + Sources
+                               ↕               ↕
+                           ChromaDB          Ollama
+                        (vector search)    (local LLM)
+```
+
+---
+
+**Need more detail?** See the full [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md).

@@ -1,12 +1,12 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { User, Bot, AlertCircle } from 'lucide-react';
+import CodeBlock from './CodeBlock';
 import SourceCard from './SourceCard';
 
 /**
- * Component to display a single chat message.
+ * Single chat message with animated entrance and themed bubbles.
  */
 const ChatMessage = ({ message }) => {
   const isUser = message.type === 'user';
@@ -14,60 +14,66 @@ const ChatMessage = ({ message }) => {
 
   if (isUser) {
     return (
-      <div className="flex justify-end gap-3 mb-6">
-        <div className="max-w-[80%] bg-primary-600 text-white rounded-2xl rounded-tr-sm px-5 py-3">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="flex justify-end gap-3 mb-6"
+      >
+        <div className="max-w-[75%] bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-2xl rounded-tr-sm px-5 py-3 shadow-lg shadow-primary-500/10">
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         </div>
-        <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0">
-          <User className="w-5 h-5 text-white" />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-primary-500/20">
+          <User className="w-4 h-4 text-white" />
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex gap-3 mb-6">
-        <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
-          <AlertCircle className="w-5 h-5 text-white" />
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="flex gap-3 mb-6"
+      >
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-red-500/20">
+          <AlertCircle className="w-4 h-4 text-white" />
         </div>
-        <div className="max-w-[80%] bg-red-500/20 border border-red-500/50 text-red-200 rounded-2xl rounded-tl-sm px-5 py-3">
+        <div className="max-w-[75%] bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-200 rounded-2xl rounded-tl-sm px-5 py-3">
           <p className="text-sm leading-relaxed">{message.content}</p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   // Assistant message
   return (
-    <div className="flex gap-3 mb-6">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-        <Bot className="w-5 h-5 text-white" />
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="flex gap-3 mb-6"
+    >
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/20">
+        <Bot className="w-4 h-4 text-white" />
       </div>
-      
+
       <div className="flex-1 max-w-[80%]">
-        <div className="bg-slate-700/50 rounded-2xl rounded-tl-sm px-5 py-4">
+        <div className="glass-card rounded-2xl rounded-tl-sm px-5 py-4">
           <div className="markdown-content text-sm">
             <ReactMarkdown
               components={{
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
                   return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={vscDarkPlus}
-                      language={match[1]}
-                      PreTag="div"
-                      customStyle={{
-                        margin: '1rem 0',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.875rem',
-                      }}
+                    <CodeBlock language={match[1]}>{children}</CodeBlock>
+                  ) : (
+                    <code
+                      className="bg-surface-100 dark:bg-surface-800/80 text-primary-600 dark:text-primary-300 px-1.5 py-0.5 rounded-md text-xs font-mono"
                       {...props}
                     >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <code className="bg-slate-800 text-blue-300 px-1.5 py-0.5 rounded text-xs" {...props}>
                       {children}
                     </code>
                   );
@@ -79,10 +85,14 @@ const ChatMessage = ({ message }) => {
           </div>
         </div>
 
-        {/* Sources */}
         {message.sources && message.sources.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide px-1">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mt-3 space-y-2"
+          >
+            <p className="text-[10px] font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-widest px-1">
               Sources ({message.sources.length})
             </p>
             <div className="space-y-2">
@@ -90,10 +100,10 @@ const ChatMessage = ({ message }) => {
                 <SourceCard key={index} source={source} />
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
