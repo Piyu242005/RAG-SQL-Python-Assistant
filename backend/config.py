@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     chroma_persist_directory: str = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
     
     # Document Processing
-    chunk_size: int = int(os.getenv("CHUNK_SIZE", "1000"))
+    chunk_size: int = int(os.getenv("CHUNK_SIZE", "800"))
     chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "200"))
     
     # API Configuration

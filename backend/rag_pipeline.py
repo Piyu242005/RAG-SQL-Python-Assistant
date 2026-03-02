@@ -31,8 +31,8 @@ class RAGPipeline:
         self.llm = Ollama(
             base_url=settings.ollama_base_url,
             model=settings.ollama_model,
-            temperature=0.3,  # Lower temperature for more factual responses
-            num_ctx=2048,  # Context window size
+            temperature=0.2,
+            num_ctx=4096,
         )
         print("[OK] LLM initialized")
     
@@ -41,8 +41,8 @@ class RAGPipeline:
         print(" Initializing retriever...")
         self.vector_store_manager.initialize_vectorstore()
         self.retriever = self.vector_store_manager.get_retriever(
-            k=4,  # Retrieve top 4 relevant chunks
-            search_type="mmr"  # Maximum Marginal Relevance for diversity
+            k=5,
+            search_type="mmr"
         )
         print("[OK] Retriever initialized")
     
@@ -51,20 +51,24 @@ class RAGPipeline:
         print(" Initializing RAG chain...")
         
         # Create prompt template
-        template = """You are an expert assistant specializing in SQL (MySQL) and Python programming. Your role is to answer questions based ONLY on the provided context from the MySQL Handbook and The Ultimate Python Handbook.
+        template = """You are an expert SQL and Python programming assistant.
 
-Context from documentation:
+Use ONLY the provided reference material to answer the user's question.
+
+Reference material:
 {context}
 
 Question: {question}
 
-Instructions:
-1. Answer the question using ONLY information from the provided context
-2. If the context contains code examples, include them in your response
-3. Be specific and cite which handbook the information comes from (MySQL or Python)
-4. If the context doesn't contain enough information to fully answer the question, say so
-5. Format code snippets with proper syntax
-6. Be concise but thorough
+Response rules:
+1. Start with a clear, direct answer in 2-4 sentences.
+2. If code is relevant, provide a clean, runnable code example with proper syntax highlighting (use ```sql or ```python).
+3. Add a brief explanation after the code if needed.
+4. Keep the response concise, well-structured, and easy to scan.
+5. Use markdown formatting: headers, bold, bullet points.
+6. Do NOT use the word "context" or refer to "the provided text".
+7. If the information is insufficient, say: "The available documentation does not cover this topic in sufficient detail."
+8. Do NOT hallucinate or make up information not present in the reference material.
 
 Answer:"""
         
@@ -159,7 +163,7 @@ Answer:"""
             if doc_type:
                 docs = self.vector_store_manager.similarity_search(
                     query=question,
-                    k=4,
+                    k=5,
                     filter={"doc_type": doc_type}
                 )
             else:

@@ -1,13 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, User, AlertCircle } from 'lucide-react';
+import { Bot, User, AlertCircle, FileText, ChevronDown, ChevronUp, Hash } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import CodeBlock from './CodeBlock';
-import SourceCard from './SourceCard';
+
+const SourceItem = ({ source, index }) => {
+  const docType = source.doc_type || (source.source?.toLowerCase().includes('python') ? 'python' : 'mysql');
+  const accentColor = docType === 'python' ? 'text-emerald-400' : 'text-blue-400';
+  const dotColor = docType === 'python' ? 'bg-emerald-400' : 'bg-blue-400';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.2 }}
+      className="flex items-center gap-3 px-3 py-2 rounded-lg
+        hover:bg-white/[0.02] transition-colors duration-200 group"
+    >
+      <div className={`w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0`} />
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <span className="text-[12px] text-dark-100 font-medium truncate">
+          {source.source || 'Unknown'}
+        </span>
+        {source.page && (
+          <span className="text-[10px] text-dark-400 font-mono flex-shrink-0">
+            p.{source.page}
+          </span>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
 const ChatMessage = ({ message }) => {
   const isUser = message.role === 'user';
   const isError = message.isError;
+  const [showSources, setShowSources] = useState(false);
+  const sourceCount = message.sources?.length || 0;
 
   return (
     <motion.div
@@ -25,14 +54,15 @@ const ChatMessage = ({ message }) => {
         </div>
       )}
 
-      <div className={`max-w-[75%] ${isUser ? 'order-first' : ''}`}>
+      <div className={`max-w-[78%] ${isUser ? 'order-first' : ''}`}>
+        {/* Message bubble */}
         <div
-          className={`rounded-2xl px-4 py-3 transition-all duration-200
+          className={`rounded-2xl px-5 py-4 transition-all duration-200
             ${isUser
               ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-600/20 rounded-br-md'
               : isError
                 ? 'bg-rose-500/5 border border-rose-500/10 text-rose-300 rounded-bl-md'
-                : 'bg-white dark:bg-[#151A22] border border-black/5 dark:border-white/[0.04] text-dark-200 dark:text-dark-100 rounded-bl-md'
+                : 'bg-white dark:bg-[#151A22] border border-black/5 dark:border-white/[0.04] rounded-bl-md shadow-depth-sm'
             }`}
         >
           {isError ? (
@@ -61,20 +91,41 @@ const ChatMessage = ({ message }) => {
               />
             </div>
           )}
-        </div>
 
-        {message.sources && message.sources.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
-            className="mt-2.5 space-y-1.5"
-          >
-            {message.sources.map((source, i) => (
-              <SourceCard key={i} source={source} index={i} />
-            ))}
-          </motion.div>
-        )}
+          {/* Sources toggle — inside the bubble, below the answer */}
+          {sourceCount > 0 && !isUser && !isError && (
+            <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/[0.04]">
+              <button
+                onClick={() => setShowSources(!showSources)}
+                className="flex items-center gap-2 text-[11px] font-medium text-dark-300 hover:text-primary-400
+                  transition-colors duration-200 group"
+              >
+                <FileText className="w-3 h-3" />
+                <span>
+                  {showSources ? 'Hide' : 'View'} Sources ({sourceCount})
+                </span>
+                {showSources
+                  ? <ChevronUp className="w-3 h-3 text-dark-400" />
+                  : <ChevronDown className="w-3 h-3 text-dark-400" />
+                }
+              </button>
+
+              {/* Collapsible source list */}
+              {showSources && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  className="mt-2 -mx-1"
+                >
+                  {message.sources.map((source, i) => (
+                    <SourceItem key={i} source={source} index={i} />
+                  ))}
+                </motion.div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* User avatar */}
