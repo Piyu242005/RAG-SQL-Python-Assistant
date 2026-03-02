@@ -32,7 +32,11 @@ class RAGPipeline:
             base_url=settings.ollama_base_url,
             model=settings.ollama_model,
             temperature=0.2,
-            num_ctx=4096,
+            num_ctx=2048,
+            num_predict=512,
+            top_k=30,
+            top_p=0.8,
+            repeat_penalty=1.1,
         )
         print("[OK] LLM initialized")
     
@@ -41,7 +45,7 @@ class RAGPipeline:
         print(" Initializing retriever...")
         self.vector_store_manager.initialize_vectorstore()
         self.retriever = self.vector_store_manager.get_retriever(
-            k=5,
+            k=3,
             search_type="mmr"
         )
         print("[OK] Retriever initialized")
@@ -51,24 +55,19 @@ class RAGPipeline:
         print(" Initializing RAG chain...")
         
         # Create prompt template
-        template = """You are an expert SQL and Python programming assistant.
+        template = """You are an expert SQL and Python assistant. Answer using ONLY the provided reference material. Be concise.
 
-Use ONLY the provided reference material to answer the user's question.
-
-Reference material:
+Reference:
 {context}
 
 Question: {question}
 
-Response rules:
-1. Start with a clear, direct answer in 2-4 sentences.
-2. If code is relevant, provide a clean, runnable code example with proper syntax highlighting (use ```sql or ```python).
-3. Add a brief explanation after the code if needed.
-4. Keep the response concise, well-structured, and easy to scan.
-5. Use markdown formatting: headers, bold, bullet points.
-6. Do NOT use the word "context" or refer to "the provided text".
-7. If the information is insufficient, say: "The available documentation does not cover this topic in sufficient detail."
-8. Do NOT hallucinate or make up information not present in the reference material.
+Rules:
+- Start with a direct answer (2-3 sentences)
+- Include a code example if relevant (```sql or ```python)
+- Use markdown formatting
+- Do NOT hallucinate or mention "context"
+- If info is insufficient, say so
 
 Answer:"""
         
@@ -163,7 +162,7 @@ Answer:"""
             if doc_type:
                 docs = self.vector_store_manager.similarity_search(
                     query=question,
-                    k=5,
+                    k=3,
                     filter={"doc_type": doc_type}
                 )
             else:
