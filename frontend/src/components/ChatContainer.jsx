@@ -7,10 +7,9 @@ import {
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import TypingIndicator from './TypingIndicator';
-import { useChat } from '../hooks/useChat';
 
-const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange }) => {
-  const { messages, isLoading, sendMessage, clearMessages } = useChat();
+const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => {
+  const { messages, isLoading, sendMessage, clearMessages } = chat;
   const messagesEndRef = useRef(null);
 
   useEffect(() => {

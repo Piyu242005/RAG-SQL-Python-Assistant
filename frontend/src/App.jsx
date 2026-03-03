@@ -5,14 +5,16 @@ import { ThemeProvider } from './context/ThemeContext';
 import Sidebar from './components/Sidebar';
 import ChatContainer from './components/ChatContainer';
 import ToastProvider from './components/ToastProvider';
+import { useChat } from './hooks/useChat';
 
 function AppContent() {
   const [healthStatus, setHealthStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [conversations, setConversations] = useState([]);
-  const [activeConversationId, setActiveConversationId] = useState(null);
   const [docFilter, setDocFilter] = useState(null);
+
+  // Single source of truth for all chat state
+  const chat = useChat();
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -48,19 +50,21 @@ function AppContent() {
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        onNewChat={() => setActiveConversationId(null)}
-        onSelectConversation={setActiveConversationId}
-        onDeleteConversation={(id) => {
-          setConversations(conversations.filter((c) => c.id !== id));
-          if (activeConversationId === id) setActiveConversationId(null);
-        }}
+        conversations={chat.conversations}
+        activeConversationId={chat.activeConversationId}
+        onNewChat={chat.startNewChat}
+        onSelectConversation={chat.selectConversation}
+        onDeleteConversation={chat.deleteConversation}
         docFilter={docFilter}
         onDocFilterChange={setDocFilter}
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <ChatContainer healthStatus={healthStatus} docFilter={docFilter} onDocFilterChange={setDocFilter} />
+        <ChatContainer
+          healthStatus={healthStatus}
+          docFilter={docFilter}
+          onDocFilterChange={setDocFilter}
+          chat={chat}
+        />
       </main>
       <ToastProvider />
     </div>
