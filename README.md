@@ -1,3 +1,4 @@
+
 <div align="center">
 
 <img src="https://img.shields.io/badge/%E2%9C%A8-Piyu_RAG-6366f1?style=for-the-badge&labelColor=0B0D11" alt="logo" height="40" />
@@ -20,6 +21,10 @@
 
 [⚡ Quick Start](#-quick-start) · [🧠 How It Works](#-how-it-works) · [📡 API](#-api-reference) · [🗺️ Roadmap](#️-roadmap)
 
+<br />
+
+<img src="./Welcome%20Screen.png" width="100%" alt="Welcome Screen Demo" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" />
+
 ---
 
 </div>
@@ -36,6 +41,8 @@
 🤖 Piyu:  "SQL JOINs combine rows from two or more tables based on a related column..."
           📄 Source: MySQL Handbook.pdf — Page 42
 ```
+
+<img src="./chat%20response.png" width="100%" alt="Chat Response Demo" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-top: 10px; margin-bottom: 20px;" />
 
 **No API keys. No cloud. No data leaks. Just local AI.**
 
