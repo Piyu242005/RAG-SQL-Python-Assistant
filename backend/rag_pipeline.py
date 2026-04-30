@@ -1,10 +1,14 @@
 """RAG pipeline implementation using LangChain."""
 from typing import List, Dict, Optional
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import OllamaLLM as Ollama
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import FlashrankRerank
 from vector_store import VectorStoreManager
 from llm_config import OllamaManager
 from config import settings
@@ -19,10 +23,12 @@ class RAGPipeline:
         self.llm = None
         self.retriever = None
         self.chain = None
+        self.history_store = {} # Session memory
         
         # Initialize components
         self._initialize_llm()
-        self._initialize_retriever()
+        self._initialize_retriever(use_hybrid=True)
+        self._initialize_reranker()
         self._initialize_chain()
     
     def _initialize_llm(self):
@@ -40,15 +46,41 @@ class RAGPipeline:
         )
         print("[OK] LLM initialized")
     
-    def _initialize_retriever(self):
-        """Initialize document retriever."""
-        print(" Initializing retriever...")
+    def _initialize_retriever(self, use_hybrid: bool = True):
+        """Initialize document retriever.
+        
+        Args:
+            use_hybrid: Whether to use hybrid search (Vector + BM25)
+        """
+        print(f" Initializing {'hybrid ' if use_hybrid else ''}retriever...")
         self.vector_store_manager.initialize_vectorstore()
-        self.retriever = self.vector_store_manager.get_retriever(
-            k=3,
-            search_type="mmr"
-        )
-        print("[OK] Retriever initialized")
+        
+        if use_hybrid:
+            self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=10)
+        else:
+            self.base_retriever = self.vector_store_manager.get_retriever(
+                k=10,
+                search_type="mmr"
+            )
+        
+        # Initially, retriever is the base retriever
+        self.retriever = self.base_retriever
+        print("[OK] Base retriever initialized")
+        
+    def _initialize_reranker(self):
+        """Initialize FlashRank reranker for better precision."""
+        print(" Initializing FlashRank reranker...")
+        try:
+            compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=3)
+            self.retriever = ContextualCompressionRetriever(
+                base_compressor=compressor, 
+                base_retriever=self.base_retriever
+            )
+            print("[OK] Reranker initialized")
+        except Exception as e:
+            print(f"[X] Failed to initialize reranker: {str(e)}")
+            print("Falling back to base retriever.")
+            self.retriever = self.base_retriever
     
     def _initialize_chain(self):
         """Initialize RAG chain."""
@@ -71,20 +103,38 @@ Rules:
 
 Answer:"""
         
-        prompt = ChatPromptTemplate.from_template(template)
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are an expert SQL and Python assistant."),
+            MessagesPlaceholder(variable_name="history"),
+            ("human", template)
+        ])
         
-        # Create RAG chain using LCEL (LangChain Expression Language)
-        self.chain = (
+        # Create RAG chain
+        self.base_chain = (
             {
                 "context": self.retriever | self._format_docs,
-                "question": RunnablePassthrough()
+                "question": RunnablePassthrough(),
+                "history": lambda x: x.get("history", [])
             }
             | prompt
             | self.llm
             | StrOutputParser()
         )
         
-        print("[OK] RAG chain initialized")
+        # Wrap with message history
+        def get_session_history(session_id: str):
+            if session_id not in self.history_store:
+                self.history_store[session_id] = ChatMessageHistory()
+            return self.history_store[session_id]
+
+        self.chain = RunnableWithMessageHistory(
+            self.base_chain,
+            get_session_history,
+            input_messages_key="question",
+            history_messages_key="history",
+        )
+        
+        print("[OK] RAG chain with memory initialized")
     
     def _format_docs(self, docs: List[Document]) -> str:
         """Format retrieved documents for context.
@@ -203,6 +253,22 @@ Answer:"""
                 "success": False,
                 "error": str(e)
             }
+
+    async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
+        """Stream the RAG response."""
+        import json
+        try:
+            # For streaming, we use a default config with session_id
+            config = {"configurable": {"session_id": session_id}}
+            
+            async for chunk in self.chain.astream(question, config=config):
+                yield f"data: {json.dumps({'token': chunk})}\n\n"
+            
+            yield "data: [DONE]\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield "data: [DONE]\n\n"
 
 
 # Example usage and testing

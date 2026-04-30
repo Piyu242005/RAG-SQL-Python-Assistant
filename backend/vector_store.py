@@ -7,6 +7,8 @@ from chromadb.config import Settings as ChromaSettings
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
 from config import settings
 
 class VectorStoreManager:
@@ -164,6 +166,55 @@ class VectorStoreManager:
             search_type=search_type,
             search_kwargs={"k": k}
         )
+    
+    def get_hybrid_retriever(self, k: int = 4, vector_weight: float = 0.5, bm25_weight: float = 0.5):
+        """Get a hybrid retriever (Vector + BM25).
+        
+        Args:
+            k: Number of documents to retrieve
+            vector_weight: Weight for vector search results
+            bm25_weight: Weight for BM25 search results
+            
+        Returns:
+            EnsembleRetriever instance
+        """
+        if self.vectorstore is None:
+            self.initialize_vectorstore()
+            
+        # Get all documents from vector store to build BM25 index
+        # Note: In a production system, you'd want a persisted BM25 index
+        print(" Building BM25 index for hybrid search...")
+        try:
+            # Fetch documents from Chroma
+            results = self.vectorstore.get()
+            documents = []
+            for i in range(len(results['ids'])):
+                documents.append(Document(
+                    page_content=results['documents'][i],
+                    metadata=results['metadatas'][i]
+                ))
+            
+            if not documents:
+                print("[!] Warning: No documents found to build BM25 index. Falling back to vector search.")
+                return self.get_retriever(k=k)
+                
+            bm25_retriever = BM25Retriever.from_documents(documents)
+            bm25_retriever.k = k
+            
+            vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
+            
+            ensemble_retriever = EnsembleRetriever(
+                retrievers=[vector_retriever, bm25_retriever],
+                weights=[vector_weight, bm25_weight]
+            )
+            
+            print("[OK] Hybrid retriever initialized")
+            return ensemble_retriever
+            
+        except Exception as e:
+            print(f"[X] Error creating hybrid retriever: {str(e)}")
+            print("Falling back to standard vector search.")
+            return self.get_retriever(k=k)
     
     def get_stats(self) -> dict:
         """Get statistics about the vector store.

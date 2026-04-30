@@ -1,7 +1,9 @@
 """FastAPI routers for chat endpoints."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from models import ChatRequest, ChatResponse, Source
 from rag_pipeline import RAGPipeline
+from limiter import limiter
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
@@ -22,7 +24,8 @@ def get_rag_pipeline() -> RAGPipeline:
     return rag_pipeline
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+@limiter.limit("10/minute")
+async def chat(request: ChatRequest, fast_request: Request) -> ChatResponse:
     """
     Process a chat query and return answer with sources.
     
@@ -64,3 +67,22 @@ async def chat(request: ChatRequest) -> ChatResponse:
             status_code=500,
             detail=f"Error processing query: {str(e)}"
         )
+
+@router.post("/chat/stream")
+@limiter.limit("5/minute")
+async def chat_stream(request: ChatRequest, fast_request: Request):
+    """
+    Stream a chat response.
+    """
+    try:
+        pipeline = get_rag_pipeline()
+        
+        async def event_generator():
+            # Use the streaming method from pipeline (to be implemented)
+            async for chunk in pipeline.stream_query(request.query, request.doc_type):
+                yield chunk
+
+        return StreamingResponse(event_generator(), media_type="text/event-stream")
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

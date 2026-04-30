@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/chroma_db:/app/chroma_db
+      - ./*.pdf:/app/
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    restart: always
+
+networks:
+  default:
+    name: rag-network

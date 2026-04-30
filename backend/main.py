@@ -1,5 +1,5 @@
 """Main FastAPI application."""
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from models import HealthResponse, InitializeResponse, DocumentStats
@@ -8,6 +8,21 @@ from vector_store import VectorStoreManager
 from document_processor import DocumentProcessor
 from routers import chat
 from config import settings
+import logging
+import time
+from pythonjsonlogger import jsonlogger
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
+from limiter import limiter
+
+# Setup Logging
+log_handler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+log_handler.setFormatter(formatter)
+logger = logging.getLogger("rag-api")
+logger.addHandler(log_handler)
+logger.setLevel(logging.INFO)
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
@@ -56,6 +71,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Rate Limiter state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -64,6 +83,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Middleware for request logging
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    logger.info(
+        "Request processed",
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "duration": f"{duration:.4f}s",
+            "client_ip": request.client.host
+        }
+    )
+    return response
 
 # Include routers
 app.include_router(chat.router)
@@ -138,6 +175,37 @@ async def initialize_system() -> InitializeResponse:
         return InitializeResponse(
             success=False,
             message="Initialization failed",
+            error=str(e)
+        )
+
+@app.post("/api/upload", response_model=InitializeResponse)
+async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> InitializeResponse:
+    """
+    Upload a new PDF and index it into the vector store.
+    """
+    try:
+        # 1. Save file
+        file_path = settings.pdf_directory / file.filename
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+        
+        # 2. Process document
+        processor = DocumentProcessor()
+        documents = processor.process_pdf(file_path, doc_type)
+        
+        # 3. Add to vector store
+        vector_manager = VectorStoreManager()
+        vector_manager.add_documents(documents)
+        
+        return InitializeResponse(
+            success=True,
+            message=f"File '{file.filename}' uploaded and indexed successfully",
+            documents_processed=len(documents)
+        )
+    except Exception as e:
+        return InitializeResponse(
+            success=False,
+            message=f"Upload failed: {str(e)}",
             error=str(e)
         )
 

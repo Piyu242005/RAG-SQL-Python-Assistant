@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What is MySQL Workbench?",
+    "ground_truth_answer": "MySQL Workbench is a visual tool for database architects, developers, and DBAs that provides data modeling, SQL development, and administration tools.",
+    "expected_page": 2,
+    "expected_source": "MySQL Handbook.pdf"
+  },
+  {
+    "question": "How do you create a user named 'harry' on localhost in MySQL?",
+    "ground_truth_answer": "CREATE USER 'harry'@'localhost' IDENTIFIED BY 'password';",
+    "expected_page": 3,
+    "expected_source": "MySQL Handbook.pdf"
+  },
+  {
+    "question": "Who is the Ultimate Python Programming Handbook designed for?",
+    "ground_truth_answer": "It is designed for beginners and anyone looking to strengthen their foundational knowledge of Python.",
+    "expected_page": 2,
+    "expected_source": "The Ultimate Python Handbook.pdf"
+  },
+  {
+    "question": "What are the first few sections mentioned in the Table of Contents of the Python handbook?",
+    "ground_truth_answer": "PREFACE, Purpose and Audience, Structure and Content, Why Python?",
+    "expected_page": 3,
+    "expected_source": "The Ultimate Python Handbook.pdf"
+  }
+]
