@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 import fitz  # PyMuPDF
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -115,40 +115,23 @@ def load_pdfs(pdf_dir: Path) -> List[Dict[str, Any]]:
 
 def split_documents(
     pages_data: List[Dict[str, Any]],
-    chunk_size: int = 800,
-    chunk_overlap: int = 150,
+    embeddings: HuggingFaceEmbeddings,
 ) -> List[Document]:
     """
-    Split extracted page text into semantic chunks.
-
-    Uses RecursiveCharacterTextSplitter which preserves paragraph
-    and sentence boundaries for more meaningful retrieval.
-
-    Args:
-        pages_data: Output from load_pdfs().
-        chunk_size: Maximum characters per chunk (default: 800).
-        chunk_overlap: Overlap between consecutive chunks (default: 150).
-
-    Returns:
-        List of LangChain Document objects with metadata.
-
-    Raises:
-        ValueError: If pages_data is empty.
+    Split extracted page text into semantic chunks using embeddings.
     """
     if not pages_data:
         raise ValueError("No page data provided for splitting.")
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        length_function=len,
-        separators=["\n\n", "\n", ". ", " ", ""],  # Semantic boundaries
-        keep_separator=True,
+    splitter = SemanticChunker(
+        embeddings,
+        breakpoint_threshold_type="percentile"
     )
 
     documents: List[Document] = []
 
     for page in pages_data:
+        # Create a list of text chunks
         chunks = splitter.split_text(page["text"])
 
         for idx, chunk_text in enumerate(chunks):
@@ -163,15 +146,7 @@ def split_documents(
             )
             documents.append(doc)
 
-    # Summary by source
-    source_counts: Dict[str, int] = {}
-    for d in documents:
-        src = d.metadata["source"]
-        source_counts[src] = source_counts.get(src, 0) + 1
-
-    print(f"\n[INFO] Chunking complete  (size={chunk_size}, overlap={chunk_overlap})")
-    for src, count in source_counts.items():
-        print(f"   - {src}: {count} chunks")
+    print(f"\n[INFO] Semantic chunking complete")
     print(f"   Total chunks: {len(documents)}")
 
     return documents
@@ -369,15 +344,14 @@ def main():
 
     # -- Step 4/5: Chunk documents ----------------------------
     print(f"\n[4/5] Splitting into semantic chunks...")
+    embeddings = create_embeddings(settings.embedding_model)
     documents = split_documents(
         pages,
-        chunk_size=settings.chunk_size,
-        chunk_overlap=settings.chunk_overlap,
+        embeddings=embeddings
     )
 
     # -- Step 5/5: Embed & store ------------------------------
-    print(f"\n[5/5] Creating embeddings & vector store...")
-    embeddings = create_embeddings(settings.embedding_model)
+    print(f"\n[5/5] Creating vector store...")
     initialize_vector_store(
         documents=documents,
         embeddings=embeddings,

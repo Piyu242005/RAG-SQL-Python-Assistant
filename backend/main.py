@@ -1,5 +1,6 @@
 """Main FastAPI application."""
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
+import os
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from models import HealthResponse, InitializeResponse, DocumentStats
@@ -78,7 +79,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -172,11 +173,7 @@ async def initialize_system() -> InitializeResponse:
         )
     
     except Exception as e:
-        return InitializeResponse(
-            success=False,
-            message="Initialization failed",
-            error=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload", response_model=InitializeResponse)
 async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> InitializeResponse:
@@ -184,8 +181,9 @@ async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> 
     Upload a new PDF and index it into the vector store.
     """
     try:
-        # 1. Save file
-        file_path = settings.pdf_directory / file.filename
+        # 1. Save file Safely
+        safe_filename = os.path.basename(file.filename)
+        file_path = settings.pdf_directory / safe_filename
         with open(file_path, "wb") as buffer:
             buffer.write(await file.read())
         
@@ -203,11 +201,7 @@ async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> 
             documents_processed=len(documents)
         )
     except Exception as e:
-        return InitializeResponse(
-            success=False,
-            message=f"Upload failed: {str(e)}",
-            error=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/documents", response_model=DocumentStats)
 async def get_documents_stats() -> DocumentStats:

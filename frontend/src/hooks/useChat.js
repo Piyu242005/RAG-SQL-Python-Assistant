@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { sendChatQuery } from '../services/api';
+import { sendChatQuery, streamChatQuery } from '../services/api';
 import toast from 'react-hot-toast';
 
 // ── localStorage helpers ──────────────────────────────────
@@ -103,25 +103,40 @@ export const useChat = () => {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const aiMessageId = Date.now() + 1;
+    const initialAiMessage = {
+      id: aiMessageId,
+      type: 'assistant',
+      content: '',
+      sources: [],
+      timestamp: new Date().toISOString(),
+      success: true,
+    };
+
+    setMessages((prev) => [...prev, userMessage, initialAiMessage]);
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await sendChatQuery(query, docType);
+      await streamChatQuery(query, convId, docType, (chunk) => {
+        if (chunk.token) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMessageId ? { ...m, content: m.content + chunk.token } : m
+            )
+          );
+        } else if (chunk.sources) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMessageId ? { ...m, sources: chunk.sources } : m
+            )
+          );
+        }
+      });
 
-      const aiMessage = {
-        id: Date.now() + 1,
-        type: 'assistant',
-        content: response.answer,
-        sources: response.sources || [],
-        timestamp: new Date().toISOString(),
-        success: response.success,
-      };
-
+      // Persist final state
       setMessages((prev) => {
-        const updated = [...prev, aiMessage];
-        // Save immediately so even if user closes the tab, it's persisted
+        const updated = [...prev];
         saveToStorage(STORAGE_KEYS.MESSAGES + convId, updated);
         return updated;
       });
@@ -130,13 +145,16 @@ export const useChat = () => {
       toast.error(err.message || 'Failed to get response');
 
       const errorMessage = {
-        id: Date.now() + 1,
+        id: Date.now() + 5,
         type: 'error',
         content: err.message,
         timestamp: new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => {
+        const filtered = prev.filter(m => m.id !== aiMessageId || m.content.length > 0);
+        return [...filtered, errorMessage];
+      });
     } finally {
       setIsLoading(false);
     }

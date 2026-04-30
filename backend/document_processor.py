@@ -3,30 +3,24 @@ import os
 from pathlib import Path
 from typing import List, Dict
 import fitz  # PyMuPDF
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from config import settings
 
 class DocumentProcessor:
     """Process PDF documents for RAG system."""
     
-    def __init__(self, chunk_size: int = None, chunk_overlap: int = None):
-        """Initialize document processor.
+    def __init__(self):
+        """Initialize document processor."""
+        # Initialize embeddings for semantic chunking
+        self.embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
         
-        Args:
-            chunk_size: Size of text chunks (defaults to settings)
-            chunk_overlap: Overlap between chunks (defaults to settings)
-        """
-        self.chunk_size = chunk_size or settings.chunk_size
-        self.chunk_overlap = chunk_overlap or settings.chunk_overlap
-        
-        # Initialize text splitter with semantic chunking
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
-            chunk_overlap=self.chunk_overlap,
-            length_function=len,
-            separators=["\n\n", "\n", ". ", " ", ""],  # Preserve paragraphs and sentences
-            keep_separator=True
+        # Initialize semantic chunker
+        # It uses percentile of distance between embeddings to determine splits
+        self.text_splitter = SemanticChunker(
+            self.embeddings,
+            breakpoint_threshold_type="percentile"
         )
     
     def extract_text_from_pdf(self, pdf_path: Path) -> List[Dict[str, any]]:

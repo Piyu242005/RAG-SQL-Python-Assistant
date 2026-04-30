@@ -2,7 +2,7 @@
 from typing import List, Dict, Optional
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory, RedisChatMessageHistory
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -63,22 +63,22 @@ class RAGPipeline:
         self.vector_store_manager.initialize_vectorstore()
         
         if use_hybrid:
-            self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=10)
+            self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=20)
         else:
             self.base_retriever = self.vector_store_manager.get_retriever(
-                k=10,
+                k=20,
                 search_type="mmr"
             )
         
         # Initially, retriever is the base retriever
         self.retriever = self.base_retriever
-        print("[OK] Base retriever initialized")
+        print("[OK] Base retriever initialized (k=20 for reranking)")
         
     def _initialize_reranker(self):
         """Initialize FlashRank reranker for better precision."""
         print(" Initializing FlashRank reranker...")
         try:
-            compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=3)
+            compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=5)
             self.retriever = ContextualCompressionRetriever(
                 base_compressor=compressor, 
                 base_retriever=self.base_retriever
@@ -128,11 +128,13 @@ Answer:"""
             | StrOutputParser()
         )
         
-        # Wrap with message history
+        # Wrap with message history using Redis
         def get_session_history(session_id: str):
-            if session_id not in self.history_store:
-                self.history_store[session_id] = ChatMessageHistory()
-            return self.history_store[session_id]
+            return RedisChatMessageHistory(
+                session_id=session_id,
+                url=settings.redis_url,
+                ttl=3600 # 1 hour TTL
+            )
 
         self.chain = RunnableWithMessageHistory(
             self.base_chain,
@@ -197,12 +199,7 @@ Answer:"""
             }
         
         except Exception as e:
-            return {
-                "answer": f"Error processing query: {str(e)}",
-                "sources": [],
-                "success": False,
-                "error": str(e)
-            }
+            raise RuntimeError(f"Error processing query: {str(e)}")
     
     def query_with_filter(self, question: str, doc_type: Optional[str] = None) -> Dict[str, any]:
         """Query with document type filter.
@@ -254,22 +251,34 @@ Answer:"""
             }
         
         except Exception as e:
-            return {
-                "answer": f"Error processing query: {str(e)}",
-                "sources": [],
-                "success": False,
-                "error": str(e)
-            }
+            raise RuntimeError(f"Error processing query: {str(e)}")
 
     async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
-        """Stream the RAG response."""
+        """Stream the RAG response with source documentation."""
         import json
         try:
-            # For streaming, we use a default config with session_id
-            config = {"configurable": {"session_id": session_id}}
+            # 1. Retrieve relevant documents for sources
+            docs = await self.retriever.ainvoke(question)
+            sources = []
+            seen = set()
+            for doc in docs:
+                source_key = f"{doc.metadata.get('source')}_{doc.metadata.get('page')}"
+                if source_key not in seen:
+                    sources.append({
+                        "source": doc.metadata.get('source', 'Unknown'),
+                        "page": doc.metadata.get('page', 'N/A'),
+                        "content_preview": doc.page_content[:200] + "..."
+                    })
+                    seen.add(source_key)
             
+            # Send metadata/sources first so UI can display them immediately
+            yield f"data: {json.dumps({'sources': sources})}\n\n"
+
+            # 2. Stream the LLM response
+            config = {"configurable": {"session_id": session_id}}
             async for chunk in self.chain.astream(question, config=config):
-                yield f"data: {json.dumps({'token': chunk})}\n\n"
+                if chunk:
+                    yield f"data: {json.dumps({'token': chunk})}\n\n"
             
             yield "data: [DONE]\n\n"
             

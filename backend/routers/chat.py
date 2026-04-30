@@ -78,8 +78,9 @@ async def chat_stream(request: ChatRequest, fast_request: Request):
         pipeline = get_rag_pipeline()
         
         async def event_generator():
-            # Use the streaming method from pipeline (to be implemented)
-            async for chunk in pipeline.stream_query(request.query, request.doc_type):
+            # Use conversation_id as session_id for Redis memory
+            session_id = request.conversation_id or "default"
+            async for chunk in pipeline.stream_query(request.query, request.doc_type, session_id=session_id):
                 yield chunk
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
