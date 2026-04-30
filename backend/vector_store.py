@@ -8,7 +8,14 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
+try:
+    from langchain.retrievers import EnsembleRetriever
+except ImportError:
+    try:
+        from langchain_classic.retrievers import EnsembleRetriever
+    except ImportError:
+        # Fallback if both fail
+        from langchain_community.retrievers.ensemble import EnsembleRetriever
 from config import settings
 
 class VectorStoreManager:

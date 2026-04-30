@@ -7,8 +7,15 @@ from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import OllamaLLM as Ollama
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import FlashrankRerank
+try:
+    from langchain.retrievers import ContextualCompressionRetriever
+except ImportError:
+    from langchain_classic.retrievers import ContextualCompressionRetriever
+
+try:
+    from langchain.retrievers.document_compressors import FlashrankRerank
+except ImportError:
+    from langchain_community.document_compressors import FlashrankRerank
 from vector_store import VectorStoreManager
 from llm_config import OllamaManager
 from config import settings
