@@ -29,7 +29,9 @@
 
 </div>
 
-<br />
+> **Simple Explanation:** This project is a smart assistant that reads your PDF handbooks (MySQL & Python) and answers your questions with exact page references. It runs 100% locally on your computer, keeping your data private and secure.
+
+---
 
 ## 🎯 What Is This?
 

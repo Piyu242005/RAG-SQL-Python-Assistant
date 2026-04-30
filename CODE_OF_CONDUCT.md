@@ -1,23 +1,51 @@
-# Code of Conduct
+# Project Overview & Instructions
 
-## How to Run the Application
+## 🌟 Simple Explanation
+This project is a **Smart AI Assistant** for SQL and Python. 
+1. You ask a question.
+2. It searches through local PDF handbooks.
+3. It gives you a precise answer with the **exact page number** for proof.
+4. **Everything stays on your computer.** No data is sent to the cloud, making it 100% private and free.
 
-If you are contributing or testing the application locally, please follow these steps to run the servers correctly:
+---
 
-**1. Open Terminal 1 (Backend)**
-Copy and paste this:
+## 🚀 How to Run the Project
+
+There are two ways to run this: the **Easy Way** (Docker) and the **Manual Way**.
+
+### Method 1: The Easy Way (Docker)
+If you have Docker installed, just run this one command in your main folder:
 ```powershell
-cd "c:\Users\Piyu\Downloads\RAG (Retrieval-Augmented Generation) system using SQL + Python PDFs\backend"
-.\venv\Scripts\python.exe -m uvicorn main:app --reload
+docker-compose up --build
 ```
-*(Leave this window open and running)*
+*Wait for it to finish, then open http://localhost in your browser.*
 
-**2. Open Terminal 2 (Frontend)**
-Open a new tab/window and paste this:
+---
+
+### Method 2: The Manual Way (Two Terminals)
+
+**1. Start the Backend (API)**
+Open a terminal and run:
 ```powershell
-cd "c:\Users\Piyu\Downloads\RAG (Retrieval-Augmented Generation) system using SQL + Python PDFs\frontend"
+cd backend
+venv\Scripts\activate
+python main.py
+```
+*(Leave this running at http://localhost:8000)*
+
+**2. Start the Frontend (UI)**
+Open a **new** terminal tab and run:
+```powershell
+cd frontend
 npm run dev
 ```
-*(Leave this window open too)*
+*(Open the link shown, usually http://localhost:5173)*
 
-Once both are running, open your browser to http://localhost:5173. The new UI and chat history will be working perfectly!
+---
+
+## 🧪 How to Run Evaluation (Quality Check)
+To see how accurate the AI is, run:
+```powershell
+cd backend
+python evals/runner.py
+```
