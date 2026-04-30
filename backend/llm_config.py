@@ -90,10 +90,10 @@ class OllamaManager:
             print(f"[*] Pulling model: {model_name}...")
             print("This may take a few minutes...")
             ollama.pull(model_name)
-            print(f"✓ Model {model_name} pulled successfully")
+            print(f"[OK] Model {model_name} pulled successfully")
             return True
         except Exception as e:
-            print(f"✗ Error pulling model: {str(e)}")
+            print(f"[X] Error pulling model: {str(e)}")
             return False
     
     def generate(self, prompt: str, system: Optional[str] = None, **kwargs) -> str:

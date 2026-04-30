@@ -28,6 +28,7 @@ docker-compose up --build
 Open a terminal and run:
 ```powershell
 cd backend
+python -m venv venv
 venv\Scripts\activate
 python main.py
 ```
