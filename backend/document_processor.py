@@ -5,23 +5,38 @@ from typing import List, Dict
 import fitz  # PyMuPDF
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from config import settings
 
 class DocumentProcessor:
     """Process PDF documents for RAG system."""
     
-    def __init__(self):
-        """Initialize document processor."""
-        # Initialize embeddings for semantic chunking
-        self.embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
+    def __init__(self, use_semantic: bool = False):
+        """Initialize document processor.
         
-        # Initialize semantic chunker
-        # It uses percentile of distance between embeddings to determine splits
-        self.text_splitter = SemanticChunker(
-            self.embeddings,
-            breakpoint_threshold_type="percentile"
-        )
+        Args:
+            use_semantic: Whether to use computationally expensive SemanticChunker.
+                          Defaults to False for better performance during bulk indexing.
+        """
+        self.embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
+        self.use_semantic = use_semantic
+        
+        if self.use_semantic:
+            # High-precision but slow
+            self.text_splitter = SemanticChunker(
+                self.embeddings,
+                breakpoint_threshold_type="percentile"
+            )
+        else:
+            # Fast and reliable (Optimized Recursive Splitter)
+            self.text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=settings.chunk_size,
+                chunk_overlap=settings.chunk_overlap,
+                length_function=len,
+                separators=["\n\n", "\n", ". ", " ", ""],
+                keep_separator=True
+            )
     
     def extract_text_from_pdf(self, pdf_path: Path) -> List[Dict[str, any]]:
         """Extract text from PDF with metadata.

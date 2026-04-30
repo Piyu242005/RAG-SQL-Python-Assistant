@@ -22,91 +22,21 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 import fitz  # PyMuPDF
-from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
 from config import settings
 from llm_config import OllamaManager
+from document_processor import DocumentProcessor
 
 
 # ------------------------------------------------------------------
 #  1. LOAD PDFs
 # ------------------------------------------------------------------
 
-def load_pdfs(pdf_dir: Path) -> List[Dict[str, Any]]:
-    """
-    Load and extract text from all PDF files in a directory.
-
-    Uses PyMuPDF (fitz) for fast, accurate text extraction.
-    Each page is returned as a dict with text, page number,
-    source filename, and inferred doc_type.
-
-    Args:
-        pdf_dir: Path to directory containing PDF files.
-
-    Returns:
-        List of dicts: [{"text", "page", "source", "doc_type"}, ...]
-
-    Raises:
-        FileNotFoundError: If pdf_dir does not exist.
-        RuntimeError: If no PDFs are found in the directory.
-    """
-    pdf_dir = Path(pdf_dir)
-    if not pdf_dir.exists():
-        raise FileNotFoundError(f"PDF directory not found: {pdf_dir}")
-
-    pdf_files = sorted(pdf_dir.glob("*.pdf"))
-    if not pdf_files:
-        raise RuntimeError(f"No PDF files found in: {pdf_dir}")
-
-    print(f"\n[INFO] Found {len(pdf_files)} PDF file(s):")
-    for f in pdf_files:
-        size_mb = f.stat().st_size / (1024 * 1024)
-        print(f"   - {f.name}  ({size_mb:.1f} MB)")
-
-    all_pages: List[Dict[str, Any]] = []
-
-    for pdf_path in pdf_files:
-        try:
-            doc = fitz.open(pdf_path)
-            page_count = 0
-
-            # Infer document type from filename
-            name_lower = pdf_path.stem.lower()
-            if "mysql" in name_lower or "sql" in name_lower:
-                doc_type = "mysql"
-            elif "python" in name_lower:
-                doc_type = "python"
-            else:
-                doc_type = "general"
-
-            for page_num in range(len(doc)):
-                page = doc[page_num]
-                text = page.get_text().strip()
-
-                if text:  # Skip blank pages
-                    all_pages.append({
-                        "text": text,
-                        "page": page_num + 1,  # 1-indexed
-                        "source": pdf_path.name,
-                        "doc_type": doc_type,
-                    })
-                    page_count += 1
-
-            doc.close()
-            print(f"   [OK] {pdf_path.name}: {page_count} pages extracted")
-
-        except Exception as e:
-            print(f"   [FAIL] {pdf_path.name}: Failed -- {e}")
-            continue  # Skip broken PDFs, process the rest
-
-    if not all_pages:
-        raise RuntimeError("No text could be extracted from any PDF.")
-
-    print(f"\n   Total pages extracted: {len(all_pages)}")
-    return all_pages
+# Functions delegated to DocumentProcessor
 
 
 # ------------------------------------------------------------------
@@ -115,23 +45,40 @@ def load_pdfs(pdf_dir: Path) -> List[Dict[str, Any]]:
 
 def split_documents(
     pages_data: List[Dict[str, Any]],
-    embeddings: HuggingFaceEmbeddings,
+    chunk_size: int = 800,
+    chunk_overlap: int = 150,
 ) -> List[Document]:
     """
-    Split extracted page text into semantic chunks using embeddings.
+    Split extracted page text into semantic chunks.
+
+    Uses RecursiveCharacterTextSplitter which preserves paragraph
+    and sentence boundaries for more meaningful retrieval.
+
+    Args:
+        pages_data: Output from load_pdfs().
+        chunk_size: Maximum characters per chunk (default: 800).
+        chunk_overlap: Overlap between consecutive chunks (default: 150).
+
+    Returns:
+        List of LangChain Document objects with metadata.
+
+    Raises:
+        ValueError: If pages_data is empty.
     """
     if not pages_data:
         raise ValueError("No page data provided for splitting.")
 
-    splitter = SemanticChunker(
-        embeddings,
-        breakpoint_threshold_type="percentile"
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        separators=["\n\n", "\n", ". ", " ", ""],  # Semantic boundaries
+        keep_separator=True,
     )
 
     documents: List[Document] = []
 
     for page in pages_data:
-        # Create a list of text chunks
         chunks = splitter.split_text(page["text"])
 
         for idx, chunk_text in enumerate(chunks):
@@ -146,7 +93,15 @@ def split_documents(
             )
             documents.append(doc)
 
-    print(f"\n[INFO] Semantic chunking complete")
+    # Summary by source
+    source_counts: Dict[str, int] = {}
+    for d in documents:
+        src = d.metadata["source"]
+        source_counts[src] = source_counts.get(src, 0) + 1
+
+    print(f"\n[INFO] Chunking complete  (size={chunk_size}, overlap={chunk_overlap})")
+    for src, count in source_counts.items():
+        print(f"   - {src}: {count} chunks")
     print(f"   Total chunks: {len(documents)}")
 
     return documents
@@ -156,39 +111,6 @@ def split_documents(
 #  3. CREATE EMBEDDINGS
 # ------------------------------------------------------------------
 
-def create_embeddings(
-    model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
-) -> HuggingFaceEmbeddings:
-    """
-    Initialize the SentenceTransformer embedding model.
-
-    Uses HuggingFaceEmbeddings from LangChain which wraps
-    sentence-transformers for seamless integration with ChromaDB.
-
-    Args:
-        model_name: HuggingFace model identifier.
-
-    Returns:
-        HuggingFaceEmbeddings instance ready for vectorization.
-
-    Raises:
-        RuntimeError: If the model fails to load.
-    """
-    print(f"\n[INFO] Loading embedding model: {model_name}")
-    t0 = time.time()
-
-    try:
-        embeddings = HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
-        )
-        elapsed = time.time() - t0
-        print(f"   [OK] Model loaded in {elapsed:.1f}s")
-        return embeddings
-
-    except Exception as e:
-        raise RuntimeError(f"Failed to load embedding model '{model_name}': {e}")
 
 
 # ------------------------------------------------------------------
@@ -287,6 +209,11 @@ def main():
         action="store_true",
         help="Force re-indexing even if the database already exists.",
     )
+    parser.add_argument(
+        "--semantic",
+        action="store_true",
+        help="Use computationally expensive semantic chunking instead of recursive splitting.",
+    )
     args = parser.parse_args()
 
     total_start = time.time()
@@ -338,20 +265,26 @@ def main():
         shutil.rmtree(persist_dir)
         print(f"   [OK] Deleted: {persist_dir}")
 
-    # -- Step 3/5: Load & extract PDFs ------------------------
-    print(f"\n[3/5] Loading PDF documents...")
-    pages = load_pdfs(settings.pdf_directory)
+    # -- Step 3/5: Process PDFs -------------------------------
+    processor = DocumentProcessor(use_semantic=args.semantic)
+    
+    if args.semantic:
+        print(f"\n[3/5] Running HIGH-LOAD Semantic Chunking (this will take time)...")
+    else:
+        print(f"\n[3/5] Running Optimized Fast Chunking...")
 
-    # -- Step 4/5: Chunk documents ----------------------------
-    print(f"\n[4/5] Splitting into semantic chunks...")
-    embeddings = create_embeddings(settings.embedding_model)
-    documents = split_documents(
-        pages,
-        embeddings=embeddings
-    )
+    # Use processor to handle all logic
+    documents = processor.process_all_pdfs()
 
-    # -- Step 5/5: Embed & store ------------------------------
-    print(f"\n[5/5] Creating vector store...")
+    if not documents:
+        print("[X] No documents processed. Check your PDF directory.")
+        return
+
+    # -- Step 4/5: Embed & store ------------------------------
+    print(f"\n[4/5] Loading embedding model...")
+    embeddings = processor.embeddings
+    
+    print(f"\n[5/5] Creating vector store (Computing {len(documents)} embeddings)...")
     initialize_vector_store(
         documents=documents,
         embeddings=embeddings,
