@@ -1,0 +1,3059 @@
+id,source,page,content,embedding_preview
+86b862c7-5ea9-4599-af08-9134ba7b7c70,MySQL Handbook.pdf,2,"Installing MySQL
+What is MySQL workbench?
+MySQL Workbench is a visual tool for database architects, developers, and DBAs. It
+provides data modeling, SQL development, and comprehensive administration
+tools for server configuration, user administration, backup, and much more.
+What is a Database Management System (DBMS)?
+A Database Management System (DBMS) is software that interacts with end users,
+applications, and the database itself to capture and analyze data. It allows for the
+creation, retrieval, updating, and management of data in databases. If you know
+one DBMS, you can easily transition to another, as they share similar concepts and
+functionalities.
+Windows / macOS Installation
+Download from: https://dev.mysql.com/downloads/installer/
+Run the installer and choose Developer Default.
+Set a root password when prompted.
+Install MySQL Workbench (optional but helpful GUI).
+Linux (Ubuntu) Installation
+Follow these steps to install MySQL and create a user:
+1. 
+2. 
+3. 
+4.",[ 0.04167357 -0.09659155 -0.04677111  0.00021265 -0.06463145]...
+35ad0655-28df-456b-9788-dbe9a2bd0dfd,MySQL Handbook.pdf,3,"Step 1: Update Package Index
+Step 2: Install MySQL Server
+Step 3: Secure the Installation
+Choose your options (yes to most).
+Step 4: Create a User 'harry'@'localhost'
+Log into MySQL:
+Run the following SQL commands:
+sudo apt update
+sudo apt install mysql-server
+sudo mysql_secure_installation
+sudo mysql
+CREATE USER 'harry'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON *.* TO 'harry'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EXIT;",[ 0.11437535 -0.0626582   0.02787678 -0.03512659 -0.13108569]...
+ef5dceb1-5cff-4b64-a13d-f1f236c7faa6,MySQL Handbook.pdf,4,"Step 5: Test Login
+Enter the password: password
+Make sure to replace 'password'  with a secure password of your choice in
+production environments.
+mysql -u harry -p",[ 0.05947184 -0.06409933 -0.05412957 -0.04519818 -0.09082227]...
+73989886-3ee8-4669-83fe-54daa6da2264,MySQL Handbook.pdf,5,"Getting Started with MySQL
+What is a Database?
+A database is a container that stores related data in an organized way. In MySQL, a
+database holds one or more tables.
+Think of it like:
+Folder analogy:
+A database is like a folder.
+Each table is a file inside that folder.
+The rows in the table are like the content inside each file.
+Excel analogy:
+A database is like an Excel workbook.
+Each table is a separate sheet inside that workbook.
+Each row in the table is like a row in Excel.
+Step 1: Create a Database
+After creating the database, either:
+Right-click it in MySQL Workbench and select “Set as Default Schema”, or
+Use this SQL command:
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+CREATE DATABASE startersql;
+• 
+• 
+USE startersql;",[ 0.06388944 -0.05668221 -0.09283461  0.0691287  -0.09302546]...
+80bde94f-1cf8-43a0-aed7-d344345818e1,MySQL Handbook.pdf,6,"Step 2: Create a Table
+Now we’ll create a simple users  table:
+This table will store basic user info.
+Step 3: Drop the Database
+You can delete the entire database (and all its tables) using:
+Be careful — this will delete everything in that database.
+Data Types Explained
+INT : Integer type, used for whole numbers.
+VARCHAR(100) : Variable-length string, up to 100 characters.
+ENUM : A string object with a value chosen from a list of permitted values. eg. 
+gender ENUM('Male', 'Female', 'Other')
+DATE : Stores date values. eg date_of_birth DATE
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    gender ENUM('Male', 'Female', 'Other'),
+    date_of_birth DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+DROP DATABASE startersql;
+• 
+• 
+• 
+•",[ 0.01977701  0.03789625 -0.05448222  0.00415438 -0.09434938]...
+ec5218a9-6860-4708-b3f0-4bbdd90b05e7,MySQL Handbook.pdf,7,"TIMESTAMP : Stores date and time, automatically set to the current timestamp
+when a row is created.
+BOOLEAN : Stores TRUE or FALSE values, often used for flags like is_active .
+DECIMAL(10, 2) : Stores exact numeric data
+values, useful for financial data. The first number is
+the total number of digits, and the second is the
+number of digits after the decimal point.
+Constraints Explained
+AUTO_INCREMENT : Automatically generates a unique number for each row.
+PRIMARY KEY : Uniquely identifies each row in the table.
+NOT NULL : Ensures a column cannot have a NULL value.
+UNIQUE : Ensures all values in a column are different.
+DEFAULT : Sets a default value for a column if no value is provided. eg. 
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP , is_active BOOLEAN 
+DEFAULT TRUE
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+•",[-0.08104648  0.03110957 -0.16187871 -0.00601533 -0.02969991]...
+475b750f-c0c1-4c79-9c93-0a0e79707937,MySQL Handbook.pdf,8,"Working with Tables in MySQL
+Selecting Data from a Table
+Select All Columns
+This fetches every column and every row from the users  table.
+Select Specific Columns
+This only fetches the name  and email  columns from all rows.
+Renaming a Table
+To rename an existing table:
+To rename it back:
+SELECT * FROM users;
+SELECT name, email FROM users;
+RENAME TABLE users TO customers;
+RENAME TABLE customers TO users;",[ 0.06798497  0.01290518  0.02148643  0.0087214  -0.07610308]...
+2320a82a-e9f1-4de7-9066-a4d4d70b0171,MySQL Handbook.pdf,9,"Altering a Table
+You can use ALTER TABLE  to modify an existing table.
+Add a Column
+Drop a Column
+Modify a Column Type
+Move a Column to the First Position
+To move a column (e.g., email ) to the first position:
+To move a column after another column (e.g., move gender  after name ):
+ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+ALTER TABLE users DROP COLUMN is_active;
+ALTER TABLE users MODIFY COLUMN name VARCHAR(150);
+ALTER TABLE users MODIFY COLUMN email VARCHAR(100) FIRST;
+ALTER TABLE users MODIFY COLUMN gender ENUM('Male', 'Female', 'Other') AFTER name;",[ 0.01663519 -0.04360799 -0.03337044  0.02961013 -0.02088122]...
+1da6a5a5-2da6-4921-9b66-5ee2eeef9fbf,MySQL Handbook.pdf,10,"Inserting Data into MySQL Tables
+To add data into a table, we use the INSERT INTO  statement.
+Insert Without Specifying Column Names (Full Row
+Insert)
+This method requires you to provide values for all columns in order, except
+columns with default values or AUTO_INCREMENT .
+Not recommended if your table structure might change (e.g., new columns
+added later).
+Insert by Specifying Column Names (Best Practice)
+This method is safer and more readable. You only insert into specific columns.
+or for multiple rows:
+INSERT INTO users VALUES
+(1, 'Alice', 'alice@example.com', 'Female', '1995-05-14', DEFAULT);
+INSERT INTO users (name, email, gender, date_of_birth) VALUES
+('Bob', 'bob@example.com', 'Male', '1990-11-23');
+INSERT INTO users (name, email, gender, date_of_birth) VALUES
+('Bob', 'bob@example.com', 'Male', '1990-11-23'),
+('Charlie', 'charlie@example.com', 'Other', '1988-02-17');",[ 0.01198001  0.01281725 -0.00188993  0.04812572 -0.08371171]...
+8263c3e1-1e4d-4d7d-856c-f9d339365abf,MySQL Handbook.pdf,11,"The remaining columns like id  (which is AUTO_INCREMENT ) and created_at
+(which has a default) are automatically handled by MySQL.
+Insert Multiple Rows at Once
+This is more efficient than inserting rows one by one.
+INSERT INTO users (name, email, gender, date_of_birth) VALUES
+('Charlie', 'charlie@example.com', 'Other', '1988-02-17'),
+('David', 'david@example.com', 'Male', '2000-08-09'),
+('Eva', 'eva@example.com', 'Female', '1993-12-30');",[-0.01075762 -0.00894687 -0.03445601  0.01862262 -0.02280255]...
+96183adf-6343-43cd-92d3-8f787a65364d,MySQL Handbook.pdf,12,"Querying Data in MySQL using SELECT
+The SELECT  statement is used to query data from a table.
+Basic Syntax
+To select all columns:
+Filtering Rows with WHERE
+Equal To
+Not Equal To
+SELECT column1, column2 FROM table_name;
+SELECT * FROM users;
+SELECT * FROM users WHERE gender = 'Male';
+SELECT * FROM users WHERE gender != 'Female';
+-- or
+SELECT * FROM users WHERE gender <> 'Female';",[ 0.02830468  0.04928769  0.01270646  0.04419865 -0.05542672]...
+f6eb47eb-80b4-4992-9cdb-21cbb322279e,MySQL Handbook.pdf,13,"Greater Than / Less Than
+Greater Than or Equal / Less Than or Equal
+Working with NULL
+IS NULL
+IS NOT NULL
+BETWEEN
+SELECT * FROM users WHERE date_of_birth < '1995-01-01';
+SELECT * FROM users WHERE id > 10;
+SELECT * FROM users WHERE id >= 5;
+SELECT * FROM users WHERE id <= 20;
+SELECT * FROM users WHERE date_of_birth IS NULL;
+SELECT * FROM users WHERE date_of_birth IS NOT NULL;
+SELECT * FROM users WHERE date_of_birth BETWEEN '1990-01-01' AND '2000-12-31';",[ 0.00301533  0.11509404  0.0713611  -0.02802746 -0.0493421 ]...
+a74b3dd2-ab9a-4180-b68a-058f505f6038,MySQL Handbook.pdf,14,"IN
+LIKE (Pattern Matching)
+AND / OR
+ORDER BY
+LIMIT
+SELECT * FROM users WHERE gender IN ('Male', 'Other');
+SELECT * FROM users WHERE name LIKE 'A%';
+-- Starts with A
+SELECT * FROM users WHERE name LIKE '%a';
+-- Ends with a
+SELECT * FROM users WHERE name LIKE '%li%'; -- Contains 'li'
+SELECT * FROM users WHERE gender = 'Female' AND date_of_birth > '1990-01-01';
+SELECT * FROM users WHERE gender = 'Male' OR gender = 'Other';
+SELECT * FROM users ORDER BY date_of_birth ASC;
+SELECT * FROM users ORDER BY name DESC;
+SELECT * FROM users LIMIT 5;
+-- Top 5 rows
+SELECT * FROM users LIMIT 10 OFFSET 5;
+-- Skip first 5 rows, then get next 10
+SELECT * FROM users LIMIT 5, 10;
+-- Get 10 rows starting from the 6th row (Same as",[-0.05016651  0.02283322  0.06563456 -0.01475597 -0.03766766]...
+19ed2510-9b38-43cf-82b6-8802a5895bf7,MySQL Handbook.pdf,15,"Quick Quiz
+What does the following queries do?
+above)
+SELECT * FROM users ORDER BY created_at DESC LIMIT 10;
+SELECT * FROM users WHERE salary > 60000 ORDER BY created_at DESC LIMIT 5;
+SELECT * FROM users ORDER BY salary DESC;
+SELECT * FROM users WHERE salary BETWEEN 50000 AND 70000;",[-0.03358653  0.01347302  0.01613095  0.01991894 -0.06820761]...
+1d53433d-8ec1-47ba-8f27-9f10de74baab,MySQL Handbook.pdf,16,"UPDATE - Modifying Existing Data
+The UPDATE  statement is used to change values in one or more rows.
+Basic Syntax
+Example: Update One Column
+This changes the name of the user with id = 1  to “Alicia”.
+Example: Update Multiple Columns
+Without WHERE Clause (Warning)
+UPDATE table_name
+SET column1 = value1, column2 = value2
+WHERE condition;
+UPDATE users
+SET name = 'Alicia'
+WHERE id = 1;
+UPDATE users
+SET name = 'Robert', email = 'robert@example.com'
+WHERE id = 2;
+UPDATE users
+SET gender = 'Other';",[-0.0073592   0.01433179 -0.0177978   0.00884373 -0.07036594]...
+2d71b2e2-c851-4e73-8d95-d6c0f8fce49d,MySQL Handbook.pdf,17,"This updates every row in the table. Be very careful when omitting the WHERE
+clause.
+Quick Quiz: Practice Your UPDATE  Skills
+Try answering or running these queries based on your users  table.
+1. Update the salary of user with id = 5  to ₹70,000.
+2. Change the name of the user with email aisha@example.com
+to Aisha Khan .
+3. Increase salary by ₹10,000 for all users whose salary is less
+than ₹60,000.
+UPDATE users
+SET salary = 70000
+WHERE id = 5;
+UPDATE users
+SET name = 'Aisha Khan'
+WHERE email = 'aisha@example.com';
+UPDATE users
+SET salary = salary + 10000
+WHERE salary < 60000;",[ 0.02093451  0.06255306  0.01042369 -0.01184004 -0.07358288]...
+293fb4e4-177b-4106-9e78-69a62cfb569f,MySQL Handbook.pdf,18,"4. Set the gender of user Ishaan  to Other .
+5. Reset salary of all users to ₹50,000 (Careful - affects all rows).
+Note: This query will overwrite salary for every user. Use with caution!
+UPDATE users
+SET gender = 'Other'
+WHERE name = 'Ishaan';
+UPDATE users
+SET salary = 50000;",[ 0.00238163  0.09075776 -0.05306182  0.02558601 -0.13310631]...
+39bfd9c5-d5b0-495c-96ca-fd872bf076b8,MySQL Handbook.pdf,19,"DELETE - Removing Data from a Table
+The DELETE  statement removes rows from a table.
+Basic Syntax
+Example: Delete One Row
+Delete Multiple Rows
+Delete All Rows (but keep table structure)
+Drop the Entire Table (use with caution)
+DELETE FROM table_name
+WHERE condition;
+DELETE FROM users
+WHERE id = 3;
+DELETE FROM users
+WHERE gender = 'Other';
+DELETE FROM users;
+DROP TABLE users;",[-0.00888226  0.04060065 -0.00101145  0.00999849  0.01135896]...
+6a13e28e-3d40-4741-9f2a-b3ddddd9da57,MySQL Handbook.pdf,20,"This removes the table structure and all data permanently.
+Best Practices
+Always use WHERE  unless you’re intentionally updating/deleting everything.
+Consider running a SELECT  with the same WHERE  clause first to confirm what
+will be affected:
+Always back up important data before performing destructive operations.
+Quick Quiz: Practice Your DELETE  Skills
+what will happen if you run these queries?
+• 
+• 
+SELECT * FROM users WHERE id = 3;
+• 
+DELETE FROM users
+WHERE salary < 50000;
+DELETE FROM users
+WHERE salary IS NULL;",[-0.01445116  0.09456661 -0.00777943  0.02818502  0.00091901]...
+d4010607-9c7b-4ba5-9c26-91fa5ae8a72f,MySQL Handbook.pdf,21,"MySQL Constraints
+Constraints in MySQL are rules applied to table columns to ensure the accuracy, 
+validity, and integrity of the data.
+1. UNIQUE  Constraint
+Ensures that all values in a column are different.
+Example (during table creation):
+Add UNIQUE  using ALTER TABLE :
+2. NOT NULL  Constraint
+Ensures that a column cannot contain NULL values.
+CREATE TABLE users (
+id INT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE
+);
+ALTER TABLE users
+ADD CONSTRAINT unique_email UNIQUE (email);",[-0.02077326  0.01430528 -0.02880393 -0.04030842 -0.0125437 ]...
+450f617a-3b91-4849-9a93-b5aae858fbe6,MySQL Handbook.pdf,22,"Example:
+Change an existing column to NOT NULL:
+Make a column nullable again:
+3. CHECK  Constraint
+Ensures that values in a column satisfy a specific condition.
+Example: Allow only dates of birth after Jan 1, 2000
+Naming the constraint ( chk_dob ) helps if you want to drop it later.
+4. DEFAULT  Constraint
+Sets a default value for a column if none is provided during insert.
+CREATE TABLE users (
+id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+ALTER TABLE users
+MODIFY COLUMN name VARCHAR(100) NOT NULL;
+ALTER TABLE users
+MODIFY COLUMN name VARCHAR(100) NULL;
+ALTER TABLE users
+ADD CONSTRAINT chk_dob CHECK (date_of_birth > '2000-01-01');",[-0.01997333  0.09506141 -0.06807028 -0.00424929 -0.06262209]...
+9991d48c-a08c-4a49-9eca-c8a71693143c,MySQL Handbook.pdf,23,"Example:
+Add DEFAULT using ALTER TABLE :
+5. PRIMARY KEY  Constraint
+Uniquely identifies each row. Must be NOT NULL and UNIQUE.
+Example:
+Add later with ALTER TABLE :
+6. AUTO_INCREMENT
+Used with PRIMARY KEY  to automatically assign the next number.
+CREATE TABLE users (
+id INT PRIMARY KEY,
+    is_active BOOLEAN DEFAULT TRUE
+);
+ALTER TABLE users
+ALTER COLUMN is_active SET DEFAULT TRUE;
+CREATE TABLE users (
+id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+ALTER TABLE users
+ADD PRIMARY KEY (id);",[-0.00044026 -0.03951897 -0.07151055 -0.02376528 -0.12493873]...
+643fd3c0-a6ab-4c43-8819-dbb6361712e3,MySQL Handbook.pdf,24,"Example:
+Each new row gets the next available integer value in id .
+Summary Table
+Constraint
+Purpose
+UNIQUE
+Prevents duplicate values
+NOT NULL
+Ensures value is not NULL
+CHECK
+Restricts values using a condition
+DEFAULT
+Sets a default value
+PRIMARY KEY
+Uniquely identifies each row
+AUTO_INCREMENT
+Automatically generates unique numbers
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100)
+);",[-0.05058873  0.02671791 -0.06506193 -0.04129002 -0.0875547 ]...
+3f172802-f7d3-475d-a97d-75fbb9b358a2,MySQL Handbook.pdf,25,"SQL Functions (MySQL)
+SQL functions help you analyze, transform, or summarize data in your tables.
+We’ll use the users  table which includes:
+id , name , email , gender , date_of_birth , salary , created_at
+1. Aggregate Functions
+These return a single value from a set of rows.
+COUNT()
+Count total number of users:
+Count users who are Female:
+MIN()  and MAX()
+Get the minimum and maximum salary:
+• 
+SELECT COUNT(*) FROM users;
+SELECT COUNT(*) FROM users WHERE gender = 'Female';
+SELECT MIN(salary) AS min_salary, MAX(salary) AS max_salary FROM users;",[ 0.04120646  0.06576832  0.00601201  0.03602826 -0.09185258]...
+dd4734b2-14e9-432d-bdf2-049d73bd2f60,MySQL Handbook.pdf,26,"SUM()
+Calculate total salary payout:
+AVG()
+Find average salary:
+Grouping with GROUP BY
+Average salary by gender:
+2. String Functions
+LENGTH()
+Length of user names:
+SELECT SUM(salary) AS total_payroll FROM users;
+SELECT AVG(salary) AS avg_salary FROM users;
+SELECT gender, AVG(salary) AS avg_salary
+FROM users
+GROUP BY gender;
+SELECT name, LENGTH(name) AS name_length FROM users;",[ 0.06070103  0.12334826 -0.00416107  0.0625195  -0.12142146]...
+85010bab-b40d-4469-a932-b38eda8af5b1,MySQL Handbook.pdf,27,"LOWER()  and UPPER()
+Convert names to lowercase or uppercase:
+CONCAT()
+Combine name and email:
+3. Date Functions
+NOW()
+Current date and time:
+YEAR() , MONTH() , DAY()
+Extract parts of date_of_birth :
+SELECT name, LOWER(name) AS lowercase_name FROM users;
+SELECT name, UPPER(name) AS uppercase_name FROM users;
+SELECT CONCAT(name, ' <', email, '>') AS user_contact FROM users;
+SELECT NOW();
+SELECT name, YEAR(date_of_birth) AS birth_year FROM users;",[ 0.05911211  0.0958077   0.08468518 -0.00919088 -0.04406713]...
+0f052b3f-d3ce-4ffb-b2b8-58db8feb3f10,MySQL Handbook.pdf,28,"DATEDIFF()
+Find number of days between today and birthdate:
+TIMESTAMPDIFF()
+Calculate age in years:
+4. Mathematical Functions
+ROUND() , FLOOR() , CEIL()
+MOD()
+Find even or odd user IDs:
+SELECT name, DATEDIFF(CURDATE(), date_of_birth) AS days_lived FROM users;
+SELECT name, TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) AS age FROM users;
+SELECT salary,
+       ROUND(salary) AS rounded,
+       FLOOR(salary) AS floored,
+       CEIL(salary) AS ceiled
+FROM users;
+SELECT id, MOD(id, 2) AS remainder FROM users;",[ 0.04882063  0.12855673 -0.02953112  0.01595524 -0.03790756]...
+14aa41c0-5549-48a0-8ef9-186d897587fc,MySQL Handbook.pdf,29,"5. Conditional Functions
+IF()
+Summary Table
+Function
+Purpose
+COUNT()
+Count rows
+SUM()
+Total of a column
+AVG()
+Average of values
+MIN() / MAX()
+Lowest / highest value
+LENGTH()
+String length
+CONCAT()
+Merge strings
+YEAR() / DATEDIFF()
+Date breakdown / age
+ROUND()
+Rounding numbers
+IF()
+Conditional logic
+SELECT name, gender,
+       IF(gender = 'Female', 'Yes', 'No') AS is_female
+FROM users;",[ 0.08603948  0.07070246  0.02572976  0.02266703 -0.07108074]...
+ccbbf489-908f-4e1d-8de8-e0a9582387f8,MySQL Handbook.pdf,30,"MySQL Transactions and AutoCommit
+By default, MySQL operates in AutoCommit mode. This means that every SQL
+statement is treated as a transaction and is committed automatically. However, for
+more control over when changes are saved, you can turn AutoCommit off and
+manage transactions manually.
+1. Disabling AutoCommit
+When AutoCommit is off, you can explicitly control when to commit or rollback
+changes.
+To disable AutoCommit:
+This turns off AutoCommit, meaning that changes you make won’t be saved to the
+database unless you explicitly tell MySQL to commit them.
+Important: Until you execute a COMMIT , your changes are not permanent.
+2. COMMIT — Save Changes to the Database
+Once you’ve made changes and you’re confident that everything is correct, you can
+use the COMMIT  command to save those changes.
+To commit a transaction:
+SET autocommit = 0;
+COMMIT;",[ 0.06278446 -0.0077458  -0.05201011  0.04056993 -0.06528098]...
+36b94c8f-6845-4551-b611-81be7e25bc6f,MySQL Handbook.pdf,31,"This saves all the changes made since the last COMMIT  or ROLLBACK . After this
+point, the changes become permanent.
+3. ROLLBACK — Revert Changes to the Last Safe Point
+If you make an error or decide you don’t want to save your changes, you can 
+rollback the transaction to its previous state.
+To rollback a transaction:
+This undoes all changes since the last COMMIT  or ROLLBACK .
+Example Workflow
+Here’s a simple example of using COMMIT  and ROLLBACK  in a transaction:
+Turn off AutoCommit:
+Make some changes (e.g., updating a salary):
+Decide whether to commit or rollback:
+If you’re happy with the changes, run:
+If you’re not happy and want to revert the changes, run:
+ROLLBACK;
+1. 
+SET autocommit = 0;
+2. 
+UPDATE users SET salary = 80000 WHERE id = 5;
+3. 
+1. 
+COMMIT;
+2.",[-0.05259067  0.10939336 -0.08981027  0.02841741 -0.06517687]...
+b7a7ac73-6099-4315-b8a9-2c7745aeb6be,MySQL Handbook.pdf,32,"4. Enabling AutoCommit Again
+If you want to turn AutoCommit back on (so that every statement is automatically
+committed), you can do so with:
+Best Practices
+Use COMMIT  when you want to make changes permanent.
+Use ROLLBACK  to discard changes if something goes wrong.
+Consider disabling AutoCommit when performing complex updates to avoid
+saving partial or incorrect data.
+ROLLBACK;
+SET autocommit = 1;
+• 
+• 
+•",[ 0.00085607  0.06358294 -0.0107192   0.04849719  0.00167602]...
+1238d838-4ba1-4846-a45c-bf719de43df4,MySQL Handbook.pdf,33,"Understanding PRIMARY KEY  in MySQL
+A PRIMARY KEY  is a constraint in SQL that uniquely identifies each row in a table.
+It is one of the most important concepts in database design.
+What is a Primary Key?
+A PRIMARY KEY :
+Must be unique
+Cannot be NULL
+Is used to identify rows in a table
+Can be a single column or a combination of columns
+Each table can have only one primary key
+Example:
+How Is PRIMARY KEY  Different from UNIQUE ?
+At first glance, PRIMARY KEY  and UNIQUE  might seem similar since both prevent
+duplicate values. But there are important differences:
+• 
+• 
+• 
+• 
+• 
+• 
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100)
+);",[-0.06273657  0.02124054 -0.05898272 -0.05524625 -0.05109616]...
+1cbb8902-b79b-4dea-babb-a96dccb91d7a,MySQL Handbook.pdf,34,"Feature
+PRIMARY KEY
+UNIQUE
+Must be
+unique
+Yes
+Yes
+Allows NULL
+values
+No
+Yes (one or more NULLs
+allowed)
+How many
+allowed
+Only one per table
+Can have multiple
+Required by
+table
+Recommended, often
+required
+Optional
+Dropping
+Cannot be easily dropped
+Can be dropped anytime
+Example with UNIQUE
+In this example:
+id  is the unique identifier for each row.
+email  must be unique, but is not the primary key.
+Can I Drop a PRIMARY KEY?
+Yes, but it is more restricted than dropping a UNIQUE  constraint.
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE,
+    name VARCHAR(100)
+);
+• 
+• 
+ALTER TABLE users DROP PRIMARY KEY;",[-0.01151524  0.00982311  0.01396027 -0.03763187 -0.02102272]...
+279d5cb1-7357-4867-aefa-23be76746b5c,MySQL Handbook.pdf,35,"This may fail if the primary key is being used elsewhere (like in a foreign key
+or auto_increment column).
+To drop a UNIQUE  constraint:
+Auto Increment
+In MySQL, a PRIMARY KEY  is often used with the AUTO_INCREMENT  attribute to
+automatically generate unique values for new rows.
+This means that every time you insert a new row, MySQL will automatically assign a
+unique value to the id  column. You can change the starting value of 
+AUTO_INCREMENT  using:
+Key Takeaways
+Use PRIMARY KEY  for the main identifier of a row.
+Use UNIQUE  for enforcing non-duplicate values in other columns (like email
+or phone).
+You can have only one primary key, but you can have many unique
+constraints.
+ALTER TABLE users DROP INDEX email;
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100)
+);
+ALTER TABLE users AUTO_INCREMENT = 1000;
+• 
+• 
+•",[-0.0595096  -0.0214655   0.00120943 -0.04513649 -0.08503351]...
+d89cd403-8a0b-4ba1-9e30-36812663b0bf,MySQL Handbook.pdf,36,"Foreign Keys in MySQL
+A foreign key is a column that creates a link between two tables. It ensures that
+the value in one table must match a value in another table.
+This is used to maintain data integrity between related data.
+Why Use Foreign Keys?
+Imagine this scenario:
+You have a users  table. Now you want to store each user’s address. Instead of
+putting address columns inside the users  table, you create a separate 
+addresses  table, and link it to users  using a foreign key.
+Creating a Table with a Foreign Key
+Let’s create an addresses  table where each address belongs to a user.
+CREATE TABLE addresses (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    street VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    pincode VARCHAR(10),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);",[-0.01474877 -0.03533999  0.01915111 -0.03430266 -0.01030857]...
+b9b67891-1cd5-41bf-81ce-43af938cc9d6,MySQL Handbook.pdf,37,"Explanation:
+user_id  is a foreign key.
+It references the id  column in the users  table.
+This ensures that every address must be linked to a valid user.
+Dropping a Foreign Key
+To drop a foreign key, you need to know its constraint name. MySQL auto-
+generates it if you don’t specify one, or you can name it yourself:
+To drop it:
+Adding a Foreign Key Later (Using ALTER)
+Suppose the foreign key was not defined during table creation. You can add it
+later using ALTER TABLE :
+• 
+• 
+• 
+CREATE TABLE addresses (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+ALTER TABLE addresses
+DROP FOREIGN KEY fk_user;
+ALTER TABLE addresses
+ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id);",[ 0.0032103  -0.00652895  0.02015104 -0.01328048 -0.05275716]...
+a1b9cc29-99ef-42c3-a456-dfde0e6c08d2,MySQL Handbook.pdf,38,"Adding ON DELETE  Action
+By default, if you delete a user that has related addresses, MySQL will throw an
+error. You can control this behavior with ON DELETE .
+Example with ON DELETE CASCADE :
+If you want addresses to be automatically deleted when the user is deleted:
+Or alter it later:
+Other ON DELETE Options
+ON DELETE
+Option
+Behavior
+CASCADE
+Deletes all related rows in child table
+SET NULL
+Sets the foreign key to NULL in the child table
+RESTRICT
+Prevents deletion of parent if child exists (default)
+CREATE TABLE addresses (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    street VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    pincode VARCHAR(10),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+ALTER TABLE addresses
+ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE 
+CASCADE;",[-0.00637079 -0.06917095 -0.00203773 -0.02744508 -0.04082479]...
+8a5a2857-ef64-483c-8787-abe4db767fd8,MySQL Handbook.pdf,39,"Summary
+Foreign keys connect tables and enforce valid references.
+You can create them inline or with ALTER TABLE .
+You can drop them by name.
+Use ON DELETE  to control what happens when the parent row is deleted.
+• 
+• 
+• 
+•",[-0.07750672 -0.01644856 -0.05189629 -0.0169663   0.01978301]...
+a61e529c-4917-4f49-9edc-05679825715b,MySQL Handbook.pdf,40,"SQL JOINs in MySQL
+In SQL, JOINs are used to combine rows from two or more tables based on related
+columns — usually a foreign key in one table referencing a primary key in another.
+We’ll use the following two tables:
+users  table
+id
+name
+1
+Aarav
+2
+Sneha
+3
+Raj
+addresses  table
+id
+user_id
+city
+1
+1
+Mumbai
+2
+2
+Kolkata
+3
+4
+Delhi
+Note: user_id  is a foreign key that references users.id .
+1. INNER JOIN
+Returns only the matching rows from both tables.",[ 0.0043586  -0.0107172   0.00117941  0.01928665 -0.03829151]...
+4b10cdd8-8524-4395-8a56-d6ca7d200502,MySQL Handbook.pdf,41,"Output:
+name
+city
+Aarav
+Mumbai
+Sneha
+Kolkata
+Raj  is excluded because there is no matching address. Delhi  is excluded
+because its user_id  (4) is not in users .
+Visual Representation:
+2. LEFT JOIN
+Returns all rows from the left table ( users ), and matching rows from the right
+table ( addresses ). If no match is found, NULLs are returned.
+SELECT users.name, addresses.city
+FROM users
+INNER JOIN addresses ON users.id = addresses.user_id;
+users          addresses
+-----
+------
+|
+1
+|
+|
+1
+|
+|
+2
+|
+|
+2
+|
+|
+|
+|
+|
+=> only matching pairs
+SELECT users.name, addresses.city
+FROM users
+LEFT JOIN addresses ON users.id = addresses.user_id;",[ 0.07055119  0.04378163  0.0509379   0.02969078 -0.00805376]...
+2d2c2a68-4109-4414-bbdb-6403997cf6b3,MySQL Handbook.pdf,42,"Output:
+name
+city
+Aarav
+Mumbai
+Sneha
+Kolkata
+Raj
+NULL
+Raj  is shown even though he doesn’t have an address.
+Visual Representation:
+3. RIGHT JOIN
+Returns all rows from the right table ( addresses ), and matching rows from the
+left table ( users ). If no match is found, NULLs are returned.
+Output:
+name
+city
+Aarav
+Mumbai
+Sneha
+Kolkata
+users          addresses
+-----
+------
+|
+1
+|
+|
+1
+|
+|
+2
+|
+|
+2
+|
+|
+3
+|
+|
+|
+=> all users + matched addresses (or NULL)
+SELECT users.name, addresses.city
+FROM users
+RIGHT JOIN addresses ON users.id = addresses.user_id;",[ 0.03825166  0.03135386  0.02596842  0.04178539 -0.03184666]...
+cfa72f7e-6944-4fad-9593-3c14ebd8d16a,MySQL Handbook.pdf,43,"name
+city
+NULL
+Delhi
+Delhi  is shown even though it points to a user_id  that doesn’t exist.
+Visual Representation:
+Summary Table
+JOIN Type
+Description
+INNER JOIN
+Only matching rows from both tables
+LEFT JOIN
+All rows from left table + matching from right
+RIGHT JOIN
+All rows from right table + matching from left
+users          addresses
+-----
+------
+|
+1
+|
+|
+1
+|
+|
+2
+|
+|
+2
+|
+|
+|
+|
+4
+|
+=> all addresses + matched users (or NULL)",[ 0.04758934  0.00837632  0.0112631   0.040044   -0.0407793 ]...
+915f0018-97ab-485d-bdd1-a79ea722ad6e,MySQL Handbook.pdf,44,"SQL UNION  and UNION ALL
+The UNION  operator in SQL is used to combine the result sets of two or more 
+SELECT  statements. It removes duplicates by default.
+If you want to include all rows including duplicates, use UNION ALL .
+Example Scenario
+You already have a users  table for active users. Now, we’ll create an 
+admin_users  table to store users who are administrators or have special roles. We
+will then combine the names from both tables using UNION .
+Step 1: Create the admin_users  Table
+CREATE TABLE admin_users (
+id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    gender ENUM('Male', 'Female', 'Other'),
+    date_of_birth DATE,
+    salary INT
+);",[ 0.00754531  0.03352071  0.03347604  0.0370124  -0.0644231 ]...
+858f114d-d74d-4423-864d-697afd4284cc,MySQL Handbook.pdf,45,"Step 2: Insert Sample Data into admin_users
+Step 3: Use UNION  to Combine Data
+Let’s combine the active and admin user names.
+This returns a single list of unique names from both tables.
+UNION ALL  Example
+If you want to keep duplicate names (if any), use UNION ALL .
+Using More Than One Column
+You can also select multiple columns as long as both SELECT  queries return the 
+same number of columns with compatible types.
+INSERT INTO admin_users (id, name, email, gender, date_of_birth, salary) VALUES
+(101, 'Anil Kumar', 'anil@example.com', 'Male', '1985-04-12', 60000),
+(102, 'Pooja Sharma', 'pooja@example.com', 'Female', '1992-09-20', 58000),
+(103, 'Rakesh Yadav', 'rakesh@example.com', 'Male', '1989-11-05', 54000),
+(104, 'Fatima Begum', 'fatima@example.com', 'Female', '1990-06-30', 62000);
+SELECT name FROM users
+UNION
+SELECT name FROM admin_users;
+SELECT name FROM users
+UNION ALL
+SELECT name FROM admin_users;",[ 0.02246815 -0.00913017 -0.01540062  0.05576317 -0.07907812]...
+e13bb05f-4f5c-4c28-bfcc-438c0172e2ed,MySQL Handbook.pdf,46,"Adding separate roles
+Using Order By with UNION
+Rules of UNION
+The number of columns and their data types must match in all SELECT
+statements.
+UNION  removes duplicates by default.
+UNION ALL  keeps duplicates.
+SELECT name, salary FROM users
+UNION
+SELECT name, salary FROM admin_users;
+SELECT name, 'User' AS role FROM users
+UNION
+SELECT name, 'Admin' AS role FROM admin_users;
+SELECT name FROM users
+UNION
+SELECT name FROM admin_users
+ORDER BY name;
+1. 
+2. 
+3.",[ 0.02662625 -0.0184251   0.05616301  0.03376834 -0.0912678 ]...
+01581769-9c9e-4f4b-8999-680a953f4e7e,MySQL Handbook.pdf,47,"When to Use UNION
+When you have two similar tables (like current and archived data).
+When you need to combine filtered results (e.g., high-salary users from two
+sources).
+When performing cross-category reporting.
+Summary
+Operator
+Behavior
+UNION
+Combines results, removes duplicates
+UNION ALL
+Combines results, keeps duplicates
+• 
+• 
+•",[-0.00690754  0.05291736 -0.00893096  0.03207447 -0.01551391]...
+8d09d397-5fe8-4343-9c4d-5e533ea9f375,MySQL Handbook.pdf,48,"Self JOIN in MySQL
+A Self JOIN is a regular join, but the table is joined with itself.
+This is useful when rows in the same table are related to each other. For example,
+when users refer other users, and we store the ID of the person who referred them
+in the same users  table.
+Step 1: Add a referred_by_id  Column
+We’ll extend the existing users  table to include a column called referred_by_id ,
+which holds the id  of the user who referred them.
+This column:
+Will be NULL for users who were not referred.
+Will contain the id  of another user who referred them.
+Step 2: Insert Referral Data (Optional)
+Assuming id = 1  is the first user, and referred others:
+ALTER TABLE users
+ADD COLUMN referred_by_id INT;
+• 
+• 
+UPDATE users SET referred_by_id = 1 WHERE id IN (2, 3); -- User 1 referred Users 2
+and 3
+UPDATE users SET referred_by_id = 2 WHERE id = 4;
+-- User 2 referred User 4",[ 0.0009664  -0.01205213 -0.05010667 -0.02029971 -0.11358978]...
+fc58d3a5-dcde-4dd4-b1c6-5fdc7ea6ab01,MySQL Handbook.pdf,49,"Step 3: Use a Self JOIN to Get Referrer Names
+We want to get each user’s name along with the name of the person who referred
+them.
+Explanation:
+a  refers to the user being queried.
+b  refers to the user who referred them.
+LEFT JOIN  is used so that users with NULL  in referred_by_id  are also
+included.
+Sample Output:
+id
+user_name
+referred_by
+1
+Aarav
+NULL
+2
+Sneha
+Aarav
+3
+Raj
+Aarav
+4
+Fatima
+Sneha
+Summary
+Use Self JOIN when you need to join a table with itself.
+In referral-based relationships, store the referrer’s id  in the same table.
+SELECT 
+  a.id,
+  a.name AS user_name,
+  b.name AS referred_by
+FROM users a
+INNER JOIN users b ON a.referred_by_id = b.id;
+• 
+• 
+• 
+• 
+•",[ 0.02086516  0.00766975 -0.04028478  0.01533175 -0.11291896]...
+44fe056c-fea3-4cf1-b3d4-3ec2fd4bed64,MySQL Handbook.pdf,50,"Use aliases like a  and b  to differentiate the two instances of the same table.
+•",[ 0.0224316  -0.03586037 -0.01288433 -0.011317   -0.03684267]...
+bab30467-f502-4dfe-9973-c0df5308f312,MySQL Handbook.pdf,51,"MySQL Views
+A view in MySQL is a virtual table based on the result of a SELECT  query. It does
+not store data itself — it always reflects the current data in the base tables.
+Views are useful when:
+You want to simplify complex queries
+You want to reuse logic
+You want to hide certain columns from users
+You want a “live snapshot” of filtered data
+Creating a View
+Suppose we want a view that lists all users earning more than ₹70,000.
+Querying the View
+This will return all users from the users  table where salary is above ₹70,000.
+• 
+• 
+• 
+• 
+CREATE VIEW high_salary_users AS
+SELECT id, name, salary
+FROM users
+WHERE salary > 70000;
+SELECT * FROM high_salary_users;",[ 0.00510165  0.0441374  -0.09868447 -0.01714202 -0.05466728]...
+ad17b94a-cd5c-45ec-809a-7afc9adb69e0,MySQL Handbook.pdf,52,"Demonstrating That a View is Always Up-To-Date
+Let’s see what happens when the underlying data changes.
+Step 1: View before update
+Output:
+id
+name
+salary
+2
+Sneha
+75000
+5
+Fatima
+80000
+Step 2: Update a user’s salary
+Step 3: Query the view again
+New Output:
+id
+name
+salary
+2
+Sneha
+75000
+5
+Fatima
+80000
+3
+Raj
+72000
+Notice how Raj is now included in the view — without updating the view
+itself. That’s because views always reflect live data from the original table.
+SELECT * FROM high_salary_users;
+UPDATE users
+SET salary = 72000
+WHERE name = 'Raj';
+SELECT * FROM high_salary_users;",[-0.04364037  0.00145798 -0.04252225  0.00654172 -0.02317458]...
+411bd7e5-06d0-4bf3-b570-142a9b06fb20,MySQL Handbook.pdf,53,"Dropping a View
+To remove a view:
+Summary
+Views act like saved SELECT queries
+Views are not duplicated data
+Changes to base tables are reflected automatically
+Great for simplifying complex queries or creating filtered access
+DROP VIEW high_salary_users;
+• 
+• 
+• 
+•",[-0.03096075  0.00807696  0.00817634  0.0538173   0.00432953]...
+75baa46e-6533-4b4d-9a8b-a48e89857446,MySQL Handbook.pdf,54,"MySQL Indexes
+Indexes in MySQL are used to speed up data retrieval. They work like the index of
+a book — helping the database engine find rows faster, especially for searches,
+filters, and joins.
+Viewing Indexes on a Table
+To see the indexes on a table, use:
+This shows all the indexes currently defined on the users  table, including the
+automatically created primary key index.
+Creating a Single-Column Index
+Suppose you’re frequently searching users by their email . You can speed this up
+by indexing the email  column.
+What this does:
+Creates an index named idx_email
+Improves performance of queries like:
+SHOW INDEXES FROM users;
+CREATE INDEX idx_email ON users(email);
+• 
+• 
+SELECT * FROM users WHERE email = 'example@example.com';",[0.01319073 0.00862914 0.0150421  0.03752677 0.04975184]...
+b1700d7d-706d-4843-a2e2-a9a4eddab967,MySQL Handbook.pdf,55,"Important Notes
+Indexes consume extra disk space
+Indexes slow down INSERT , UPDATE , and DELETE  operations slightly
+(because the index must be updated)
+Use indexes only when needed (i.e., for columns used in WHERE , JOIN , 
+ORDER BY )
+Creating a Multi-Column Index
+If you often query users using both gender  and salary , a multi-column index is
+more efficient than separate indexes.
+Usage Example:
+This query can take advantage of the combined index on gender  and salary .
+Index Order Matters
+For a multi-column index on (gender, salary) :
+This works efficiently:
+• 
+• 
+• 
+CREATE INDEX idx_gender_salary ON users(gender, salary);
+SELECT * FROM users
+WHERE gender = 'Female' AND salary > 70000;
+• 
+WHERE gender = 'Female' AND salary > 70000",[ 0.04140544  0.05486092 -0.01534725  0.02549418 -0.01047524]...
+9e89fee9-22c5-4824-9fb8-6660f8a4f955,MySQL Handbook.pdf,56,"But this may not use the index effectively:
+Because the first column in the index ( gender ) is missing in the filter.
+Dropping an Index
+To delete an index:
+Summary
+Feature
+Description
+SHOW INDEXES
+View current indexes on a table
+CREATE INDEX
+Create single or multi-column indexes
+DROP INDEX
+Remove an index
+Use when
+Query performance on large tables is a concern
+Avoid on
+Columns that are rarely queried or always unique
+• 
+WHERE salary > 70000
+DROP INDEX idx_email ON users;",[0.04858853 0.07131866 0.06451632 0.07337253 0.05383183]...
+c4ddb411-4e0a-42bf-aa22-c6e8c526e111,MySQL Handbook.pdf,57,"Subqueries in MySQL
+A subquery is a query nested inside another query. Subqueries are useful for
+breaking down complex problems into smaller parts.
+They can be used in:
+SELECT  statements
+WHERE  clauses
+FROM  clauses
+Example Scenario: Salary Comparison
+Suppose we want to find all users who earn more than the average salary of all
+users.
+Scalar Subquery Example
+This subquery returns a single value — the average salary — and we compare each
+user’s salary against it.
+Explanation:
+The inner query: SELECT AVG(salary) FROM users  returns the average salary.
+• 
+• 
+• 
+SELECT id, name, salary
+FROM users
+WHERE salary > (
+    SELECT AVG(salary) FROM users
+);
+•",[-0.01220357  0.09084821  0.05811886  0.0361764  -0.06346479]...
+f6ee312c-c947-423c-a1b9-eaa51e1640ab,MySQL Handbook.pdf,58,"The outer query selects all users with a salary greater than that average.
+Subquery with IN
+Now let’s say we want to find users who have been referred by someone who earns
+more than ₹75,000.
+Explanation:
+The inner query: SELECT id FROM users WHERE salary > 75000  returns a list
+of user IDs (referrers) who earn more than ₹75,000.
+The outer query selects users whose referred_by_id  is in that list.
+Other Places Subqueries Are Used
+You can also use subqueries:
+Inside SELECT  columns (called scalar subqueries)
+In the FROM  clause to create derived tables
+Example in SELECT :
+This shows each user’s salary along with the overall average.
+• 
+SELECT id, name, referred_by_id
+FROM users
+WHERE referred_by_id IN (
+    SELECT id FROM users WHERE salary > 75000
+);
+• 
+• 
+• 
+• 
+SELECT name, salary,
+(SELECT AVG(salary) FROM users) AS average_salary
+FROM users;",[ 0.04205482  0.03922553  0.01261626  0.03844972 -0.04026844]...
+c96ba881-59df-456a-bde4-962fe938540b,MySQL Handbook.pdf,59,"Summary
+Subquery Type
+Use Case
+Scalar Subquery
+Returns one value (e.g. AVG, MAX)
+Subquery with IN
+Returns multiple values
+Subquery in SELECT
+Shows related calculated value
+Subquery in FROM
+Acts as a virtual table
+Subqueries are powerful tools when filtering based on computed or dynamic
+conditions.",[ 0.02503115  0.02109367  0.06652527 -0.01670766 -0.03303726]...
+e384c086-300e-44e0-87fc-8e08b9c702d8,MySQL Handbook.pdf,60,"GROUP BY and HAVING in MySQL
+The GROUP BY  clause is used to group rows that have the same values in
+specified columns. It is typically used with aggregate functions like COUNT , SUM , 
+AVG , MIN , or MAX .
+The HAVING  clause is used to filter groups after aggregation — similar to how 
+WHERE  filters individual rows.
+Example Table: users
+Assume this is your users  table:
+id
+name
+gender
+salary
+referred_by_id
+1
+Aarav
+Male
+80000
+NULL
+2
+Sneha
+Female
+75000
+1
+3
+Raj
+Male
+72000
+1
+4
+Fatima
+Female
+85000
+2
+5
+Priya
+Female
+70000
+NULL
+GROUP BY Example: Average Salary by Gender
+SELECT gender, AVG(salary) AS average_salary
+FROM users
+GROUP BY gender;",[ 0.03960333  0.09110183 -0.02283826  0.04814216 -0.04901165]...
+8014c4e1-da00-4c85-b1ca-8230fda8e5dd,MySQL Handbook.pdf,61,"Explanation:
+This groups users by gender.
+Then calculates the average salary for each group.
+GROUP BY with COUNT
+Find how many users were referred by each user:
+Output:
+referred_by_id
+total_referred
+1
+2
+2
+1
+HAVING Clause: Filtering Groups
+Let’s say we only want to show genders where the average salary is greater than
+₹75,000.
+• 
+• 
+SELECT referred_by_id, COUNT(*) AS total_referred
+FROM users
+WHERE referred_by_id IS NOT NULL
+GROUP BY referred_by_id;
+SELECT gender, AVG(salary) AS avg_salary
+FROM users
+GROUP BY gender
+HAVING AVG(salary) > 75000;",[ 0.08324148  0.09756091 -0.00952921  0.069645   -0.05373557]...
+0f5e623e-4bde-4dce-a1f6-40cbf4b61071,MySQL Handbook.pdf,62,"Why not WHERE ?
+WHERE  is used before grouping.
+HAVING  is used after groups are formed — it’s the only way to filter
+aggregated values.
+Another Example: Groups with More Than 1 Referral
+Summary
+Clause
+Purpose
+Can use
+aggregates?
+WHERE
+Filters rows before grouping
+No
+GROUP 
+BY
+Groups rows based on column values
+N/A
+HAVING
+Filters groups after aggregation
+Yes
+Use GROUP BY  to organize data, and HAVING  to filter those groups based on
+aggregate conditions.
+ROLLUP
+To get subtotals and grand totals, you can use ROLLUP :
+• 
+• 
+SELECT referred_by_id, COUNT(*) AS total_referred
+FROM users
+WHERE referred_by_id IS NOT NULL
+GROUP BY referred_by_id
+HAVING COUNT(*) > 1;",[ 0.04474799  0.02932798  0.02228625  0.03645261 -0.07030178]...
+9a31265c-0b55-4e43-b7d8-3fac983c8680,MySQL Handbook.pdf,63,"Explanation:
+This will give you a count of users by gender, along with a grand total for all
+users.
+SELECT gender, COUNT(*) AS total_users
+FROM users
+GROUP BY gender WITH ROLLUP;
+•",[ 0.11113977 -0.00886827 -0.01048851  0.03452361 -0.1072601 ]...
+76795c6c-231d-4b3b-8974-2838635af52f,MySQL Handbook.pdf,64,"Stored Procedures in MySQL
+A stored procedure is a saved SQL block that can be executed later. It’s useful
+when you want to encapsulate logic that can be reused multiple times — like
+queries, updates, or conditional operations.
+Why Change the Delimiter?
+By default, MySQL uses ;  to end SQL statements.
+But when defining stored procedures, we use ; inside the procedure as well. This
+can confuse MySQL. To avoid this, we temporarily change the delimiter (e.g. to 
+$$  or // ) while creating the procedure.
+Syntax for Creating a Stored Procedure
+After the procedure is created, we reset the delimiter back to ; .
+DELIMITER $$
+CREATE PROCEDURE procedure_name()
+BEGIN
+-- SQL statements go here
+END$$
+DELIMITER ;",[ 0.02328015  0.00954227  0.01124577 -0.03478153 -0.06543338]...
+dff1625d-cc20-46bb-b094-95c4b997d687,MySQL Handbook.pdf,65,"Creating a Procedure with Input Parameters
+Let’s say you want to create a stored procedure that inserts a new user into the 
+users  table.
+Example:
+This creates a procedure named AddUser  that accepts five input parameters.
+Calling the Procedure
+You can call the procedure using:
+This will insert the new user into the users  table.
+DELIMITER $$
+CREATE PROCEDURE AddUser(
+    IN p_name VARCHAR(100),
+    IN p_email VARCHAR(100),
+    IN p_gender ENUM('Male', 'Female', 'Other'),
+    IN p_dob DATE,
+    IN p_salary INT
+)
+BEGIN
+    INSERT INTO users (name, email, gender, date_of_birth, salary)
+    VALUES (p_name, p_email, p_gender, p_dob, p_salary);
+END$$
+DELIMITER ;
+CALL AddUser('Kiran Sharma', 'kiran@example.com', 'Female', '1994-06-15', 72000);",[ 0.00273999  0.03186481 -0.08709677 -0.02636236 -0.15504259]...
+67a80505-d5f6-47ae-b6b1-972af7a887fb,MySQL Handbook.pdf,66,"Notes
+Input parameters are declared using the IN  keyword.
+Stored procedures are stored in the database and can be reused.
+Viewing Stored Procedures
+Dropping a Stored Procedure
+Summary
+Command
+Purpose
+DELIMITER $$
+Temporarily change statement delimiter
+CREATE PROCEDURE
+Defines a new stored procedure
+CALL procedure_name(...)
+Executes a stored procedure
+DROP PROCEDURE
+Removes an existing procedure
+• 
+• 
+SHOW PROCEDURE STATUS WHERE Db = 'startersql';
+DROP PROCEDURE IF EXISTS AddUser;",[-0.02369163 -0.00118286 -0.06937164  0.03363818 -0.08359119]...
+354f7241-c66c-43ba-bfef-555459b695fe,MySQL Handbook.pdf,67,"Triggers in MySQL
+A trigger is a special kind of stored program that is automatically executed
+(triggered) when a specific event occurs in a table — such as INSERT , UPDATE , or 
+DELETE .
+Triggers are commonly used for:
+Logging changes
+Enforcing additional business rules
+Automatically updating related data
+Basic Trigger Structure
+Triggers can be fired:
+BEFORE  or AFTER  an event
+On INSERT , UPDATE , or DELETE
+Scenario: Log Every New User Insertion
+Suppose we want to log every time a new user is inserted into the users  table.
+We’ll create a separate table called user_log  to store log entries.
+• 
+• 
+• 
+CREATE TRIGGER trigger_name
+AFTER INSERT ON table_name
+FOR EACH ROW
+BEGIN
+-- statements to execute
+END;
+• 
+•",[ 0.01773829 -0.03186096 -0.01344322 -0.01166585 -0.02482522]...
+d98be71e-d326-4397-9ec9-03bdef4ca13f,MySQL Handbook.pdf,68,"Step 1: Create the Log Table
+Step 2: Create the Trigger
+We now define a trigger that runs after a new user is added.
+Explanation:
+AFTER INSERT  means the trigger fires after the user is inserted.
+NEW  refers to the new row being added to the users  table.
+We insert the new user’s ID and name into the user_log  table.
+CREATE TABLE user_log (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    name VARCHAR(100),
+    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+DELIMITER $$
+CREATE TRIGGER after_user_insert
+AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+    INSERT INTO user_log (user_id, name)
+    VALUES (NEW.id, NEW.name);
+END$$
+DELIMITER ;
+• 
+• 
+•",[ 0.03075411 -0.04044545 -0.03199752 -0.07723548 -0.08844882]...
+33e395b8-9611-46cc-bc62-8cd9b18bd084,MySQL Handbook.pdf,69,"Step 3: Test the Trigger
+Now check the user_log  table:
+You should see Ritika’s info automatically logged.
+Dropping a Trigger
+If you need to remove a trigger:
+Summary
+Trigger Component
+Description
+BEFORE  / AFTER
+When the trigger runs
+INSERT  / UPDATE  / 
+DELETE
+What kind of action triggers it
+NEW.column
+Refers to the new row (for INSERT , UPDATE )
+OLD.column
+Refers to the old row (for UPDATE , DELETE )
+FOR EACH ROW
+Executes for each affected row
+CALL AddUser('Ritika Jain', 'ritika@example.com', 'Female', '1996-03-12', 74000);
+SELECT * FROM user_log;
+DROP TRIGGER IF EXISTS after_user_insert;",[ 0.03666278 -0.02006648  0.01631303 -0.02181137 -0.02788959]...
+fb0f8ae6-2cf1-4caa-a991-2cccfc2e6a50,MySQL Handbook.pdf,70,"More on MySQL
+This section covers some essential MySQL features and operators that help you
+write more powerful and flexible queries.
+1. Logical Operators
+Logical operators are used to combine multiple conditions in a WHERE  clause.
+Operator
+Description
+Example
+AND
+All conditions must be true
+salary > 50000 AND gender = 
+'Male'
+OR
+At least one condition is
+true
+gender = 'Male' OR gender = 
+'Other'
+NOT
+Reverses a condition
+NOT gender = 'Female'
+2. Add a Column to an Existing Table
+Use ALTER TABLE  to add a column:
+This adds a new column named city  to the users  table.
+ALTER TABLE users
+ADD COLUMN city VARCHAR(100);",[ 0.10056881  0.05261835  0.02789157  0.0279271  -0.08915508]...
+e7ef590b-da24-4402-94df-84c232b0787a,MySQL Handbook.pdf,71,"3. Wildcard Operators
+Wildcards are used with the LIKE  operator for pattern matching in text.
+Wildcard
+Description
+Example
+%
+Matches any
+sequence
+WHERE name LIKE 'A%'  (starts with A)
+_
+Matches a single
+character
+WHERE name LIKE '_a%'  (second letter
+is ‘a’)
+4. LIMIT with OFFSET
+LIMIT  is used to limit the number of rows returned. OFFSET  skips a number of
+rows before starting to return rows.
+This skips the first 10 rows and returns the next 5.
+Alternative syntax:
+This also skips 10 and returns 5 (syntax: LIMIT offset, count ).
+5. DISTINCT Keyword
+DISTINCT  is used to return only unique values.
+SELECT * FROM users
+ORDER BY id
+LIMIT 5 OFFSET 10;
+SELECT * FROM users
+ORDER BY id
+LIMIT 10, 5;",[-0.02610083  0.02577787  0.06630622  0.00664781 -0.04790067]...
+ed102624-91b7-47ba-ba0a-145c3f081d96,MySQL Handbook.pdf,72,"Returns a list of unique gender values from the users  table.
+6. TRUNCATE Keyword
+TRUNCATE  removes all rows from a table, but keeps the table structure.
+Faster than DELETE FROM users
+Cannot be rolled back (unless in a transaction-safe environment)
+7. CHANGE vs MODIFY Column
+Both CHANGE  and MODIFY  are used to alter existing columns in a table, but they
+work slightly differently.
+CHANGE: Rename and change datatype
+This renames city  to location  and changes its type.
+MODIFY: Only change datatype
+This changes only the datatype of salary .
+SELECT DISTINCT gender FROM users;
+TRUNCATE TABLE users;
+• 
+• 
+ALTER TABLE users
+CHANGE COLUMN city location VARCHAR(150);
+ALTER TABLE users
+MODIFY COLUMN salary BIGINT;",[ 0.06983729  0.04227416  0.04284167 -0.0162977  -0.06449606]...
+99a82230-22da-499a-9813-9c6aa112c20d,The Ultimate Python Handbook.pdf,2,"1 
+ 
+PREFACE 
+Welcome to the “Ultimate Python Programming Handbook,"" your comprehensive guide to 
+mastering Python programming. This handbook is designed for beginners and anyone looking to 
+strengthen their foundational knowledge of Python, a versatile and user-friendly programming 
+language. 
+PURPOSE AND AUDIENCE 
+This handbook aims to make programming accessible and enjoyable for everyone. Whether 
+you're a student new to coding, a professional seeking to enhance your skills, or an enthusiast 
+exploring Python, this handbook will definitely be helpful. Python's simplicity and readability 
+make it an ideal starting point for anyone interested in programming. 
+STRUCTURE AND CONTENT 
+The handbook is divided into clear, concise chapters, each focused on a specific aspect of 
+Python: 
+• 
+Fundamental Concepts: Start with the basics, such as installing Python and writing your 
+first program. 
+• 
+Practical Examples: Illustrative examples and sample code demonstrate the",[-0.03902581  0.02092905 -0.05224568 -0.01391769 -0.01608768]...
+9ae3a6b3-e52b-4a40-8020-043d4d93a385,The Ultimate Python Handbook.pdf,2,"Python: 
+• 
+Fundamental Concepts: Start with the basics, such as installing Python and writing your 
+first program. 
+• 
+Practical Examples: Illustrative examples and sample code demonstrate the 
+application of concepts. 
+• 
+Hands-On Exercises: End-of-chapter exercises reinforce learning and build confidence. 
+• 
+Additional Resources: References to official Python documentation for deeper 
+exploration. 
+WHY PYTHON? 
+Python is known for its simplicity and readability, making it perfect for beginners. It is a high-
+level, interpreted language with a broad range of libraries and frameworks, supporting 
+applications in web development, data analysis, AI, and more. Python's versatility and ease of 
+use make it a valuable tool for both novice and experienced programmers. 
+ACKNOWLEDGEMENTS 
+I extend my gratitude to the educators, programmers, and contributors who have shared their 
+knowledge and insights, shaping the content of this handbook. Special thanks to all the",[-0.02371247 -0.00309536 -0.01740828  0.01992831 -0.01295289]...
+becaac0d-bc14-453b-9c49-c2c674b7595d,The Ultimate Python Handbook.pdf,2,"ACKNOWLEDGEMENTS 
+I extend my gratitude to the educators, programmers, and contributors who have shared their 
+knowledge and insights, shaping the content of this handbook. Special thanks to all the 
+students watching my content on YouTube and Python community for maintaining a supportive 
+and inspiring environment for learners worldwide. 
+CONCLUSION 
+Learning programming can be both exciting and challenging. The “Ultimate Python 
+Programming Handbook"" aims to make your journey smooth and rewarding. Watch my video 
+along with following this handbook for optimal learning. Let this guide be your stepping stone to 
+success in the world of programming.",[ 0.02859511  0.03557593 -0.03396884 -0.00995391  0.01857116]...
+e11a2386-465a-4179-aea9-be3d57e280f4,The Ultimate Python Handbook.pdf,3,"2 
+ 
+CONTENTS 
+PREFACE ........................................................................................................................................... 1 
+Purpose and Audience .................................................................................................................... 1 
+Structure and Content ..................................................................................................................... 1 
+Why Python? ................................................................................................................................... 1 
+Acknowledgements ........................................................................................................................ 1 
+Conclusion ..................................................................................................................................... 1",[ 0.04624689  0.00848082 -0.05584616 -0.0774432  -0.01749578]...
+cdcb66ef-f95d-45b9-b737-af121d6973b2,The Ultimate Python Handbook.pdf,3,"Conclusion ..................................................................................................................................... 1 
+Contents ........................................................................................................................................ 2 
+Python programming Handbook .......................................................................................................... 6 
+What is Programming? .................................................................................................................... 6 
+What is Python? .............................................................................................................................. 6 
+Features of Python .......................................................................................................................... 6","[-1.37611646e-02  2.41585840e-02 -4.09690634e-04 -6.93612620e-02
+ -2.25097369e-06]..."
+9c720476-10bd-4c50-9759-66f5d4471c0d,The Ultimate Python Handbook.pdf,3,"Features of Python .......................................................................................................................... 6 
+Installation ..................................................................................................................................... 6 
+Chapter 1 – Modules, Comments & pip ................................................................................................ 7 
+Modules ......................................................................................................................................... 7 
+pip ................................................................................................................................................. 7 
+Types of Modules ............................................................................................................................ 7",[-0.06089293  0.0035413  -0.05815295 -0.05195314 -0.06576031]...
+41037f2c-e668-4fea-b5bc-466908e81ca7,The Ultimate Python Handbook.pdf,3,"Types of Modules ............................................................................................................................ 7 
+Using python as a calculator ............................................................................................................ 7 
+Comments ..................................................................................................................................... 7 
+Types of Comments ........................................................................................................................ 7 
+Chapter 1 – Practice Set ...................................................................................................................... 9 
+Chapter 2 – Variables and Datatype ................................................................................................... 10",[-0.04516415  0.01373408 -0.13136411 -0.01257925 -0.11205278]...
+0287ce96-3e3b-47d8-883b-5061beb2b5d2,The Ultimate Python Handbook.pdf,3,"Chapter 2 – Variables and Datatype ................................................................................................... 10 
+Data Types ................................................................................................................................... 10 
+Rules for choosing an identifier ...................................................................................................... 10 
+Operators in Python ...................................................................................................................... 10 
+type() function and typecasting. ..................................................................................................... 11 
+input() Function ............................................................................................................................ 11 
+Chapter 2 – Practice Set .................................................................................................................... 12",[-0.04927817  0.03782791 -0.00016034 -0.06696881 -0.00147928]...
+064e7579-d514-4920-8bd2-3de9e625474e,The Ultimate Python Handbook.pdf,3,"Chapter 2 – Practice Set .................................................................................................................... 12 
+Chapter 3 – Strings ........................................................................................................................... 13 
+String Slicing ................................................................................................................................. 13 
+Slicing With Skip Value .................................................................................................................. 14 
+String Functions ............................................................................................................................ 14 
+Escape Sequence Characters ........................................................................................................ 15",[ 0.01393141  0.08146227 -0.01110142 -0.12528165 -0.17670682]...
+affae553-071d-46a2-be7b-6fdee227f1f5,The Ultimate Python Handbook.pdf,3,"Escape Sequence Characters ........................................................................................................ 15 
+Chapter 3 – Practice Set .................................................................................................................... 16 
+Chapter 4 – Lists And Tuples ............................................................................................................. 17 
+List Indexing ................................................................................................................................. 17",[ 0.04795779  0.08764171  0.06029568 -0.09374227 -0.05998119]...
+1caeb217-ce54-4595-bf0a-d90abdb15f65,The Ultimate Python Handbook.pdf,4,"3 
+ 
+List methods. ................................................................................................................................ 17 
+Tuples in Python ........................................................................................................................... 17 
+Tuple Methods .............................................................................................................................. 17 
+Chapter 4 - Practice Set .................................................................................................................... 19 
+Chapter 5 – Dictionary & Sets ............................................................................................................ 20 
+Properties of Python Dictionaries ................................................................................................... 20",[ 0.01867503  0.05782831 -0.03300698 -0.07049173 -0.06856357]...
+abe4624c-b8b0-4c53-8276-3411e291cec2,The Ultimate Python Handbook.pdf,4,"Properties of Python Dictionaries ................................................................................................... 20 
+Dictionary Methods ....................................................................................................................... 20 
+Sets in Python. .............................................................................................................................. 20 
+Properties of Sets .......................................................................................................................... 21 
+Operations on sets ........................................................................................................................ 21 
+Chapter 5 – Practice Set .................................................................................................................... 22",[ 0.02973969  0.06467232 -0.01647609 -0.01806653 -0.10609981]...
+2b0b34ab-9535-467a-8e04-dc7d807e9083,The Ultimate Python Handbook.pdf,4,"Chapter 5 – Practice Set .................................................................................................................... 22 
+Chapter 6 – Conditional Expression ................................................................................................... 23 
+If Else and Elif in Python ................................................................................................................. 23 
+Code example. ............................................................................................................................. 23 
+Relational Operators ..................................................................................................................... 24 
+Logical Operators ......................................................................................................................... 24",[ 0.01451627  0.12372256  0.03397193 -0.09105749 -0.02978097]...
+7f0c1360-0879-4d76-996a-3156518642c8,The Ultimate Python Handbook.pdf,4,"Logical Operators ......................................................................................................................... 24 
+Elif clause ..................................................................................................................................... 24 
+Important notes: ........................................................................................................................... 24 
+Chapter 6 – Practice Set .................................................................................................................... 25 
+Chapter 7 – Loops in Python .............................................................................................................. 26 
+Types of Loops in Python ............................................................................................................... 26",[ 0.04808825  0.05710252 -0.0068486  -0.07229931 -0.10809907]...
+467b420d-9753-48bd-bc92-341e1d533d53,The Ultimate Python Handbook.pdf,4,"Types of Loops in Python ............................................................................................................... 26 
+While loop .................................................................................................................................... 26 
+For loop ........................................................................................................................................ 27 
+range() Function in Python ............................................................................................................. 27 
+An Example Demonstrating range() function. .................................................................................. 27 
+For Loop with Else ......................................................................................................................... 27 
+The Break Statement ..................................................................................................................... 27","[-4.11905457e-05  5.51976599e-02 -4.81820330e-02 -3.56194675e-02
+ -9.23991129e-02]..."
+6a4aecd1-1438-4095-9852-a0bf18cdfd60,The Ultimate Python Handbook.pdf,4,"The Break Statement ..................................................................................................................... 27 
+The Continue Statement ................................................................................................................ 28 
+Pass statement ............................................................................................................................. 28 
+Chapter 7 – Practice Set .................................................................................................................... 29 
+Chapter 8 – Functions & Recursions .................................................................................................. 30 
+Example and syntax of a function ................................................................................................... 30 
+Function call ................................................................................................................................. 30",[-0.03210801  0.07305824  0.00918787 -0.05274988 -0.00117689]...
+89fdd371-254b-4a16-a2d5-40d7d1742c16,The Ultimate Python Handbook.pdf,4,"Function call ................................................................................................................................. 30 
+Function Definition ....................................................................................................................... 30 
+Types of Functions in Python ......................................................................................................... 30 
+Functions with Arguments ............................................................................................................. 30 
+Default Parameter Value ............................................................................................................... 31",[-0.0153085   0.00090615 -0.09460981 -0.07085522 -0.12111621]...
+01badea3-60f4-4040-955c-46b8883ac9d8,The Ultimate Python Handbook.pdf,5,"4 
+ 
+Recursion ..................................................................................................................................... 31 
+Chapter 8 – Practice Set .................................................................................................................... 33 
+Project 1: Snake, Water, Gun Game ................................................................................................... 34 
+Chapter 9 – File I/O ........................................................................................................................... 35 
+Type of Files. ................................................................................................................................. 35 
+Opening a File ............................................................................................................................... 35",[-0.01808609  0.07087348  0.05688647 -0.11792087 -0.11039034]...
+ad3f6e8a-3c5f-4d29-ae91-e4f765e870f1,The Ultimate Python Handbook.pdf,5,"Opening a File ............................................................................................................................... 35 
+Reading a File in Python ................................................................................................................. 35 
+Other methods to read the file. ...................................................................................................... 36 
+Modes of opening a file .................................................................................................................. 36 
+Write Files in Python ...................................................................................................................... 36 
+With Statement ............................................................................................................................. 36",[-0.01046922  0.05554153 -0.1067014  -0.01615466 -0.09523125]...
+39c4567e-ccbb-4666-80ad-4bde085b3b97,The Ultimate Python Handbook.pdf,5,"With Statement ............................................................................................................................. 36 
+Chapter 9 – Practice Set .................................................................................................................... 37 
+Chapter 10 - Object Oriented Programming ....................................................................................... 38 
+Class............................................................................................................................................ 38 
+Object .......................................................................................................................................... 38 
+Modelling a problem in OOPs ......................................................................................................... 38",[ 0.00456078  0.05907959  0.02468759 -0.10026979 -0.06209365]...
+cddb2ab0-5fcc-4376-ae92-89207a4da21e,The Ultimate Python Handbook.pdf,5,"Modelling a problem in OOPs ......................................................................................................... 38 
+Class Attributes ............................................................................................................................ 38 
+Instance attributes ........................................................................................................................ 39 
+self parameter .............................................................................................................................. 39 
+static method ............................................................................................................................... 39 
+__init__() constructor ..................................................................................................................... 40",[ 0.04534123  0.0801193  -0.00419948 -0.06544846 -0.05891119]...
+495336d3-e841-488f-b8b8-24b10bedcd38,The Ultimate Python Handbook.pdf,5,"__init__() constructor ..................................................................................................................... 40 
+Chapter 10 – Practice Set .................................................................................................................. 41 
+Chapter 11 - Inheritance & more on OOPs .......................................................................................... 42 
+Types of Inheritance ...................................................................................................................... 42 
+Single Inheritance ......................................................................................................................... 42 
+Multiple Inheritance ...................................................................................................................... 43",[-0.05504703  0.07547574  0.02010844 -0.12478535 -0.10156432]...
+eba14607-83ca-457c-928a-60901375b89b,The Ultimate Python Handbook.pdf,5,"Multiple Inheritance ...................................................................................................................... 43 
+Multilevel Inheritance .................................................................................................................... 43 
+super() method ............................................................................................................................. 43 
+class method ................................................................................................................................ 44 
+@property Decorators ................................................................................................................... 44 
+@.getters and @.setters ................................................................................................................ 44 
+Operator Overloading in Python ..................................................................................................... 44",[-0.06359021  0.02659785 -0.03138602 -0.07834589 -0.12995583]...
+b62749b9-e004-4e56-8873-9e55a6d23453,The Ultimate Python Handbook.pdf,5,"Operator Overloading in Python ..................................................................................................... 44 
+Chapter 11- Practice set ................................................................................................................... 46 
+Project 2 – The Perfect Guess ............................................................................................................ 47 
+Chapter 12 – Advanced Python 1 ....................................................................................................... 48 
+Newly added features in python ..................................................................................................... 48 
+Walrus Operator ........................................................................................................................... 48",[ 0.0016469   0.09443428  0.01410193 -0.02107344 -0.10546774]...
+9202337a-1c99-46bf-941c-c8497a0591ee,The Ultimate Python Handbook.pdf,6,"5 
+ 
+Types Definitions in Python ............................................................................................................ 48 
+Advanced Type Hints ..................................................................................................................... 48 
+Match Case .................................................................................................................................. 49 
+Dictionary Merge & Update Operators ............................................................................................ 49 
+Exception handling in Python ......................................................................................................... 50 
+Raising Exceptions ........................................................................................................................ 50 
+try with else clause ....................................................................................................................... 50",[-0.02249111  0.07470199  0.01547551 -0.03833405 -0.05034604]...
+454d86d8-d143-47ed-a989-07e413cc2809,The Ultimate Python Handbook.pdf,6,"try with else clause ....................................................................................................................... 50 
+try with finally ............................................................................................................................... 51 
+If __name__== ‘__main__’ in python ................................................................................................ 51 
+The global keyword ....................................................................................................................... 51 
+enumerate function in python ........................................................................................................ 51 
+List comprehensions ..................................................................................................................... 51 
+Chapter 12 – Practice set .................................................................................................................. 52",[ 0.01585461  0.05055059  0.03925841 -0.08692265 -0.00168913]...
+20a6e9db-110a-4d32-95cf-947595942036,The Ultimate Python Handbook.pdf,6,"Chapter 12 – Practice set .................................................................................................................. 52 
+Chapter 13 – Advanced Python 2 ....................................................................................................... 53 
+Virtual envirionment ...................................................................................................................... 53 
+Installation ................................................................................................................................... 53 
+pip freeze command ..................................................................................................................... 53 
+Lambda functions ......................................................................................................................... 53",[-0.00631295  0.08271038 -0.0648929  -0.07390499 -0.07255698]...
+fb2c3635-3655-478f-b4d5-cc7eb492a756,The Ultimate Python Handbook.pdf,6,"Lambda functions ......................................................................................................................... 53 
+join method (strings) ..................................................................................................................... 54 
+format method (strings) ................................................................................................................. 54 
+Map, Filter & Reduce ..................................................................................................................... 54 
+Chapter 13 – Practice Set .................................................................................................................. 56 
+MEGA Project 1: Jarvis  ...................................................................................................................... 57",[-0.00625232  0.08431933 -0.07326419 -0.04209099 -0.13909446]...
+886a981b-2c3a-4226-aedc-1f8f86a77960,The Ultimate Python Handbook.pdf,6,"MEGA Project 1: Jarvis  ...................................................................................................................... 57 
+Features ....................................................................................................................................... 57 
+Workflow ...................................................................................................................................... 57 
+Libraries Used............................................................................................................................... 58 
+Mega Project 2: Auto Reply AI Chatbot ............................................................................................... 59 
+Description ................................................................................................................................... 59",[-0.08488733 -0.03149291 -0.08129963 -0.13705516 -0.03466934]...
+33a39a7c-e57b-4855-b57e-7110f4ac36b7,The Ultimate Python Handbook.pdf,6,"Description ................................................................................................................................... 59 
+Features ....................................................................................................................................... 59 
+Workflow ...................................................................................................................................... 59 
+Libraries Used............................................................................................................................... 60",[-0.03451297  0.00261935 -0.05906811 -0.06263397 -0.07320808]...
+891260fe-8e7a-4634-ae12-83497fc13030,The Ultimate Python Handbook.pdf,7,"6 
+ 
+PYTHON PROGRAMMING HANDBOOK 
+WHAT IS PROGRAMMING?  
+Just like we use Hindi or English to communicate with each other, we use a 
+programming language like Python to communicate with the computer. 
+Programming is a way to instruct the computer to perform various tasks. 
+WHAT IS PYTHON? 
+Python is a simple and easy to understand language which feels like reading simple 
+English. This Pseudo code nature is easy to learn and understandable by beginners. 
+FEATURES OF PYTHON 
+• Easy to understand = Less development time  
+• Free and open source 
+• High level language 
+• Portable: Works on Linux / Windows / Mac. 
+• Fun to work with! 
+INSTALLATION 
+Python can be easily installed from python.org. When you click on the download 
+button, python can be installed right after you complete the setup by executing the file 
+for your platform.",[-0.03375044  0.00696248 -0.0153479   0.00171809 -0.01313928]...
+2da46cca-9520-4cc2-b1ea-2d545277a203,The Ultimate Python Handbook.pdf,8,"7 
+ 
+CHAPTER 1 – MODULES, COMMENTS & PIP 
+Let’s write our very first python program. Create a file called hello.py and paste the 
+below code in it. 
+print(""hello world"") # print is a function (more later) 
+Execute this file (.py file) by typing python hello.py and you will see Hello World printed 
+on the screen. 
+MODULES 
+A module is a file containing code written by somebody else (usually) which can be 
+imported and used in our programs. 
+PIP 
+Pip is the package manager for python. You can use pip to install a module on your 
+system. 
+pip install flask # Installs Flask Module 
+TYPES OF MODULES 
+There are two types of modules in Python. 
+1. Built in Modules (Preinstalled in Python) 
+2. External Modules (Need to install using pip) 
+Some examples of built in modules are os, random etc. 
+Some examples of external modules are tensorflow, flask etc. 
+USING PYTHON AS A CALCULATOR 
+We can use python as a calculator by typing “python” + ↵ on the terminal.",[-0.07845702 -0.04928502 -0.03766348  0.06564849  0.04757901]...
+64048132-d07e-40ed-b5c8-6fea11605186,The Ultimate Python Handbook.pdf,8,"Some examples of external modules are tensorflow, flask etc. 
+USING PYTHON AS A CALCULATOR 
+We can use python as a calculator by typing “python” + ↵ on the terminal. 
+This opens REPL or Read Evaluate Print Loop. 
+COMMENTS 
+Comments are used to write something which the programmer does not want to 
+execute. This can be used to mark author name, date etc. 
+TYPES OF COMMENTS 
+There are two types of comments in python.",[-0.12283375 -0.09145761 -0.0642563   0.06070917 -0.00061425]...
+4df54f41-bc1a-4225-b318-d887cd2ad173,The Ultimate Python Handbook.pdf,9,"8 
+ 
+1. Single Line Comments: To write a single line comment just add a ‘#’ at the start 
+of the line. 
+# This is a Single-Line Comment 
+ 
+2. Multiline Comments: To write multi-line comments you can use ‘#’ at each line 
+or you can use the multiline string ("""""" """""") 
+""""""This is an amazing 
+    example of a Multiline 
+    comment!""""""",[-0.05520177 -0.05953211  0.04915622  0.05576444 -0.07831096]...
+80535b9f-7ac0-4947-a881-1999f443b0c4,The Ultimate Python Handbook.pdf,10,"9 
+ 
+CHAPTER 1 – PRACTICE SET 
+1. Write a program to print Twinkle twinkle little star poem in python. 
+2. Use REPL and print the table of 5 using it.  
+3. Install an external module and use it to perform an operation of your interest.  
+4. Write a python program to print the contents of a directory using the os module. 
+Search online for the function which does that.  
+5. Label the program written in problem 4 with comments.",[-0.00947948  0.01827381 -0.03205965  0.03620191 -0.0050932 ]...
+9a00fbd7-3b88-4ebe-988a-4dbcba594247,The Ultimate Python Handbook.pdf,11,"10 
+ 
+CHAPTER 2 – VARIABLES AND DATATYPE 
+A variable is the name given to a memory location in a program. For example. 
+a= 30      # variables = container to store a value. 
+b= ""harry"" # keywords = reserved words in python  
+c= 71.22   # identifiers = class/function/variable name 
+DATA TYPES 
+Primarily these are the following data types in Python: 
+1. Integers 
+2. Floating point numbers 
+3. Strings 
+4. Booleans  
+5. None 
+Python is a fantastic language that automatically identifies the type of data for us. 
+a= 71         # identifies a as class <int> 
+b=88.44       # identifies b as class <float> 
+name= ""harry"" # identifies name as class <str> 
+RULES FOR CHOOSING AN IDENTIFIER 
+• A variable name can contain alphabets, digits, and underscores. 
+• A variable name can only start with an alphabet and underscores. 
+• A variable name can’t start with a digit. 
+• No while space is allowed to be used inside a variable name.",[-0.02902649  0.0136513  -0.02050769  0.05224187 -0.09762309]...
+5d38dc69-5b8a-4b1f-99d2-1d442e1161df,The Ultimate Python Handbook.pdf,11,"• A variable name can only start with an alphabet and underscores. 
+• A variable name can’t start with a digit. 
+• No while space is allowed to be used inside a variable name. 
+Examples of a few variable names are: harry, one8, seven, _seven etc. 
+OPERATORS IN PYTHON 
+Following are some common operators in python: 
+1. Arithmetic operators: +, -, *, / etc. 
+2. Assignment operators:  =, +=, -= etc. 
+3. Comparison operators: ==, >, >=, <,  != etc. 
+4. Logical operators: and, or, not.",[-0.05135737 -0.03616356 -0.02861272  0.01889059 -0.15437295]...
+e4b5779c-e687-4c76-9c7c-a93827f41aed,The Ultimate Python Handbook.pdf,12,"11 
+ 
+TYPE() FUNCTION AND TYPECASTING.  
+type() function is used to find the data type of a given variable in python. 
+a = 31  
+type(a) # class <int> 
+ 
+b = ""31"" 
+type (b) # class <str> 
+A number can be converted into a string and vice versa (if possible) 
+There are many functions to convert one data type into another. 
+str(31)    =>""31""   # integer to string conversion 
+int(""32"")  => 32    # string to integer conversion 
+float(32)  => 32.0  # integer to float conversion 
+… and so, on 
+Here ""31"" is a string literal and 31 a numeric literal. 
+INPUT () FUNCTION 
+This function allows the user to take input from the keyboard as a string. 
+A = input (""enter name"")   # if a is ""harry"", the user entered harry 
+It is important to note that the output of input is always a string (even is a number is 
+entered).",[-0.01557464  0.03622211 -0.03217777 -0.01103732 -0.12847906]...
+3576999c-8ca8-4d20-b59e-504fea4ae35a,The Ultimate Python Handbook.pdf,13,"12 
+ 
+CHAPTER 2 – PRACTICE SET 
+1. Write a python program to add two numbers. 
+2. Write a python program to find remainder when a number is divided by z. 
+3. Check the type of variable assigned using input () function. 
+4. Use comparison operator to find out whether ‘a’ given variable a is greater than 
+‘b’ or not. Take a = 34 and b = 80 
+5. Write a python program to find an average of two numbers entered by the user. 
+6. Write a python program to calculate the square of a number entered by the user.",[ 0.02179113  0.0877527  -0.01511223 -0.03470775 -0.12813467]...
+98d166d9-2cfc-405c-8e67-74a5140345ad,The Ultimate Python Handbook.pdf,14,"13 
+ 
+CHAPTER 3 – STRINGS 
+String is a data type in python. 
+String is a sequence of characters enclosed in quotes. 
+We can primarily write a string in these three ways. 
+a ='harry'       # Single quoted string 
+b = ""harry""      # Double quoted string 
+c = '''harry'''  # Triple quoted string 
+STRING SLICING 
+A string in python can be sliced for getting a part of the strings. 
+Consider the following string: 
+  
+ 
+ 
+The index in a sting starts from 0 to (length -1) in Python. In order to slice a string, we use 
+the following syntax:  
+  
+ 
+ 
+Negative Indices: Negative indices can also be used as shown in the figure above. -1 
+corresponds to the (length - 1) index, -2 to (length - 2).",[-0.042349    0.06372101  0.02934237 -0.00378808 -0.07784733]...
+390fd007-6d51-42f5-92d3-8e5ceeeffdc6,The Ultimate Python Handbook.pdf,15,"14 
+ 
+SLICING WITH SKIP VALUE 
+We can provide a skip value as a part of our slice like this: 
+word = ""amazing"" 
+word[1: 6: 2] # ""mzn"" 
+Other advanced slicing techniques: 
+Word = ""amazing"" 
+Word = [:7]  # word [0:7] – 'amazing' 
+Word = [0:]  # word [0:7] – 'amazing' 
+ 
+STRING FUNCTIONS 
+Some of the commonly used functions to perform operations on or manipulate strings 
+are as follows. Let us assume there is a string ‘str’ as follows: 
+str = 'harry' 
+Now when operated on this string ‘str’, these functions do the following: 
+1. len () function – This function returns the length of the strings. 
+str = ""harry"" 
+print(len(str))  # Output: 5 
+2. String.endswith(""rry"") – This function_ tells whether the variable string ends with 
+the string ""rry"" or not. If string is ""harry"", it returns true for ""rry"" since Harry ends 
+with rry. 
+str = ""harry"" 
+print(str.endswith(""rry""))  # Output: True 
+3. string.count(""c"") – counts the total number of occurrences of any character. 
+str = ""harry""",[-0.01815928  0.0544895   0.03893682  0.02830094 -0.0632658 ]...
+d3b007c3-2739-4982-9324-d80bceab097c,The Ultimate Python Handbook.pdf,15,"with rry. 
+str = ""harry"" 
+print(str.endswith(""rry""))  # Output: True 
+3. string.count(""c"") – counts the total number of occurrences of any character. 
+str = ""harry"" 
+count = str.count(""r"") 
+print(count)  # Output: 2 
+4. the first character of a given string. 
+str = ""harry"" 
+capitalized_string = str.capitalize() 
+print(capitalized_string)  # Output: ""Harry"" 
+5. string.find(word) – This function friends a word and returns the index of first 
+occurrence of that word in the string. 
+str = ""harry""",[ 0.04902887  0.02798617  0.00857501  0.02705173 -0.07556936]...
+81b8a82a-e587-4e52-bf90-b2eed8e88977,The Ultimate Python Handbook.pdf,16,"15 
+ 
+index = str.find(""rr"") 
+print(index)  # Output: 2 
+6. string.replace (old word, new word ) – This function replace the old word with 
+new word in the entire string. 
+str = ""harry"" 
+replaced_string = str.replace(""r"", ""l"") 
+print(replaced_string)  # Output: ""hally"" 
+ 
+ 
+ESCAPE SEQUENCE CHARACTERS 
+Sequence of characters after backslash ""\"" → Escape Sequence characters 
+Escape Sequence characters comprise of more than one character but represent one 
+character when used within the strings.",[-0.01493746  0.05609306  0.06285515  0.0349378  -0.05552812]...
+ab8fbc84-dfbd-48fb-aa8f-1a36a8a39ca7,The Ultimate Python Handbook.pdf,17,"16 
+ 
+CHAPTER 3 – PRACTICE SET 
+1. Write a python program to display a user entered name followed by Good 
+Afternoon using input () function. 
+2. Write a program to fill in a letter template given below with name and date. 
+letter = '''  
+       Dear <|Name|>, 
+       You are selected! 
+       <|Date|> 
+        ''' 
+ 
+3. Write a program to detect double space in a string.  
+4. Replace the double space from problem 3 with single spaces. 
+5. Write a program to format the following letter using escape sequence 
+characters. 
+letter = ""Dear Harry, this python course is nice. Thanks!""",[-0.04390945  0.06284995  0.09363588  0.04204953 -0.13232306]...
+c96dc05d-a77a-4b84-b20b-af07231eee19,The Ultimate Python Handbook.pdf,18,"17 
+ 
+CHAPTER 4 – LISTS AND TUPLES 
+Python lists are containers to store a set of values of any data type.  
+      
+ 
+LIST INDEXING 
+A list can be indexed just like a string. 
+l1 = [7,9,""harry""] 
+l1[0] # 7 
+l1[1] # 9 
+l1[70]  # error 
+l1[0:2] # [7,9]  #list slicing  
+LIST METHODS.  
+Consider the following list: 
+l1 = [1,8,7,2,21,15] 
+• l1.sort(): updates the list to [1,2,7,8,15,21] 
+• l1.reverse(): updates the list to [15,21,2,7,8,1] 
+• l1.append(8): adds 8 at the end of the list  
+• l1.insert(3,8): This will add 8 at 3 index 
+• l1.pop(2): Will delete element at index 2 and return its value. 
+• l1.remove(21): Will remove 21 from the list.  
+TUPLES IN PYTHON 
+A tuple is an immutable data type in python. 
+a = () # empty tuple 
+a = (1,) # tuple with only one element needs a comma 
+a = (1,7,2) # tuple with more than one element 
+ 
+TUPLE METHODS 
+Consider the following tuple.",[-0.02809349  0.05417073  0.0859272   0.00543627  0.0530084 ]...
+df789ba8-580d-475b-93e5-da0eaebc8515,The Ultimate Python Handbook.pdf,19,"18 
+ 
+a = (1, 7, 2) 
+• a.count (1): a count (1) will return number of times 1 occurs in a. 
+• a.index (1) will return the index of first occurrence of 1 in a.",[ 0.02832326 -0.01446795  0.03107763  0.01532295 -0.04545705]...
+b69756f4-1c91-4604-bdc5-cd6163782efd,The Ultimate Python Handbook.pdf,20,"19 
+ 
+CHAPTER 4 - PRACTICE SET 
+1. Write a program to store seven fruits in a list entered by the user. 
+2. Write a program to accept marks of 6 students and display them in a sorted 
+manner. 
+3. Check that a tuple type cannot be changed in python. 
+4. Write a program to sum a list with 4 numbers. 
+5. Write a program to count the number of zeros in the following tuple: 
+a = (7, 0, 8, 0, 0, 9)",[ 0.02856575  0.07848519 -0.02901143 -0.00375576 -0.09752297]...
+5c47aaa9-2751-4a70-bd7d-14419f2f751b,The Ultimate Python Handbook.pdf,21,"20 
+ 
+CHAPTER 5 – DICTIONARY & SETS 
+Dictionary is a collection of keys-value pairs. 
+Syntax:   
+a = { 
+    ""key"": ""value"", 
+    ""harry"": ""code"", 
+    ""marks"": ""100"", 
+    ""list"": [1, 2, 9] 
+} 
+ 
+print(a[""key""])  # Output: ""value"" 
+print(a[""list""])  # Output: [1, 2, 9] 
+ 
+PROPERTIES OF PYTHON DICTIONARIES 
+1. It is unordered. 
+2. It is mutable. 
+3. It is indexed. 
+4. Cannot contain duplicate keys. 
+DICTIONARY METHODS 
+Consider the following dictionary. 
+a={""name"":""harry"" 
+   ""from"":""india"" 
+   ""marks"":[92,98,96]} 
+• a.items(): Returns a list of (key,value)tuples. 
+• a.keys(): Returns a list containing dictionary's keys. 
+• a.update({""friends"":}): Updates the dictionary with supplied key-value pairs. 
+• a.get(""name""): Returns the value of the specified keys (and value is returned 
+eg.""harry"" is returned here). 
+More methods are available on docs.python.org 
+SETS IN PYTHON. 
+Set is a collection of non-repetitive elements. 
+s = set()           # no repetition allowed! 
+s.add(1)",[-0.01775849  0.02739574  0.0026406  -0.03055429 -0.04510197]...
+f6a8aaf0-e9ab-4917-b787-b8b4ec6d2226,The Ultimate Python Handbook.pdf,21,"eg.""harry"" is returned here). 
+More methods are available on docs.python.org 
+SETS IN PYTHON. 
+Set is a collection of non-repetitive elements. 
+s = set()           # no repetition allowed! 
+s.add(1) 
+s.add(2)           # or set ={1,2}",[-0.01340933  0.01537277 -0.01594274  0.03581961 -0.09642076]...
+c8b501b7-6782-421f-9c1b-ea28165a6dc1,The Ultimate Python Handbook.pdf,22,"21 
+ 
+If you are a programming beginner without much knowledge of mathematical 
+operations on sets, you can simply look at sets in python as data types containing 
+unique values. 
+PROPERTIES OF SETS 
+1. Sets are unordered => Element’s order doesn’t matter 
+2. Sets are unindexed => Cannot access elements by index 
+3. There is no way to change items in sets. 
+4. Sets cannot contain duplicate values. 
+OPERATIONS ON SETS 
+Consider the following set: 
+s = {1,8,2,3} 
+• len(s): Returns 4, the length of the set  
+• s.remove(8): Updates the set s and removes 8 from s. 
+• s.pop(): Removes an arbitrary element from the set and return the element 
+removed. 
+• s.clear():empties the set s. 
+• s.union({8,11}): Returns a new set with all items from both sets. {1,8,2,3,11}. 
+• s.intersection({8,11}): Return a set which contains only item in both sets  {8}.",[ 0.00760484  0.05905511  0.05515259 -0.02949201 -0.01081947]...
+3ecd52da-5e03-44a8-86df-b481c387f6d3,The Ultimate Python Handbook.pdf,23,"22 
+ 
+CHAPTER 5 – PRACTICE SET 
+1. Write a program to create a dictionary of Hindi words with values as their English 
+translation. Provide user with an option to look it up! 
+2. Write a program to input eight numbers from the user and display all the unique 
+numbers (once). 
+3. Can we have a set with 18 (int) and '18' (str) as a value in it? 
+4. What will be the length of following set s: 
+s = set() 
+s.add(20) 
+s.add(20.0) 
+s.add('20') # length of s after these operations? 
+5. s = {} 
+What is the type of 's'? 
+6. Create an empty dictionary. Allow 4 friends to enter their favorite language as 
+value and use key as their names. Assume that the names are unique. 
+7. If the names of 2 friends are same; what will happen to the program in problem 
+6? 
+8. If languages of two friends are same; what will happen to the program in problem 
+6? 
+9. Can you change the values inside a list which is contained in set S?  
+s = {8, 7, 12, ""Harry"", [1,2]}",[-0.0088443   0.07938504 -0.03486042 -0.06038031 -0.13814919]...
+b25d52fd-2fc4-4843-b4d9-61913dcbb2f7,The Ultimate Python Handbook.pdf,24,"23 
+ 
+CHAPTER 6 – CONDITIONAL EXPRESSION 
+Sometimes we want to play PUBG on our phone if the day is Sunday. 
+Sometimes we order Ice Cream online if the day is sunny. 
+Sometimes we go hiking if our parents allow. 
+All these are decisions which depend on a condition being met. 
+In python programming too, we must be able to execute instructions on a condition(s) 
+being met. 
+This is what conditionals are for! 
+IF ELSE AND ELIF IN PYTHON 
+If else and elif statements are a multiway decision taken by our program due to certain 
+conditions in our code. 
+Syntax: 
+if (condition1): # if condition1 is True 
+    print (""yes"") 
+        
+elif(condition2): # if condition2 is True  
+    print(""no"") 
+ 
+else:             # otherwise 
+    print(""maybe"")                            
+ 
+CODE EXAMPLE. 
+a=22 
+if(a>9): 
+    print(""greater"") 
+else: 
+    print(""lesser"") 
+ 
+Quick Quiz: Write a program to print yes when the age entered by the user is greater 
+than or equal to 18.",[ 0.00184349  0.09968942  0.08919258 -0.03595806 -0.01264624]...
+fa52557c-fda7-4ddd-a4eb-eb53f223dff6,The Ultimate Python Handbook.pdf,25,"24 
+ 
+RELATIONAL OPERATORS 
+Relational Operators are used to evaluate conditions inside the if statements. Some 
+examples of relational operators are: 
+==: equals. 
+> =: greater than/ equal to. 
+< =: lesser than/ equal to. 
+LOGICAL OPERATORS 
+In python logical operators operate on conditional statements. For Example: 
+• and – true if both operands are true else false. 
+• or – true if at least one operand is true or else false. 
+• not – inverts true to false & false to true. 
+ELIF CLAUSE 
+elif in python means [else if]. An if statements can be chained together with a lot of 
+these elif statements followed by an else statement. 
+if (condition1): 
+    #code 
+elif (condition2):   # this ladder will stop once a condition in an if or 
+elif is met. 
+    #code 
+elif(condition3): 
+    #code  
+else: 
+    #code 
+ 
+IMPORTANT NOTES: 
+1. There can be any number of elif statements. 
+2. Last else is executed only if all the conditions inside elifs fail.",[-0.01585315 -0.01571163  0.02076955 -0.036689   -0.05924864]...
+6a27b4d8-ccdb-418e-995f-ec9aff69cb5f,The Ultimate Python Handbook.pdf,26,"25 
+ 
+CHAPTER 6 – PRACTICE SET 
+1. Write a program to find the greatest of four numbers entered by the user. 
+2. Write a program to find out whether a student has passed or failed if it requires a 
+total of 40% and at least 33% in each subject to pass. Assume 3 subjects and 
+take marks as an input from the user. 
+3. A spam comment is defined as a text containing following keywords: 
+“Make a lot of money”, “buy now”, “subscribe this”, “click this”. Write a program 
+to detect these spams. 
+4. Write a program to find whether a given username contains less than 10 
+characters or not. 
+5. Write a program which finds out whether a given name is present in a list or not. 
+6. Write a program to calculate the grade of a student from his marks from the 
+following scheme: 
+90 – 100 => Ex 
+80 – 90 => A 
+70 – 80 => B 
+60 – 70  =>C 
+50 – 60 => D 
+<50        => F 
+7. Write a program to find out whether a given post is talking about “Harry” or not.",[-0.00592395  0.07413056 -0.05947834 -0.07427798 -0.09132912]...
+96a4c68a-aa3e-4d57-b37a-52e45e533373,The Ultimate Python Handbook.pdf,27,"26 
+ 
+CHAPTER 7 – LOOPS IN PYTHON 
+Sometimes we want to repeat a set of statements in our program. For instance:  Print 1 
+to 1000. 
+Loops make it easy for a programmer to tell the computer which set of instructions to 
+repeat and how! 
+TYPES OF LOOPS IN PYTHON 
+Primarily there are two types of loops in python. 
+• while loops 
+• for loops 
+We will look into these one by one. 
+WHILE LOOP 
+Syntax: 
+while (condition): # The block keeps executing until the condition is true 
+    #Body of the loop 
+In while loops, the condition is checked first. If it evaluates to true, the body of the loop 
+is executed otherwise not! 
+If the loop is entered, the process of [condition check & execution] is continued until 
+the condition becomes False. 
+Quick Quiz: Write a program to print 1 to 50 using a while loop. 
+Example: 
+i = 0 
+while i < 5: # print ""Harry"" – 5 times! 
+    print(""Harry"")     
+    i = i + 1 
+ 
+Note:  If the condition never become false, the loop keeps getting executed.",[-0.03673441  0.06155673  0.00049147  0.01646238 -0.05745747]...
+1b528f11-9a66-42d7-9cf2-0f6b2712afcb,The Ultimate Python Handbook.pdf,27,"Example: 
+i = 0 
+while i < 5: # print ""Harry"" – 5 times! 
+    print(""Harry"")     
+    i = i + 1 
+ 
+Note:  If the condition never become false, the loop keeps getting executed. 
+Quick Quiz:  Write a program to print the content of a list using while loops.",[ 0.0088166   0.10773486 -0.02338877  0.01096675 -0.03021473]...
+53c8b062-16d1-4602-83f5-c82d402d2134,The Ultimate Python Handbook.pdf,28,"27 
+ 
+FOR LOOP 
+A for loop is used to iterate through a sequence like list, tuple, or string [iterables] 
+Syntax: 
+l = [1, 7, 8] 
+for item in l: 
+    print(item) # prints 1, 7 and 8 
+RANGE FUNCTION IN PYTHON 
+The range() function in python is used to generate a sequence of number. 
+We can also specify the start, stop and step-size as follows: 
+range(start, stop, step_size) 
+# step_size is usually not used with range() 
+AN EXAMPLE DEMONSTRATING RANGE () FUNCTION. 
+ for i in range(0,7): # range(7) can also be used. 
+    print(i) # prints 0 to 6 
+FOR LOOP WITH ELSE 
+An optional else can be used with a for loop if the code is to be executed when the 
+loops exhausts. 
+Example: 
+l= [1,7,8] 
+for item in l: 
+    print(item) 
+else: 
+    print(""done"") # this is printed when the loop exhausts! 
+Output: 
+1 
+7 
+8 
+done 
+ 
+ 
+THE BREAK STATEMENT 
+‘break’ is used to come out of the loop when encountered. It instructs the program to – 
+exit the loop now.",[-0.03725255  0.02979073  0.02357913 -0.00563382  0.02111863]...
+f0571f7c-58f7-4633-a055-aebc446e74ae,The Ultimate Python Handbook.pdf,29,"28 
+ 
+Example: 
+for i in range (0,80): 
+    print(i)     # this will print 0,1,2 and 3 
+    if i==3 
+        break 
+THE CONTINUE STATEMENT 
+‘continue’ is used to stop the current iteration of the loop and continue with the next 
+one. It instructs the Program to “skip this iteration”. 
+Example: 
+for i in range(4): 
+    print(""printing"") 
+    if i == 2:   # if i is 2, the iteration is skipped  
+        continue 
+    print(i) 
+ 
+PASS STATEMENT 
+pass is a null statement in python. 
+It instructs to “do nothing”. 
+Example:  
+l = [1,7,8] 
+for item in l: 
+    pass          # without pass, the program will throw an error",[-0.00189117  0.08470041  0.00933759 -0.00170661  0.04324621]...
+74ca76f6-7cfa-4e6c-85d2-521cf3e2a2fc,The Ultimate Python Handbook.pdf,30,"29 
+ 
+CHAPTER 7 – PRACTICE SET 
+1. Write a program to print multiplication table of a given number using for loop. 
+2. Write a program to greet all the person names stored in a list ‘l’ and which starts 
+with S. 
+l = [""Harry"", ""Soham"", ""Sachin"", ""Rahul""] 
+3. Attempt problem 1 using while loop. 
+4. Write a program to find whether a given number is prime or not. 
+5. Write a program to find the sum of first n natural numbers using while loop. 
+6. Write a program to calculate the factorial of a given number using for loop. 
+7. Write a program to print the following star pattern. 
+   * 
+ *** 
+*****  for n = 3 
+8. Write a program to print the following star pattern: 
+* 
+** 
+***      for n = 3 
+9. Write a program to print the following star pattern. 
+* * * 
+*    *    for n = 3 
+* * *  
+10. Write a program to print multiplication table of n using for loops in reversed 
+order.",[-0.00651339  0.05521209 -0.08365484 -0.06260974 -0.09137775]...
+09ee5654-1c82-4ddb-87e2-8cebbf887c4e,The Ultimate Python Handbook.pdf,31,"30 
+ 
+CHAPTER 8 – FUNCTIONS & RECURSIONS 
+A function is a group of statements performing a specific task. 
+When a program gets bigger in size and its complexity grows, it gets difficult for a 
+program to keep track on which piece of code is doing what! 
+A function can be reused by the programmer in a given program any number of 
+EXAMPLE AND SYNTAX OF A FUNCTION 
+The syntax of a function looks as follows: 
+def func1(): 
+    print('hello') 
+This function can be called any number of times, anywhere in the program. 
+FUNCTION CALL 
+Whenever we want to call a function, we put the name of the function followed by 
+parentheses as follows: 
+func1() # This is called function call. 
+FUNCTION DEFINITION 
+The part containing the exact set of instructions which are executed during the function 
+call. 
+Quick Quiz:  Write a program to greet a user with “Good day” using functions. 
+TYPES OF FUNCTIONS IN PYTHON 
+There are two types of functions in python:",[-0.06792689 -0.01423385 -0.00254223  0.02702115 -0.06404349]...
+df92a174-e08c-4e8f-9167-50e36fe7d01d,The Ultimate Python Handbook.pdf,31,"call. 
+Quick Quiz:  Write a program to greet a user with “Good day” using functions. 
+TYPES OF FUNCTIONS IN PYTHON 
+There are two types of functions in python: 
+• Built in functions (Already present in python) 
+• User defined functions (Defined by the user) 
+Examples of built in functions includes len(), print(), range() etc. 
+The func1() function we defined is an example of user defined function. 
+FUNCTIONS WITH ARGUMENTS 
+A function can accept some value it can work with. We can put these values in the 
+parentheses. 
+A function can also return value as shown below:",[-0.08970838  0.04996845 -0.00759493  0.01982514 -0.16654883]...
+abcc643f-c2ec-4676-ae3f-b6832732b41f,The Ultimate Python Handbook.pdf,32,"31 
+ 
+def greet(name): 
+    gr = ""hello""+ name  
+    return gr  
+                    
+a = greet (""harry"") 
+# a will now contain ""hello harry""  
+ 
+DEFAULT PARAMETER VALUE 
+We can have a value as default as default argument in a function. 
+If we specify name = “stranger” in the line containing def, this value is used when no 
+argument is passed. 
+Example: 
+def greet(name = ""stranger""): 
+    # function body 
+greet() # name will be ""stranger"" in function body (default) 
+greet(""harry"") # name will be ""harry"" in function body (passed) 
+ 
+RECURSION 
+Recursion is a function which calls itself. 
+It is used to directly use a mathematical formula as function.  
+Example:  
+factorial(n) = n x factorial (n-1) 
+This function can be defined as follows: 
+def factorial(n) 
+    if i == 0 or i==1: # base condition which doesn’t call the function 
+any further 
+    return 1 
+else: 
+    return n*factorial(n-1) # function calling itself",[-0.07384566 -0.01066939 -0.00382154  0.01948429 -0.1017415 ]...
+623b6d3d-456b-4012-96cc-098656c233cc,The Ultimate Python Handbook.pdf,33,"32 
+ 
+This works as follows: 
+                                    
+ 
+                     
+The programmer needs to be extremely careful while working with recursion to ensure 
+that the function doesn’t infinitely keep calling itself. Recursion is sometimes the most 
+direct way to code an algorithm.",[-0.01300943  0.00285956 -0.05062727 -0.05569458 -0.08683757]...
+b71e262e-6dc7-490e-9a3c-ca989e8f7318,The Ultimate Python Handbook.pdf,34,"33 
+ 
+CHAPTER 8 – PRACTICE SET 
+1. Write a program using functions to find greatest of three numbers. 
+2. Write a python program using function to convert Celsius to Fahrenheit. 
+3. How do you prevent a python print() function to print a new line at the end. 
+4. Write a recursive function to calculate the sum of first n natural numbers. 
+5. Write a python function to print first n lines of the following pattern: 
+*** 
+**               - for n = 3 
+* 
+ 
+6. Write a python function which converts inches to cms. 
+7. Write a python function to remove a given word from a list ad strip it at the same 
+time. 
+8. Write a python function to print multiplication table of a given number.",[-0.07507623  0.07320046 -0.05572018 -0.025058   -0.11624813]...
+00bd9409-7e79-4fde-9a6f-d436acc691eb,The Ultimate Python Handbook.pdf,35,"34 
+ 
+PROJECT 1: SNAKE, WATER, GUN GAME 
+We all have played snake, water gun game in our childhood. If you haven’t, google the 
+rules of this game and write a python program capable of playing this game with the 
+user.",[-0.03692856  0.07949052 -0.00800381 -0.0438145  -0.03725921]...
+67a09ae0-73af-4852-b883-4bbab334bdb9,The Ultimate Python Handbook.pdf,36,"35 
+ 
+CHAPTER 9 – FILE I/O 
+The random-access memory is volatile, and all its contents are lost once a program 
+terminates. In order to persist the data forever, we use files. 
+A file is data stored in a storage device. A python program can talk to the file by reading 
+content from it and writing content to it. 
+ 
+TYPE OF FILES. 
+There are 2 types of files: 
+1. Text files (.txt, .c, etc) 
+2. Binary files (.jpg, .dat, etc) 
+Python has a lot of functions for reading, updating, and deleting files. 
+OPENING A FILE 
+Python has an open() function for opening files. It takes 2 parameters:  filename and 
+mode. 
+# open(""filename"", ""mode of opening(read mode by default)"") 
+open(""this.txt"", ""r"") 
+ 
+READING A FILE IN PYTHON 
+# Open the file in read mode 
+f = open(""this.txt"", ""r"") 
+# Read its contents 
+text = f.read() 
+# Print its contents 
+print(text)",[-0.01333151  0.04409389 -0.06489807  0.08939587  0.03169229]...
+aada890f-e35e-4c6d-af12-2c7342e17b16,The Ultimate Python Handbook.pdf,37,"36 
+ 
+# Close the file 
+f.close() 
+ 
+OTHER METHODS TO READ THE FILE. 
+We can also use f.readline() function to read one full line at a time. 
+f.readline() # Read one line from the file. 
+MODES OF OPENING A FILE 
+r – open for reading 
+w - open for writing  
+a - open for appending 
++  - open for updating. 
+‘rb’ will open for read in binary mode. 
+‘rt’ will open for read in text mode. 
+WRITE FILES IN PYTHON 
+In order to write to a file, we first open it in write or append mode after which, we use 
+the python’s f.write() method to write to the file! 
+# Open the file in write mode 
+f = open(""this.txt"", ""w"") 
+# Write a string to the file 
+f.write(""this is nice"") 
+# Close the file 
+f.close() 
+ 
+WITH STATEMENT 
+The best way to open and close the file automatically is the with statement. 
+# Open the file in read mode using 'with', which automatically closes the 
+file 
+with open(""this.txt"", ""r"") as f: 
+    # Read the contents of the file 
+    text = f.read() 
+ 
+# Print the contents 
+print(text)",[-0.0074426   0.03407247 -0.06846853  0.09195504 -0.05767317]...
+d312dab3-8841-4df1-b816-287cb17cc6d7,The Ultimate Python Handbook.pdf,38,"37 
+ 
+CHAPTER 9 – PRACTICE SET 
+1. Write a program to read the text from a given file ‘poems.txt’ and find out 
+whether it contains the word ‘twinkle’. 
+2. The game() function in a program lets a user play a game and returns the score 
+as an integer. You need to read a file ‘Hi-score.txt’ which is either blank or 
+contains the previous Hi-score. You need to write a program to update the Hi-
+score whenever the game() function breaks the Hi-score. 
+3. Write a program to generate multiplication tables from 2 to 20 and write it to the 
+different files. Place these files in a folder for a 13 – year old. 
+4. A file contains a word “Donkey” multiple times. You need to write a program 
+which replace this word with ##### by updating the same file.  
+5. Repeat program 4 for a list of such words to be censored. 
+6. Write a program to mine a log file and find out whether it contains ‘python’. 
+7. Write a program to find out the line number where python is present from ques 6.",[ 0.025191    0.0364349  -0.05532205 -0.04720868 -0.06391653]...
+18fac1a2-13e9-49a2-a948-f300bf6050fc,The Ultimate Python Handbook.pdf,38,"6. Write a program to mine a log file and find out whether it contains ‘python’. 
+7. Write a program to find out the line number where python is present from ques 6. 
+8. Write a program to make a copy of a text file “this. txt” 
+9. Write a program to find out whether a file is identical & matches the content of 
+another file. 
+10. Write a program to wipe out the content of a file using python. 
+11. Write a python program to rename a file to “renamed_by_ python.txt.",[-0.08269352  0.06354496  0.00155396  0.02120181 -0.00097814]...
+ebf42510-adec-45c9-a5b7-49be3390e6d8,The Ultimate Python Handbook.pdf,39,"38 
+ 
+CHAPTER 10 - OBJECT ORIENTED PROGRAMMING 
+Solving a problem by creating object is one of the most popular approaches in 
+programming. This is called object-oriented programming. 
+This concept focuses on using reusable code (DRY Principle).  
+CLASS 
+A class is a blueprint for creating object. 
+ 
+Syntax: 
+class Employee: # Class name is written in pascal case 
+    # Methods & Variables  
+ 
+OBJECT 
+An object is an instantiation of a class. When class is defined, a template (info) is 
+defined. Memory is allocated only after object instantiation. 
+Objects of a given class can invoke the methods available to it without revealing the 
+implementation details to the user. – Abstractions & Encapsulation! 
+MODELLING A PROBLEM IN OOPS 
+We identify the following in our problem. 
+• Noun → Class → Employee 
+• Adjective → Attributes → name, age, salary 
+• Verbs → Methods → getSalary(), increment() 
+CLASS ATTRIBUTES 
+An attribute that belongs to the class rather than a particular object.",[-0.07247726  0.14675578 -0.00771374  0.06393613 -0.06221809]...
+75e976d8-0e72-48ba-9f23-e9a4622fc1fd,The Ultimate Python Handbook.pdf,39,"• Adjective → Attributes → name, age, salary 
+• Verbs → Methods → getSalary(), increment() 
+CLASS ATTRIBUTES 
+An attribute that belongs to the class rather than a particular object. 
+Example:",[-0.02912319  0.08892668 -0.05305572  0.0418117  -0.07329262]...
+f6dbdd71-aaef-4b8b-a67c-82c1db55e6db,The Ultimate Python Handbook.pdf,40,"39 
+ 
+ 
+ 
+class Employee: 
+    company = ""Google"" # Specific to Each Class 
+harry = Employee() # Object Instatiation 
+harry.company 
+Employee.company = ""YouTube"" # Changing Class Attribute 
+INSTANCE ATTRIBUTES 
+An attribute that belongs to the Instance (object). Assuming the class from the previous 
+example: 
+harry.name = ""harry"" 
+harry.salary = ""30k""  # Adding instance attribute   
+ 
+Note: Instance attributes, take preference over class attributes during assignment & 
+retrieval. 
+When looking up for harry.attribute it checks for the following: 
+1) Is attribute present in object? 
+2) Is attribute present in class? 
+SELF PARAMETER  
+self refers to the instance of the class. It is automatically passed with a function call 
+from an object. 
+harry.getSalary() # here self is harry  
+# equivalent to Employee.getSalary(harry) 
+The function getSalary() is defined as: 
+class Employee: 
+    company = ""Google"" 
+    def getSalary(self): 
+        print(""Salary is not there"") 
+STATIC METHOD",[-0.04102539  0.07056114 -0.01560673  0.00722165 -0.04535044]...
+fcfca9eb-290e-4dc9-b6b0-ac5eb394de7c,The Ultimate Python Handbook.pdf,40,"The function getSalary() is defined as: 
+class Employee: 
+    company = ""Google"" 
+    def getSalary(self): 
+        print(""Salary is not there"") 
+STATIC METHOD 
+Sometimes we need a function that does not use the self-parameter. We can define a 
+static method like this: 
+@staticmethod   # decorator to mark greet as a static method  
+def greet(): 
+    print(""Hello user"")",[-0.07388088  0.07984696 -0.02792656  0.03095532 -0.08459108]...
+6b5fd16b-9ce0-4ad6-9108-358163e10c80,The Ultimate Python Handbook.pdf,41,"40 
+ 
+__INIT__() CONSTRUCTOR 
+__init__() is a special method which is first run as soon as the object is created. 
+__init__() method is also known as constructor. 
+It takes ‘self’ argument and can also take further arguments. 
+For Example: 
+class Employee: 
+    def __init__(self, name): 
+        self.name=name 
+    def getSalary(self): 
+        ... 
+ 
+harry = Employee(""Harry"")",[-0.08888685  0.04263424 -0.05534253  0.04487907 -0.0668463 ]...
+4b142fee-3c80-4571-ba59-dc79b7783f09,The Ultimate Python Handbook.pdf,42,"41 
+ 
+CHAPTER 10 – PRACTICE SET 
+1. Create a class “Programmer” for storing information of few programmers 
+working at Microsoft. 
+2. Write a class “Calculator” capable of finding square, cube and square root of a 
+number. 
+3. Create a class with a class attribute a; create an object from it and set ‘a’ 
+directly using ‘object.a = 0’. Does this change the class attribute? 
+4. Add a static method in problem 2, to greet the user with hello. 
+5. Write a Class ‘Train’ which has methods to book a ticket, get status (no of seats) 
+and get fare information of train running under Indian Railways. 
+6. Can you change the self-parameter inside a class to something else (say 
+“harry”). Try changing self to “slf” or “harry” and see the effects.",[-0.02500837  0.06486256 -0.0710758   0.0343238  -0.15198411]...
+962b43d6-ea56-4439-9d87-75029a245b3f,The Ultimate Python Handbook.pdf,43,"42 
+ 
+CHAPTER 11 - INHERITANCE & MORE ON OOPS 
+Inheritance is a way of creating a new class from an existing class. 
+Syntax: 
+class Employee:  # Base class  
+    # Code 
+ 
+class Programmer(Employee): # Derived or child class 
+    # Code 
+We can use the method and attributes of ‘Employee’ in ‘Programmer’ object. 
+Also, we can overwrite or add new attributes and methods in ‘Programmer’ class. 
+TYPES OF INHERITANCE 
+• Single inheritance 
+• Multiple inheritance 
+• Multilevel inheritance 
+SINGLE INHERITANCE 
+Single inheritance occurs when child class inherits only a single parent class.",[-0.07325789  0.02515227 -0.01409557  0.02298129 -0.00679878]...
+855bc142-7e77-4fd3-aca9-708b3be48d4f,The Ultimate Python Handbook.pdf,44,"43 
+ 
+MULTIPLE INHERITANCE 
+Multiple Inheritance occurs when the child class inherits from more than one parent 
+classes.
+ 
+ 
+MULTILEVEL INHERITANCE 
+When a child class becomes a parent for another child class. 
+                                                                       
+ 
+SUPER() METHOD  
+super() method is used to access the methods of a super class in the derived class. 
+super().__init__() 
+# __init__() Calls constructor of the base class",[-0.0625871  -0.01241166 -0.00236521 -0.03147433  0.00725843]...
+04527630-aabf-413b-b035-d8e7b20a8f11,The Ultimate Python Handbook.pdf,45,"44 
+ 
+CLASS METHOD 
+A class method is a method which is bound to the class and not the object of the class. 
+@classmethod decorator is used to create a class method. 
+Syntax:  
+ @classmethod 
+    def(cls,p1,p2): 
+ 
+@PROPERTY DECORATORS 
+Consider the following class: 
+class Employee: 
+    @property 
+    def name(self): 
+        return self.ename 
+If e = Employee() is an object of class employee, we can print (e.name) to print the 
+ename by internally calling name() function. 
+@.GETTERS AND @.SETTERS 
+The method name with ‘@property’ decorator is called getter method.  
+We can define a function + @ name.setter  decorator like below: 
+@name.setter 
+def name (self,value): 
+    self.ename = value 
+OPERATOR OVERLOADING IN PYTHON  
+Operators in Python can be overloaded using dunder methods. 
+These methods are called when a given operator is used on the objects. 
+Operators in Python can be overloaded using the following methods: 
+p1+p2 # p1.__add__(p2) 
+p1-p2 # p1.__sub__(p2)",[-0.06767789  0.07037564 -0.00493883 -0.00250907 -0.09260093]...
+2a5b4127-b0df-460c-8b03-de748a323b17,The Ultimate Python Handbook.pdf,45,"These methods are called when a given operator is used on the objects. 
+Operators in Python can be overloaded using the following methods: 
+p1+p2 # p1.__add__(p2) 
+p1-p2 # p1.__sub__(p2) 
+p1*p2 # p1.__mul__(p2) 
+p1/p2 # p1.__truediv__(p2) 
+p1//p2 # p1.__floordiv__(p2) 
+Other dunder/magic methods in Python: 
+str__() # used to set what gets displayed upon calling str(obj)",[-0.03044886  0.01629605  0.01537879  0.00141112 -0.07669137]...
+20ef3eae-a356-48fb-aae2-3b27e9197fcb,The Ultimate Python Handbook.pdf,46,"45 
+ 
+__len__() # used to set what gets displayed upon calling.__len__() or 
+len(obj)",[-0.00722367  0.08786926 -0.03566208 -0.05451884 -0.11163725]...
+203bfd51-df58-4d59-a3bf-dad921928a10,The Ultimate Python Handbook.pdf,47,"46 
+ 
+CHAPTER 11- PRACTICE SET 
+1. Create a class (2-D vector) and use it to create another class representing a 3-D 
+vector. 
+2. Create a class ‘Pets’ from a class ‘Animals’ and further create a class ‘Dog’ from 
+‘Pets’. Add a method ‘bark’ to class ‘Dog’. 
+3. Create a class ‘Employee’ and add salary and increment properties to it. 
+Write a method ‘salaryAfterIncrement’ method with a @property decorator with a setter 
+which changes the value of increment based on the salary. 
+4. Write a class ‘Complex’ to represent complex numbers, along with overloaded 
+operators ‘+’ and ‘*’ which adds and multiplies them. 
+5. Write a class vector representing a vector of n dimensions. Overload the + and * 
+operator which calculates the sum and the dot(.) product of them. 
+6. Write __str__() method to print the vector as follows: 
+                                 7i + 8j +10k  
+Assume vector of dimension 3 for this problem.",[-0.08264698  0.1046648  -0.02939555 -0.01575655 -0.1438342 ]...
+ef9bc278-8ecd-43b5-8005-045def6d301f,The Ultimate Python Handbook.pdf,47,"6. Write __str__() method to print the vector as follows: 
+                                 7i + 8j +10k  
+Assume vector of dimension 3 for this problem. 
+7. Override the __len__() method on vector of problem 5 to display the dimension of the 
+vector.",[-0.04731641  0.10703315 -0.04014748  0.02263947 -0.03497453]...
+16c202b6-04b7-45de-b9aa-4f3c44f0aaec,The Ultimate Python Handbook.pdf,48,"47 
+ 
+PROJECT 2 – THE PERFECT GUESS 
+We are going to write a program that generates a random number and asks the user to 
+guess it. 
+If the player’s guess is higher than the actual number, the program displays “Lower 
+number please”. Similarly, if the user’s guess is too low, the program prints “higher 
+number please” When the user guesses the correct number, the program displays the 
+number of guesses the player used to arrive at the number. 
+Hint: Use the random module.",[-0.0419621   0.06255026 -0.01406592 -0.06550499 -0.01265126]...
+00f87a05-d2a2-42aa-8ac1-9fe52b3ac907,The Ultimate Python Handbook.pdf,49,"48 
+ 
+CHAPTER 12 – ADVANCED PYTHON 1 
+NEWLY ADDED FEATURES IN PYTHON 
+Following are some of the newly added features in Python programming language 
+WALRUS OPERATOR 
+The walrus operator (:=), introduced in Python 3.8, allows you to assign values to 
+variables as part of an expression. This operator, named for its resemblance to the eyes 
+and tusks of a walrus, is officially called the ""assignment expression."" 
+ 
+# Using walrus operator 
+if (n := len([1, 2, 3, 4, 5])) > 3: 
+    print(f""List is too long ({n} elements, expected <= 3)"") 
+ 
+# Output: List is too long (5 elements, expected <= 3) 
+In this example, n is assigned the value of len([1, 2, 3, 4, 5]) and then used in 
+the comparison within the if statement. 
+TYPES DEFINITIONS IN PYTHON 
+Type hints are added using the colon (:) syntax for variables and the -> syntax for 
+function return types. 
+ 
+# Variable type hint 
+age: int = 25 
+ 
+# Function type hints 
+def greeting(name: str) -> str: 
+    return f""Hello, {name}!"" 
+ 
+# Usage",[-0.0064759   0.06405405  0.0587191   0.0219509   0.03029133]...
+4374d023-241e-449d-9878-d57d8bbbee23,The Ultimate Python Handbook.pdf,49,"function return types. 
+ 
+# Variable type hint 
+age: int = 25 
+ 
+# Function type hints 
+def greeting(name: str) -> str: 
+    return f""Hello, {name}!"" 
+ 
+# Usage 
+print(greeting(""Alice""))  # Output: Hello, Alice! 
+ 
+ADVANCED TYPE HINTS 
+Python's typing module provides more advanced type hints, such as List, Tuple, Dict, 
+and Union. 
+You can import List, Tuple and Dict types from the typing module like this: 
+from typing import List, Tuple, Dict, Union",[-0.00812125  0.04969291  0.0661398   0.06584547 -0.060984  ]...
+ad023942-815d-48e8-a859-fb5dd9c8c139,The Ultimate Python Handbook.pdf,50,"49 
+ 
+The syntax of types looks something like this: 
+ 
+from typing import List, Tuple, Dict, Union 
+ 
+# List of integers 
+numbers: List[int] = [1, 2, 3, 4, 5] 
+ 
+# Tuple of a string and an integer 
+person: Tuple[str, int] = (""Alice"", 30) 
+ 
+# Dictionary with string keys and integer values 
+scores: Dict[str, int] = {""Alice"": 90, ""Bob"": 85} 
+ 
+# Union type for variables that can hold multiple types 
+identifier: Union[int, str] = ""ID123"" 
+identifier = 12345  # Also valid 
+These annotations help in making the code self-documenting and allow developers to 
+understand the data structures used at a glance. 
+MATCH CASE 
+Python 3.10 introduced the match statement, which is similar to the switch statement 
+found in other programming languages.   
+The basic syntax of the match statement involves matching a variable against several 
+cases using the case keyword. 
+def http_status(status): 
+    match status: 
+        case 200: 
+            return ""OK"" 
+        case 404:",[-0.04837918  0.05231709 -0.00109166 -0.02228424 -0.04363279]...
+57b4937c-0c50-4fe9-b398-426576a9a3fa,The Ultimate Python Handbook.pdf,50,"cases using the case keyword. 
+def http_status(status): 
+    match status: 
+        case 200: 
+            return ""OK"" 
+        case 404: 
+            return ""Not Found"" 
+        case 500: 
+            return ""Internal Server Error"" 
+        case _: 
+            return ""Unknown status"" 
+ 
+# Usage 
+print(http_status(200))  # Output: OK 
+print(http_status(404))  # Output: Not Found 
+print(http_status(500))  # Output: Internal Server Error 
+print(http_status(403))  # Output: Unknown status 
+ 
+DICTIONARY MERGE & UPDATE OPERATORS 
+New operators | and |= allow for merging and updating dictionaries.",[ 0.01456656  0.06419344 -0.05337212 -0.05597539 -0.07656136]...
+787053e5-c009-4e82-af33-088140128ff5,The Ultimate Python Handbook.pdf,51,"50 
+ 
+dict1 = {'a': 1, 'b': 2} 
+dict2 = {'b': 3, 'c': 4} 
+merged = dict1 | dict2 
+print(merged)  # Output: {'a': 1, 'b': 3, 'c': 4} 
+You can now use multiple context managers in a single with statement more cleanly 
+using the parenthesised context manager 
+with ( 
+    open('file1.txt') as f1, 
+    open('file2.txt') as f2 
+): 
+    # Process files 
+ 
+ 
+EXCEPTION HANDLING IN PYTHON 
+There are many built-in exceptions which are raised in python when something goes 
+wrong. 
+Exception in python can be handled using a try statement. The code that handles the 
+exception is written in the except clause. 
+try: 
+   # Code which might throw exception  
+except Exception as e:  
+    print(e) 
+When the exception is handled, the code flow continues without program interruption. 
+We can also specify the exception to catch like below: 
+try: 
+    # Code 
+except ZeroDivisionError: 
+    # Code 
+except TypeError: 
+    # Code 
+except: 
+    # Code       # All other exceptions are handled here.",[-0.03686492  0.04459247  0.03433619  0.05668592  0.01975489]...
+b20a4931-a92b-45ec-a293-3746d421a1a8,The Ultimate Python Handbook.pdf,51,"try: 
+    # Code 
+except ZeroDivisionError: 
+    # Code 
+except TypeError: 
+    # Code 
+except: 
+    # Code       # All other exceptions are handled here. 
+RAISING EXCEPTIONS 
+We can raise custom exceptions using the ‘raise’ keyword in python. 
+TRY WITH ELSE CLAUSE  
+Sometimes we want to run a piece of code when try was successful.",[-0.05076507  0.05465923  0.03595402  0.0125623   0.00981938]...
+83026a9b-ef76-4b6c-9874-e49024c15702,The Ultimate Python Handbook.pdf,52,"51 
+ 
+try: 
+    # Somecode 
+except: 
+    # Somecode 
+else: 
+    # Code         # This is executed only if the try was successful 
+ 
+TRY WITH FINALLY 
+Python offers a ‘finally’ clause which ensures execution of a piece of code inspective of 
+the exception. 
+ 
+try: 
+    # Some Code 
+except: 
+    # Some Code 
+finally: 
+    # Some Code           # Executed regardless of error! 
+IF __NAME__== ‘__MAIN__’ IN PYTHON  
+‘__name__’ evaluates to the name of the module in python from where the program is 
+ran. 
+If the module is being run directly from the command line, the ‘ __name__’ is set to 
+string “__main__”. Thus, this behaviour is used to check whether the module is run 
+directly or imported to another file. 
+THE GLOBAL KEYWORD 
+‘global’ keyword is used to modify the variable outside of the current scope. 
+ENUMERATE FUNCTION IN PYTHON 
+The ‘enumerate’ function adds counter to an iterable and returns it 
+for i,item in list1: 
+    print(i,item)  # Prints the items of list 1 with index",[-0.04978922  0.01234392 -0.02654909  0.0413243   0.04362885]...
+7d4d0b7c-3803-4a61-ac36-72758c991527,The Ultimate Python Handbook.pdf,52,"ENUMERATE FUNCTION IN PYTHON 
+The ‘enumerate’ function adds counter to an iterable and returns it 
+for i,item in list1: 
+    print(i,item)  # Prints the items of list 1 with index 
+LIST COMPREHENSIONS 
+List Comprehension is an elegant way to create lists based on existing lists. 
+list1 = [1,7,12,11,22,] 
+list2 = [i for item in list 1 if item > 8]",[-0.0196742   0.01133211  0.00315088  0.00828293  0.06869487]...
+b3c72ec0-1e73-4df6-82e9-55373cd6b48d,The Ultimate Python Handbook.pdf,53,"52 
+ 
+CHAPTER 12 – PRACTICE SET 
+1. Write a program to open three files 1.txt, 2.txt and 3.txt if any these files are not 
+present, a message without exiting the program must be printed prompting the same. 
+2. Write a program to print third, fifth and seventh element from a list using enumerate 
+function. 
+3. Write a list comprehension to print a list which contains the multiplication table of a 
+user entered number. 
+4. Write a program to display a/b where a and b are integers. If b=0, display infinite by 
+handling the ‘ZeroDivisionError’. 
+5. Store the multiplication tables generated in problem 3 in a file named Tables.txt.",[-0.0312366   0.04408149 -0.10269006 -0.02932943 -0.08887109]...
+12d2c073-7654-4f29-aa34-ceefb09d7828,The Ultimate Python Handbook.pdf,54,"53 
+ 
+CHAPTER 13 – ADVANCED PYTHON 2 
+VIRTUAL ENVIRIONMENT 
+An environment which is same as the system interpreter but is isolated from the other 
+Python environments on the system. 
+INSTALLATION 
+To use virtual environments, we write: 
+pip install virtualenv  # Install the package 
+We create a new environment using: 
+virtualenv myprojectenv # Creates a new venv 
+The next step after creating the virtual environment is to activate it. 
+We can now use this virtual environment as a separate Python installation. 
+PIP FREEZE COMMAND  
+‘pip freeze’ returns all the package installed in a given python environment along with 
+the versions. 
+pip freeze > requirements .txt 
+The above command creates a file named ‘requirements.txt’ in the same directory 
+containing the output of ‘pip freeze’. 
+We can distribute this file to other users, and they can recreate the same environment 
+using: 
+pip install –r requirements.txt 
+LAMBDA FUNCTIONS",[-0.00875827 -0.02506579  0.01098939 -0.02755641  0.05100376]...
+6c41ed95-7e57-4d06-ba21-4498654c7013,The Ultimate Python Handbook.pdf,54,"containing the output of ‘pip freeze’. 
+We can distribute this file to other users, and they can recreate the same environment 
+using: 
+pip install –r requirements.txt 
+LAMBDA FUNCTIONS    
+Function created using an expression using ‘lambda’ keyword. 
+Syntax: 
+lambda arguments:expressions 
+# can be used as a normal function 
+Example: 
+square = lambda x:x*x 
+square(6)  # returns 36 
+sum = lambda a,b,c:a+b+c",[-0.01906666  0.01818459 -0.03005304  0.01509273 -0.05406221]...
+23343198-9c93-4894-b198-dfc053fbc9c0,The Ultimate Python Handbook.pdf,55,"54 
+ 
+sum(1,2,3) # returns 6 
+JOIN METHOD (STRINGS) 
+Creates a string from iterable objects. 
+l = [""apple"", ""mango"", ""banana""] 
+result = "", and, "".join(l) 
+print(result) 
+The above line will return “apple,and,mango,and,banana”. 
+FORMAT METHOD (STRINGS) 
+Formats the values inside the string into a desired output. 
+template.format(p1,p2...) 
+Syntax: 
+""{} is a good {}"".format(""harry"", ""boy"")   #1. 
+""{} is a good {o}"".format(""harry"", ""boy"")  #2. 
+ 
+# output for 1: 
+# harry is a good boy  
+ 
+# output for 2: 
+# boy is a good harry  
+ 
+MAP, FILTER & REDUCE 
+Map applies a function to all the items in an input_list. 
+Syntax. 
+map(function, input_list) 
+              # the function can be lambda function 
+Filter creates a list of items for which the function returns true. 
+list(filter(function)) 
+              # the function can be lambda function 
+Reduce applies a rolling computation to sequential pair of elements. 
+from functools import reduce 
+val=reduce (function, list1)",[ 0.02713346  0.12469404  0.02553152  0.00085781 -0.04418859]...
+875a78ff-37ff-4036-8ba6-77be35f5666a,The Ultimate Python Handbook.pdf,55,"# the function can be lambda function 
+Reduce applies a rolling computation to sequential pair of elements. 
+from functools import reduce 
+val=reduce (function, list1)        
+              # the function can be lambda function",[-0.09653921  0.06311933  0.01422541 -0.04212631 -0.05078068]...
+0eff2499-c309-4d2e-87f4-16561680ac70,The Ultimate Python Handbook.pdf,56,"55 
+ 
+If the function computes sum of two numbers and the list is [1,2,3,4]",[ 0.02181568  0.1041246  -0.0511275  -0.06278946 -0.06068417]...
+d9ffc4a8-a628-4c77-bbca-08cad7ae5bc5,The Ultimate Python Handbook.pdf,57,"56 
+ 
+CHAPTER 13- PRACTICE SET 
+1. Create two virtual environments, install few packages in the first one. How do you 
+create a similar environment in the second one? 
+2. Write a program to input name, marks and phone number of a student and format it 
+using the format function like below: 
+“The name of the student is Harry, his marks are 72 and phone number is 99999888” 
+3. A list contains the multiplication table of 7. write a program to convert it to vertical 
+string of same numbers. 
+                                                     
+  
+4. Write a program to filter a list of numbers which are divisible by 5. 
+5. Write a program to find the maximum of the numbers in a list using the reduce 
+function. 
+6. Run pip freeze for the system interpreter. Take the contents and create a similar 
+virtualenv. 
+7. Explore the ‘Flask’ module and create a web server using Flask & Python.",[-0.00702561  0.07856831 -0.06441457 -0.08925313 -0.07096342]...
+17c601d4-a9be-45d9-b370-c3f11a9614ed,The Ultimate Python Handbook.pdf,58,"57 
+ 
+MEGA PROJECT 1: JARVIS - VOICE-ACTIVATED VIRTUAL ASSISTANT 
+Jarvis is a voice-activated virtual assistant designed to perform tasks such as web 
+browsing, playing music, fetching news, and responding to user queries using OpenAI's 
+GPT-3.5-turbo model. 
+FEATURES 
+• Voice Recognition 
+• Utilizes the speech_recognition library to listen for and recognize voice commands. 
+• Activates upon detecting the wake word ""Jarvis."" 
+• Text-to-Speech 
+• Converts text to speech using pyttsx3 for local conversion. 
+• Uses gTTS (Google Text-to-Speech) and pygame for playback. 
+• Web Browsing. 
+• Opens websites like Google, Facebook, YouTube, and LinkedIn based on voice 
+commands. 
+• Music Playback 
+• Interfaces with a musicLibrary module to play songs via web links. 
+• News Fetching 
+• Fetches and reads the latest news headlines using NewsAPI. 
+• OpenAI Integration 
+• Handles complex queries and generates responses using OpenAI's GPT-3.5-turbo.",[-0.09561371 -0.06725724 -0.04963648 -0.06337668  0.00191924]...
+d31585dc-dcd3-4f29-ba29-352cc6dbafc0,The Ultimate Python Handbook.pdf,58,"• News Fetching 
+• Fetches and reads the latest news headlines using NewsAPI. 
+• OpenAI Integration 
+• Handles complex queries and generates responses using OpenAI's GPT-3.5-turbo. 
+• Acts as a general virtual assistant similar to Alexa or Google Assistant. 
+• Activates upon detecting the wake word ""Jarvis."" 
+• Text-to-Speech 
+WORKFLOW 
+1. Initialization 
+2. Greets the user with ""Initializing Jarvis...."" 
+3. Wake Word Detection 
+4. Listens for the wake word ""Jarvis."" 
+5. Acknowledges activation by saying ""Ya."" 
+6. Command Processing. 
+7. Processes commands to determine actions such as opening a website, playing 
+music, fetching news, or generating a response via OpenAI. 
+8. Speech Output. 
+9. Provides responses using speak function with either pyttsx3 or gTTS. 
+10. Greets the user with ""Initializing Jarvis...."" 
+11. Wake Word Detection 
+12. Acknowledges activation by saying ""Ya.""",[-0.05243964 -0.06609942 -0.03288265 -0.01038432  0.03607893]...
+013b6002-6aa1-44ef-ab62-193c6e0d4554,The Ultimate Python Handbook.pdf,59,"58 
+ 
+13. Processes commands to determine actions such as opening a website, playing 
+music, fetching news, or generating a response via OpenAI. 
+LIBRARIES USED 
+• speech_recognition 
+• webbrowser 
+• pyttsx3 
+• musicLibrary 
+• requests 
+• openai 
+• gTTS 
+• pygame 
+• os",[-0.0332446  -0.09805281 -0.08274454 -0.03999965  0.05151309]...
+a99db332-4952-41a6-8d9a-14620c7c392b,The Ultimate Python Handbook.pdf,60,"59 
+ 
+MEGA PROJECT 2: AUTO-REPLY AI CHATBOT 
+DESCRIPTION 
+This project automates the process of interacting with a chat application, specifically 
+designed to analyze chat history and generate humorous responses using OpenAI's 
+GPT-3.5-turbo model. The virtual assistant, named Naruto, is a character that roasts 
+people in a funny way, based on the chat history. 
+FEATURES 
+14. Automated Chat Interaction 
+15. Uses pyautogui to perform mouse and keyboard operations, interacting with the 
+chat application without manual intervention. 
+16. Chat History Analysis 
+17. Copies chat history from the chat application and analyzes it to determine if the last 
+message was sent by a specific user (e.g., ""Rohan Das""). 
+18. Humorous Response Generation 
+19. Integrates with OpenAI's GPT-3.5-turbo model to generate funny, roast-style 
+responses based on the analyzed chat history. 
+20. Clipboard Operations 
+21. Utilizes pyperclip to copy and paste text, facilitating the retrieval and insertion of",[-0.10933297 -0.01538806 -0.02795902 -0.01515534  0.03060299]...
+795042c2-c2b2-4269-8736-f45bf714538d,The Ultimate Python Handbook.pdf,60,"responses based on the analyzed chat history. 
+20. Clipboard Operations 
+21. Utilizes pyperclip to copy and paste text, facilitating the retrieval and insertion of 
+chat messages. 
+22. Uses pyautogui to perform mouse and keyboard operations, interacting with the 
+chat application without manual intervention. 
+23. Copies chat history from the chat application and analyzes it to determine if the last 
+message was sent by a specific user (e.g., ""Rohan Das""). 
+24. Humorous Response Generation 
+25. Integrates with OpenAI's GPT-3.5-turbo model to generate funny, roast-style 
+responses based on the analyzed chat history. 
+WORKFLOW 
+• Initialization and Setup 
+• Click on the Chrome icon to open the chat application. 
+• Wait for a brief period to ensure the application is open and ready for interaction. 
+• Chat History Retrieval 
+• Periodically select and copy chat history by dragging the mouse over the chat 
+area and using the copy shortcut. 
+• Retrieve the copied text from the clipboard.",[-0.09303337 -0.0302101  -0.05593459 -0.00065902  0.05406869]...
+b23d5894-b2ee-4f76-bcad-27bd16123cf8,The Ultimate Python Handbook.pdf,60,"• Chat History Retrieval 
+• Periodically select and copy chat history by dragging the mouse over the chat 
+area and using the copy shortcut. 
+• Retrieve the copied text from the clipboard. 
+• Message Analysis",[-0.0150751  -0.01147467 -0.00653074 -0.01022053  0.0695562 ]...
+78474aaf-501e-4f7f-af80-acfa8ade1aea,The Ultimate Python Handbook.pdf,61,"60 
+ 
+• Analyze the copied chat history to check if the last message is from a specific 
+user (e.g., ""Rohan Das""). 
+• If the last message is from the target user, send the chat history to OpenAI's 
+GPT-3.5-turbo to generate a humorous response. 
+• Copy the generated response to the clipboard. 
+• Send Response 
+• Click on the chat input area and paste the generated response. 
+• Press 'Enter' to send the response. 
+• Wait for a brief period to ensure the application is open and ready for interaction. 
+• Chat History Retrieval 
+• Retrieve the copied text from the clipboard. 
+• Message Analysis 
+• Analyze the copied chat history to check if the last message is from a specific 
+user (e.g., ""Rohan Das""). 
+• Generate Response 
+• Copy the generated response to the clipboard. 
+• Send Response 
+LIBRARIES USED 
+1. pyautogui: For automating mouse and keyboard interactions. 
+2. time: For adding delays between operations. 
+3. pyperclip: For clipboard operations.",[-0.07310954 -0.02660934 -0.06201442 -0.01607409  0.0713777 ]...
+3de445ba-c048-49e5-9637-2f4f3ae3afb8,The Ultimate Python Handbook.pdf,61,"• Send Response 
+LIBRARIES USED 
+1. pyautogui: For automating mouse and keyboard interactions. 
+2. time: For adding delays between operations. 
+3. pyperclip: For clipboard operations. 
+4. openai: For interacting with OpenAI's GPT-3.5-turbo model.",[-0.09717558 -0.07683332 -0.07380693 -0.00381952  0.04302929]...
