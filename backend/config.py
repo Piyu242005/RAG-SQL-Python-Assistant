@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Paths
     base_dir: Path = Path(__file__).parent.parent
     pdf_directory: Path = base_dir / "data" / "pdfs"
+    media_directory: Path = base_dir / "data" / "media"
     
     # Vector Store
     chroma_persist_directory: str = os.getenv("CHROMA_PERSIST_DIRECTORY", str(base_dir / "data" / "chroma_db"))
