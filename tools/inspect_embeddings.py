@@ -36,46 +36,53 @@ def export_to_csv():
     print(f"Exported to: {output_file}")
     return data
 
+import umap
+
 def visualize_embeddings(data):
-    """Generates a 2D T-SNE visualization of the embeddings."""
-    print("Generating 2D semantic visualization...")
+    """Generates a 2D UMAP visualization of the embeddings (Upgrade from TSNE)."""
+    print("🎨 Generating 2D UMAP semantic visualization...")
     
     embeddings = np.array(data['embeddings'])
     sources = [m.get('source', 'Unknown') for m in data['metadatas']]
+    topics = [m.get('topic', 'General') for m in data['metadatas']]
     
-    # Reduce dimensions to 2D using T-SNE
-    n_samples = len(embeddings)
-    perplexity = min(30, max(1, n_samples - 1))
+    # Using UMAP for better cluster separation
+    reducer = umap.UMAP(
+        n_neighbors=15,
+        min_dist=0.1,
+        n_components=2,
+        random_state=42
+    )
+    embeddings_2d = reducer.fit_transform(embeddings)
     
-    tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
-    embeddings_2d = tsne.fit_transform(embeddings)
+    plt.figure(figsize=(14, 9))
     
-    plt.figure(figsize=(12, 8))
+    # Color by topic for better insight
+    unique_topics = list(set(topics))
+    colors = plt.cm.get_cmap('tab10', len(unique_topics))
     
-    # Color by source file
-    unique_sources = list(set(sources))
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_sources)))
-    
-    for source, color in zip(unique_sources, colors):
-        indices = [i for i, s in enumerate(sources) if s == source]
+    for i, topic in enumerate(unique_topics):
+        indices = [idx for idx, t in enumerate(topics) if t == topic]
         plt.scatter(
             embeddings_2d[indices, 0], 
             embeddings_2d[indices, 1], 
-            c=[color], 
-            label=source, 
-            alpha=0.6, 
-            edgecolors='w', 
-            s=100
+            label=topic, 
+            alpha=0.7, 
+            edgecolors='none', 
+            s=80
         )
     
-    plt.title("Semantic Map of Piyu AI Assistant Documents", fontsize=15)
-    plt.legend()
-    plt.grid(True, linestyle='--', alpha=0.3)
+    plt.title("Semantic Topic Clusters (UMAP Visualization)", fontsize=16, pad=20)
+    plt.xlabel("UMAP Dimension 1")
+    plt.ylabel("UMAP Dimension 2")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', title="Topics")
+    plt.grid(True, linestyle='--', alpha=0.2)
+    plt.tight_layout()
     
     output_dir = Path("../exports")
-    output_img = output_dir / "embedding_visualization.png"
-    plt.savefig(output_img)
-    print(f"Visualization saved to: {output_img}")
+    output_img = output_dir / "umap_visualization.png"
+    plt.savefig(output_img, dpi=300)
+    print(f"✅ UMAP Visualization saved to: {output_img}")
 
 if __name__ == "__main__":
     print("\n" + "="*50)

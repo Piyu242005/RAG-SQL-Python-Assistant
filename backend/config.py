@@ -18,8 +18,12 @@ class Settings(BaseSettings):
     # Embedding Model
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     
+    # Paths
+    base_dir: Path = Path(__file__).parent.parent
+    pdf_directory: Path = base_dir / "data" / "pdfs"
+    
     # Vector Store
-    chroma_persist_directory: str = os.getenv("CHROMA_PERSIST_DIRECTORY", "../data/chroma_db")
+    chroma_persist_directory: str = os.getenv("CHROMA_PERSIST_DIRECTORY", str(base_dir / "data" / "chroma_db"))
     
     # Redis Configuration
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -37,10 +41,6 @@ class Settings(BaseSettings):
     
     # CORS
     cors_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
-    
-    # Paths
-    base_dir: Path = Path(__file__).parent.parent
-    pdf_directory: Path = base_dir / "data" / "pdfs"
     
     class Config:
         env_file = ".env"

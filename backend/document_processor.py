@@ -73,16 +73,29 @@ class DocumentProcessor:
         
         return pages_data
     
-    def chunk_documents(self, pages_data: List[Dict[str, any]], doc_type: str) -> List[Document]:
-        """Split pages into chunks and create LangChain Document objects.
+    def _detect_topic(self, text: str) -> str:
+        """Detect the primary topic of a chunk for metadata filtering."""
+        text = text.lower()
         
-        Args:
-            pages_data: List of page data dictionaries
-            doc_type: Type of document ('mysql' or 'python')
+        # SQL Heuristics
+        sql_keywords = ['join', 'select', 'where', 'group by', 'insert', 'update', 'delete', 'table', 'database']
+        # Python Heuristics
+        python_keywords = ['def ', 'class ', 'import ', 'decorators', 'list comprehension', 'try:', 'except:', 'async', 'await']
+        
+        if any(k in text for k in sql_keywords):
+            if 'join' in text: return "sql_joins"
+            if 'select' in text: return "sql_queries"
+            return "sql_general"
+        
+        if any(k in text for k in python_keywords):
+            if 'decorator' in text: return "python_decorators"
+            if 'class' in text: return "python_oop"
+            return "python_general"
             
-        Returns:
-            List of LangChain Document objects
-        """
+        return "general_tech"
+
+    def chunk_documents(self, pages_data: List[Dict[str, any]], doc_type: str) -> List[Document]:
+        """Split pages into chunks and create LangChain Document objects with topic tagging."""
         documents = []
         
         for page_data in pages_data:
@@ -90,6 +103,9 @@ class DocumentProcessor:
             chunks = self.text_splitter.split_text(page_data["text"])
             
             for i, chunk in enumerate(chunks):
+                # Detect topic for this specific chunk
+                topic = self._detect_topic(chunk)
+                
                 # Create Document with metadata
                 doc = Document(
                     page_content=chunk,
@@ -97,7 +113,8 @@ class DocumentProcessor:
                         "source": page_data["source"],
                         "page": page_data["page_number"],
                         "chunk": i,
-                        "doc_type": doc_type
+                        "doc_type": doc_type,
+                        "topic": topic  # NEW: Topic tagging
                     }
                 )
                 documents.append(doc)
@@ -125,52 +142,10 @@ class DocumentProcessor:
         print(f"[OK] Created {len(documents)} chunks from {pdf_path.name}")
         
         return documents
-    
-    def process_all_pdfs(self) -> List[Document]:
-        """Process all PDF files in the configured PDF directory.
-        
-        Returns:
-            List of all processed Document objects
-        """
-        print("=" * 60)
-        print(" Starting PDF Processing (Auto-Discovery)")
-        print("=" * 60)
-        
-        all_documents = []
-        pdf_dir = settings.pdf_directory
-        
-        if not pdf_dir.exists():
-            print(f"[!] Warning: PDF directory not found: {pdf_dir}")
-            return []
-
-        # Walk directory for all PDFs
-        for file_path in pdf_dir.glob("*.pdf"):
-            filename = file_path.name
-            
-            # Simple heuristic for doc_type based on filename
-            doc_type = "mysql" if "sql" in filename.lower() else "python" if "python" in filename.lower() else "custom"
-            
-            try:
-                documents = self.process_pdf(file_path, doc_type)
-                all_documents.extend(documents)
-            except Exception as e:
-                print(f"[X] Failed to process {filename}: {str(e)}")
-        
-        print("\n" + "=" * 60)
-        print(f"[OK] Processing Complete: {len(all_documents)} total chunks")
-        print("=" * 60)
-        
-        return all_documents
 
 
 # Example usage
 if __name__ == "__main__":
     processor = DocumentProcessor()
-    documents = processor.process_all_pdfs()
-    print(f"\nProcessed {len(documents)} document chunks")
-    
-    # Show sample
-    if documents:
-        print("\nSample chunk:")
-        print(f"Content: {documents[0].page_content[:200]}...")
-        print(f"Metadata: {documents[0].metadata}")
+    # The actual processing is usually done via initialize_db.py
+    print("DocumentProcessor ready.")

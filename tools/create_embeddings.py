@@ -19,10 +19,12 @@ from langchain_chroma import Chroma
 # Add backend to path so we can import config
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-# Configuration (Aligned with new organization)
-PDF_DIR = Path("../data/pdfs")
-CHROMA_DIR = Path("../data/chroma_db")
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+from config import settings
+
+# Configuration (Synced with central settings)
+PDF_DIR = settings.pdf_directory
+CHROMA_DIR = Path(settings.chroma_persist_directory)
+EMBEDDING_MODEL = settings.embedding_model
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 COLLECTION_NAME = "rag_documents"
@@ -64,8 +66,26 @@ def load_pdfs() -> List[dict]:
     
     return all_pages
 
+def detect_topic(text: str) -> str:
+    """Detect the primary topic of a chunk for metadata filtering."""
+    text = text.lower()
+    sql_keywords = ['join', 'select', 'where', 'group by', 'insert', 'update', 'delete', 'table', 'database']
+    python_keywords = ['def ', 'class ', 'import ', 'decorators', 'list comprehension', 'try:', 'except:', 'async', 'await']
+    
+    if any(k in text for k in sql_keywords):
+        if 'join' in text: return "sql_joins"
+        if 'select' in text: return "sql_queries"
+        return "sql_general"
+    
+    if any(k in text for k in python_keywords):
+        if 'decorator' in text: return "python_decorators"
+        if 'class' in text: return "python_oop"
+        return "python_general"
+        
+    return "general_tech"
+
 def split_text(pages: List[dict]) -> List[Document]:
-    """Splits extracted text into semantic chunks."""
+    """Splits extracted text into semantic chunks with topic tagging."""
     print(f"Splitting into chunks (size={CHUNK_SIZE}, overlap={CHUNK_OVERLAP})...")
     
     splitter = RecursiveCharacterTextSplitter(
@@ -84,7 +104,8 @@ def split_text(pages: List[dict]) -> List[Document]:
                 metadata={
                     "source": page["source"],
                     "page": page["page"],
-                    "chunk_id": idx
+                    "chunk_id": idx,
+                    "topic": detect_topic(chunk)  # TAGGING
                 }
             ))
     

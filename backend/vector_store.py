@@ -102,7 +102,7 @@ class VectorStoreManager:
         if self.vectorstore is None:
             self.initialize_vectorstore()
         
-        print(f"[+] Adding {len(documents)} documents to vector store...")
+        print(f"Adding {len(documents)} documents to vector store...")
         self.vectorstore.add_documents(documents)
         print("[OK] Documents added successfully")
     
@@ -112,24 +112,27 @@ class VectorStoreManager:
         k: int = 4,
         filter: Optional[dict] = None
     ) -> List[Document]:
-        """Perform similarity search in vector store.
-        
-        Args:
-            query: Search query
-            k: Number of results to return
-            filter: Optional metadata filter (e.g., {"doc_type": "mysql"})
-            
-        Returns:
-            List of relevant documents
-        """
+        """Perform similarity search with metadata filtering and debug logging."""
         if self.vectorstore is None:
             self.initialize_vectorstore()
         
-        return self.vectorstore.similarity_search(
+        print(f"\n[DEBUG] Querying Vector Store: '{query}'")
+        if filter:
+            print(f"[DEBUG] Applying Metadata Filter: {filter}")
+            
+        docs = self.vectorstore.similarity_search(
             query=query,
             k=k,
             filter=filter
         )
+        
+        print(f"[DEBUG] Retrieved {len(docs)} relevant chunks.")
+        for i, doc in enumerate(docs, 1):
+            source = doc.metadata.get('source', 'Unknown')
+            topic = doc.metadata.get('topic', 'N/A')
+            print(f"   [{i}] Source: {source} | Topic: {topic} | Score: [Vector Match]")
+            
+        return docs
     
     def similarity_search_with_score(
         self,
@@ -205,7 +208,7 @@ class VectorStoreManager:
                     ))
                 
                 if not documents:
-                    print("[!] Warning: No documents found to build BM25 index. Falling back to vector search.")
+                    print("Warning: No documents found to build BM25 index. Falling back to vector search.")
                     return self.get_retriever(k=k)
                     
                 bm25_retriever = BM25Retriever.from_documents(documents)
