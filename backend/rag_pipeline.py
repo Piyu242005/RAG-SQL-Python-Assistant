@@ -156,12 +156,16 @@ Rules:
         cache_key = f"rag_cache:{question}:{doc_type or 'all'}"
         cached_response = redis_manager.get_cache(cache_key)
         
-        if cached_response:
+        if cached_response and isinstance(cached_response.get('answer'), str):
             logger.info(f"Serving from cache: {question}")
             yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
-            for token in cached_response['answer'].split(' '):
-                yield f"data: {json.dumps({'token': token + ' '})}\n\n"
-                await asyncio.sleep(0.01) # Simulate streaming for cache
+            # Split by whitespace to simulate streaming tokens
+            tokens = cached_response['answer'].split(' ')
+            for i, token in enumerate(tokens):
+                # Add space back except for the last token
+                t = token + (' ' if i < len(tokens) - 1 else '')
+                yield f"data: {json.dumps({'token': t})}\n\n"
+                await asyncio.sleep(0.01)
             yield "data: [DONE]\n\n"
             return
 
@@ -187,10 +191,15 @@ Rules:
 
             full_answer = ""
             config = {"configurable": {"session_id": session_id}}
+            
+            # Use astream on the base_chain to ensure StrOutputParser works correctly
+            # RunnableWithMessageHistory sometimes wraps chunks in metadata
             async for chunk in self.chain.astream({"question": question}, config=config):
                 if chunk:
-                    full_answer += chunk
-                    yield f"data: {json.dumps({'token': chunk})}\n\n"
+                    # Defensive: ensure chunk is a string
+                    text_chunk = str(chunk) if not isinstance(chunk, str) else chunk
+                    full_answer += text_chunk
+                    yield f"data: {json.dumps({'token': text_chunk})}\n\n"
 
             # 4. Save to Cache (Expire in 1 hour)
             redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=3600)

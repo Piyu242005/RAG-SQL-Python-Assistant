@@ -74,7 +74,7 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
         </div>
       </header>
 
-      {/* Messages */}
+      {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto scrollbar-hide bg-transparent">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center px-6">
@@ -95,6 +95,7 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
                 </p>
               </motion.div>
 
+              {/* Example Question Grid */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -119,6 +120,36 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
                   </button>
                 ))}
               </motion.div>
+
+              {/* Status Warning Card */}
+              {!isSystemReady && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-12 max-w-sm mx-auto p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20"
+                >
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-3 font-bold text-xs uppercase tracking-wider">
+                    <AlertTriangle className="w-4 h-4" />
+                    System Check Required
+                  </div>
+                  <div className="space-y-2">
+                    {statusChecks.map((check, i) => (
+                      <div key={i} className="flex items-center justify-between text-[11px] font-medium">
+                        <span className="text-slate-500">{check.label}</span>
+                        <span className={check.ok ? "text-emerald-500" : "text-rose-500"}>{check.ok ? "OK" : "Error"}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="w-full mt-4 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Retry Connection
+                  </button>
+                </motion.div>
+              )}
             </div>
           </div>
         ) : (
@@ -144,89 +175,6 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
           </p>
         </div>
       </div>
-    </div>
-
-              {/* Status card */}
-              {!isSystemReady && (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="max-w-sm mx-auto text-left"
-                >
-                  <div className="bg-white dark:bg-[#111318] rounded-2xl overflow-hidden
-                    border border-black/5 dark:border-white/[0.04] shadow-depth-md">
-                    {/* Header */}
-                    <div className="px-4 py-3 border-b border-black/5 dark:border-white/[0.04] flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">
-                          <AlertTriangle className="w-3 h-3 text-amber-400" />
-                        </div>
-                        <span className="text-xs font-semibold text-dark-50">System Status</span>
-                      </div>
-                      <motion.button
-                        onClick={() => window.location.reload()}
-                        whileTap={{ scale: 0.92 }}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium
-                          text-dark-200 hover:text-dark-50 hover:bg-white/[0.04] transition-all"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                        Retry
-                      </motion.button>
-                    </div>
-
-                    {/* Items */}
-                    <div className="px-4 py-3 space-y-2.5">
-                      {statusChecks.map((check, i) => (
-                        <div key={i} className="flex items-start gap-2.5">
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5
-                            ${check.ok ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                            {check.ok
-                              ? <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                              : <XCircle className="w-3 h-3 text-rose-400" />
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-dark-50 leading-tight">{check.label}</p>
-                            <p className={`text-[10px] leading-tight mt-0.5 ${check.ok ? 'text-emerald-400/70' : 'text-rose-400/60'
-                              }`}>{check.detail}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="px-4 pb-3">
-                      <motion.a
-                        href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer"
-                        whileTap={{ scale: 0.96 }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg
-                          bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-semibold
-                          shadow-lg shadow-primary-600/20 hover:shadow-primary-500/30 transition-all"
-                      >
-                        <Rocket className="w-3.5 h-3.5" />
-                        Open API Dashboard
-                      </motion.a>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="max-w-3xl mx-auto px-6 py-6">
-            <AnimatePresence mode="popLayout">
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-            </AnimatePresence>
-            <AnimatePresence>{isLoading && <TypingIndicator />}</AnimatePresence>
-            <div ref={messagesEndRef} />
-          </div>
-        )}
-      </div>
-
-      <ChatInput onSendMessage={sendMessage} isLoading={isLoading} disabled={!isSystemReady}
-        docFilter={docFilter} onDocFilterChange={onDocFilterChange} />
     </div>
   );
 };
