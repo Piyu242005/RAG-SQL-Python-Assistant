@@ -1,7 +1,7 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/%E2%9C%A8-Piyu_RAG-6366f1?style=for-the-badge&labelColor=0B0D11" alt="logo" height="40" />
+<img src="https://img.shields.io/badge/%E2%9C%A8-Piyu_RAG_v2.0-6366f1?style=for-the-badge&labelColor=0B0D11" alt="logo" height="40" />
 
 # Piyu RAG · SQL & Python AI Assistant
 
@@ -9,44 +9,49 @@
 
 <br />
 
-[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![LangChain](https://img.shields.io/badge/LangChain-0.3+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain.com)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_DB-FF6B6B?style=for-the-badge)](https://www.trychroma.com)
+[![Ollama](https://img.shields.io/badge/Ollama-llama3.2-1a1a2e?style=for-the-badge)](https://ollama.ai)
 [![Tailwind](https://img.shields.io/badge/Tailwind-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Ollama](https://img.shields.io/badge/Ollama-Local_LLM-1a1a2e?style=for-the-badge&logo=ollama)](https://ollama.ai)
 [![License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Piyu242005/RAG-SQL-Python-Assistant?style=for-the-badge&logo=github&color=6366f1&labelColor=0B0D11)](https://github.com/Piyu242005/RAG-SQL-Python-Assistant)
 
 <br />
 
-[⚡ Quick Start](#-quick-start) · [🧠 How It Works](#-how-it-works) · [📡 API](#-api-reference) · [🗺️ Roadmap](#️-roadmap)
+[⚡ Quick Start](#-quick-start) · [🚀 One-Click Launch](#-one-click-launch-windows) · [🧠 How It Works](#-how-it-works) · [📡 API](#-api-reference) · [🐛 Troubleshooting](#-troubleshooting) · [🗺️ Roadmap](#️-roadmap)
 
 <br />
 
-<img src="./Welcome%20Screen.png" width="100%" alt="Welcome Screen Demo" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" />
+<img src="./Welcome%20Screen.png" width="100%" alt="Welcome Screen Demo" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(99,102,241,0.25);" />
 
 ---
 
 </div>
 
-> **Simple Explanation:** This project is a smart assistant that reads your PDF handbooks (MySQL & Python) and answers your questions with exact page references. It runs 100% locally on your computer, keeping your data private and secure.
+> **Simple Explanation:** This is a smart AI assistant that reads your PDF handbooks (MySQL & Python) and answers your questions with exact page references. It runs **100% locally** — no API keys, no cloud, no data leaks.
 
 ---
 
 ## 🎯 What Is This?
 
-> **Piyu RAG** is a production-grade **Retrieval-Augmented Generation** system. You ask a question about **SQL** or **Python**, it searches through PDF handbooks, and returns an **accurate answer with page-level source citations** — all running **locally** on your machine.
+**Piyu RAG v2.0** is a production-grade **Retrieval-Augmented Generation** system. You ask a question about **SQL** or **Python**, it searches through PDF handbooks using hybrid retrieval (BM25 + Vector), reranks results with FlashRank, and returns an **accurate streamed answer with page-level source citations** — all running locally.
 
 ```
 💬 You:   "What are SQL JOINs and when to use each type?"
 
-🤖 Piyu:  "SQL JOINs combine rows from two or more tables based on a related column..."
-          📄 Source: MySQL Handbook.pdf — Page 42
+🤖 Piyu:  "SQL JOINs combine rows from two or more tables based on a related column.
+           INNER JOIN returns only matching rows, LEFT JOIN includes all left-table rows..."
+           
+           📄 Source: MySQL Handbook.pdf — Page 42
+           📄 Source: MySQL Handbook.pdf — Page 47
 ```
 
-<img src="./chat%20response.png" width="100%" alt="Chat Response Demo" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-top: 10px; margin-bottom: 20px;" />
+<img src="./chat%20response.png" width="100%" alt="Chat Response Demo" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); margin: 16px 0;" />
 
-**No API keys. No cloud. No data leaks. Just local AI.**
+**No API keys. No cloud. No data leaks. Zero running cost.**
 
 <br />
 
@@ -56,26 +61,35 @@
 <tr>
 <td width="50%">
 
-### 🧠 Intelligent Q&A
-Context-aware answers powered by **llama3.2** via Ollama. Understands complex queries about SQL syntax, Python patterns, and more.
+### 🧠 Intelligent Q&A with Memory
+Context-aware answers powered by **llama3.2** via Ollama. Multi-turn conversation memory keeps track of your session context in-memory — no Redis required.
 
-### 🔒 100% Private
-Runs **entirely on your machine**. Your data never leaves your hardware. Zero API costs forever.
+### 🔒 100% Private & Local
+Runs entirely on your machine. Zero data sent anywhere. No API costs, ever.
 
-### 📄 Source Citations
+### 📄 Page-Level Source Citations
 Every answer links back to the **exact PDF page**, so you can verify and learn deeper.
+
+### ⚡ Real-Time Streaming
+Answers stream token-by-token via **Server-Sent Events (SSE)** with a smooth typing effect in the UI.
 
 </td>
 <td width="50%">
 
-### 🔍 Hybrid Retrieval
-Combines **BM25 keyword search** with **Vector semantic search**, followed by a **FlashRank reranker** for pinpoint accuracy.
+### 🔍 Hybrid Retrieval (BM25 + Vector)
+Combines **BM25 keyword search** with **semantic vector search** using an `EnsembleRetriever`, followed by **FlashRank reranking** for pinpoint precision. Top-20 → reranked to Top-5.
 
-### 🎯 Smart Filtering
-Filter by **MySQL**, **Python**, or search both handbooks simultaneously.
+### 🎯 Smart Doc Filtering
+Filter by **MySQL**, **Python**, or search both handbooks simultaneously from the sidebar.
 
-### 🛡️ Production Ready
-Includes **Rate Limiting (SlowAPI)**, **Structured JSON Logging**, and robust **Health Checks** for reliability.
+### 🛡️ Production Hardening
+- **Rate Limiting** via SlowAPI (10 req/min chat, 5 req/min stream)
+- **Structured JSON Logging** via python-json-logger
+- **Health Check endpoint** with Ollama + vectorstore status
+- **Auto-retry** on frontend if backend is still starting up
+
+### 🚀 One-Click Startup
+`START APP.bat` — double-click to auto-launch Ollama → Embeddings → Backend → Frontend → Browser.
 
 </td>
 </tr>
@@ -85,20 +99,21 @@ Includes **Rate Limiting (SlowAPI)**, **Structured JSON Logging**, and robust **
 
 ## 📊 Evaluation & Benchmarks
 
-> **Prove the quality.** This system is continuously benchmarked against a curated dataset of Q&A pairs to ensure high retrieval accuracy and citation reliability.
+> Continuously benchmarked against a curated Q&A dataset to ensure retrieval accuracy.
 
 | Metric | Target | Result | Description |
 |:---|:---:|:---:|:---|
-| **Recall@3** | > 85% | **100.0%** | Ground truth page found in top 3 results |
-| **Citation Acc.** | > 90% | **100.0%** | Answer citations accurately link to source pages |
-| **Latency (Avg)** | < 3.0s | **1.24s** | Response time from query to answer |
+| **Recall@3** | > 85% | **100.0%** | Ground truth page found in top-3 results |
+| **Citation Accuracy** | > 90% | **100.0%** | Answer citations link to correct source pages |
+| **Avg Response Latency** | < 3.0s | **1.24s** | Query to first token (streaming) |
+| **Embedding Time** | — | **~38s** | One-time: 178 chunks from 2 PDFs |
+| **Chunks Indexed** | — | **178** | MySQL (71) + Python (107) handbook chunks |
 
-*Benchmarks run on: AMD Ryzen 7 5800H @ 3.2GHz, 16GB RAM. Results may vary by hardware.*
+*Hardware: AMD Ryzen 7 5800H @ 3.2GHz, 16GB RAM. Results vary by hardware.*
 
-### Run Your Own Evaluation
 ```bash
-cd backend
-python evals/runner.py
+# Run your own evaluation
+cd backend && python evals/runner.py
 ```
 
 <br />
@@ -107,13 +122,17 @@ python evals/runner.py
 
 <div align="center">
 
-| Layer | Tech | Why |
-|:---:|:---:|:---:|
-| **Frontend** | React 18 + Tailwind + Framer Motion | Premium deep dark chat UI |
-| **Backend** | FastAPI + LangChain + Pydantic | REST API + RAG pipeline |
-| **Vector DB** | ChromaDB + HuggingFace | Semantic search & embeddings |
-| **LLM** | Ollama (llama3.2) | Free local inference |
-| **PDF** | PyMuPDF + LangChain Splitters | Extract & chunk documents |
+| Layer | Technology | Purpose |
+|:---:|:---:|:---|
+| **Frontend** | React 18 + Vite + Tailwind 3.4 + Framer Motion | Premium dark-mode chat UI with SSE streaming |
+| **Backend** | FastAPI 0.110 + Uvicorn + SlowAPI | Async REST API with rate limiting |
+| **RAG Engine** | LangChain 0.3+ | Pipeline orchestration, prompt templates, history |
+| **Retrieval** | ChromaDB + BM25 + EnsembleRetriever | Hybrid semantic + keyword search |
+| **Reranker** | FlashRank (`ms-marco-MiniLM-L-12-v2`) | Cross-encoder reranking, top-20 → top-5 |
+| **Embeddings** | HuggingFace `all-MiniLM-L6-v2` | 384-dim sentence embeddings |
+| **LLM** | Ollama (llama3.2) | Free, local inference — no API key |
+| **PDF Processing** | PyMuPDF + RecursiveCharacterTextSplitter | Extract & chunk documents |
+| **Memory** | In-memory `ChatMessageHistory` (per session) | Multi-turn conversation context |
 
 </div>
 
@@ -123,95 +142,101 @@ python evals/runner.py
 
 ### 📋 Prerequisites
 
-> You need these installed:
-
-| Tool | Min Version | Get It |
+| Tool | Min Version | Install |
 |:---:|:---:|:---:|
-| 🐍 Python | 3.8+ | [python.org](https://www.python.org/) |
+| 🐍 Python | 3.10+ | [python.org](https://www.python.org/) |
 | 📦 Node.js | 18+ | [nodejs.org](https://nodejs.org/) |
-| 🦙 Ollama | Latest | [ollama.ai](https://ollama.ai/) |
+| 🦙 Ollama | Latest | [ollama.com/download](https://ollama.com/download) |
 
 <br />
 
-### 🚀 One-Command Setup
+## 🚀 One-Click Launch (Windows)
 
-<table>
-<tr>
-<td>
+> The fastest way to start — handles everything automatically.
 
-**Windows**
-```powershell
-.\setup.bat
+```
+📁 Project Root
+└── 📄 START APP.bat   ← Double-click this file!
 ```
 
-</td>
-<td>
+**What it does automatically:**
+1. ✅ Checks if Ollama is running → starts it if not
+2. ✅ Checks if `llama3.2` model is available → pulls it if missing  
+3. ✅ Checks if ChromaDB embeddings exist → runs `initialize_db.py` if first-time (~38s)
+4. ✅ Starts FastAPI backend on `http://localhost:8000`
+5. ✅ Starts Vite frontend on `http://localhost:5173`
+6. ✅ Opens the app in your default browser
 
-**Linux / macOS**
-```bash
-chmod +x setup.sh && ./setup.sh
-```
-
-</td>
-</tr>
-</table>
-
-> The script installs all dependencies, pulls the LLM model, processes the PDFs, and validates the system.
+> After first run, subsequent launches take **~15 seconds** (embeddings already built).
 
 <br />
 
-### 🧑‍💻 Manual Setup
+### 🧑‍💻 Manual Setup (Step-by-Step)
 
 <details>
-<summary><b>Click to expand step-by-step instructions</b></summary>
+<summary><b>▶ Click to expand full manual instructions</b></summary>
 
 <br />
 
-**Step 1 — Start Ollama**
+**Step 1 — Clone the repo**
 ```bash
-ollama serve                # Start the LLM server
-ollama pull llama3.2        # Download the model (~2GB)
+git clone https://github.com/Piyu242005/RAG-SQL-Python-Assistant.git
+cd RAG-SQL-Python-Assistant
 ```
 
-**Step 2 — Backend**
+**Step 2 — Start Ollama & pull the model**
+```bash
+ollama serve                   # Start Ollama server (keep running)
+ollama pull llama3.2           # Download model (~2.0 GB, first-time only)
+```
+
+**Step 3 — Set up Python backend**
 ```bash
 cd backend
 python -m venv venv
 
-# Activate virtualenv
-venv\Scripts\activate       # Windows
-source venv/bin/activate    # macOS/Linux
+# Activate the virtual environment:
+venv\Scripts\activate          # Windows
+source venv/bin/activate       # macOS / Linux
 
 pip install -r requirements.txt
-copy .env.example .env      # Windows (use cp on Unix)
-python initialize_db.py     # Process PDFs → vector store
+copy .env.example .env         # Windows  (use: cp .env.example .env on Unix)
 ```
 
-**Step 3 — Frontend**
+**Step 4 — Build the vector database (one-time, ~38 seconds)**
+```bash
+# Still inside backend/ with venv active:
+python initialize_db.py
+
+# Force rebuild (if you changed PDFs):
+python initialize_db.py --force
+```
+
+**Step 5 — Start the backend**
+```bash
+python main.py
+# API running at: http://localhost:8000
+# Swagger docs at: http://localhost:8000/docs
+```
+
+**Step 6 — Set up & start the frontend** (new terminal)
 ```bash
 cd frontend
 npm install
+npm run dev
+# App running at: http://localhost:5173
 ```
 
 </details>
 
 <br />
 
-### ▶️ Running the App
-
-Open **3 terminals** and run:
+### 🐳 Docker Setup
 
 ```bash
-# Terminal 1 — Ollama (skip if already running)
-ollama serve
-
-# Terminal 2 — Backend API
-cd backend && venv\Scripts\activate && python main.py
-# → http://localhost:8000
-
-# Terminal 3 — Frontend
-cd frontend && npm run dev
-# → http://localhost:5173
+# From the project root:
+docker-compose up --build
+# App → http://localhost  |  API → http://localhost:8000
 ```
 
 <br />
@@ -226,8 +251,9 @@ cd frontend && npm run dev
 ```
 What are SQL JOINs and when to use each type?
 How do I create a MySQL table with constraints?
-Explain the SELECT statement with examples
-What is database normalization?
+Explain the difference between HAVING and WHERE
+What is database normalization and its forms?
+How do I use subqueries in SQL?
 ```
 
 </td>
@@ -235,74 +261,99 @@ What is database normalization?
 
 **🐍 Python Questions**
 ```
-How do Python decorators work?
-What are list comprehensions?
-Explain Python class inheritance
-How do I handle exceptions in Python?
+How do Python decorators work with examples?
+What are list comprehensions and generators?
+Explain Python class inheritance and MRO
+How do I handle exceptions properly in Python?
+What are context managers and the with statement?
 ```
 
 </td>
 </tr>
 </table>
 
-> **💡 Pro tip:** Use the filter chips (`All` / `MySQL` / `Python`) in the chat UI to narrow your search to a specific handbook.
+> 💡 **Pro tip:** Use the **Source Filter** chips (`All Sources` / `MySQL` / `Python`) in the sidebar to narrow your search to a specific handbook.
 
 <br />
 
 ## 🏗 How It Works
 
 ```mermaid
-graph LR
-    A["🖥️ React UI"] -->|REST API| B["⚡ FastAPI"]
-    B -->|Query| C["🦙 Ollama LLM"]
-    B -->|Search| D["📊 ChromaDB"]
-    D -->|Embeddings| E["🤗 HuggingFace"]
-    B -->|Response + Sources| A
+flowchart LR
+    A["🖥️ React UI\nPort 5173"] -->|"POST /api/chat/stream\n(SSE)"| B["⚡ FastAPI\nPort 8000"]
+    B -->|"Hybrid Query\nk=20"| C["📊 ChromaDB\n+ BM25"]
+    C -->|"Top 20 docs"| D["🏆 FlashRank\nReranker"]
+    D -->|"Top 5 chunks"| E["🦙 Ollama LLM\nllama3.2"]
+    E -->|"Streamed tokens\n+ sources"| A
 
     style A fill:#6366f1,color:#fff,stroke:#4f46e5
     style B fill:#009688,color:#fff,stroke:#00796b
-    style C fill:#1a1a2e,color:#fff,stroke:#6366f1
-    style D fill:#ff6b6b,color:#fff,stroke:#ee5a24
-    style E fill:#ff9f43,color:#fff,stroke:#ee5a24
+    style C fill:#FF6B6B,color:#fff,stroke:#ee5a24
+    style D fill:#9b59b6,color:#fff,stroke:#8e44ad
+    style E fill:#1a1a2e,color:#fff,stroke:#6366f1
 ```
 
-### How a query flows:
+### Request lifecycle:
 
-1. **You type** a question in the chat
-2. **React frontend** sends it to the FastAPI backend
-3. **Semantic search** finds the most relevant chunks from ChromaDB
-4. **LLM (llama3.2)** generates an answer using those chunks as context
-5. **Response** is returned with the answer + source citations (PDF + page)
+| Step | What Happens |
+|:---:|:---|
+| 1️⃣ | User types query in React chat UI |
+| 2️⃣ | Frontend POSTs to `/api/chat/stream` with `conversation_id` for session memory |
+| 3️⃣ | Backend runs **hybrid retrieval**: BM25 (keyword) + ChromaDB (semantic) → top-20 candidates |
+| 4️⃣ | **FlashRank reranker** (`ms-marco-MiniLM-L-12-v2`) scores and filters to top-5 |
+| 5️⃣ | Top-5 chunks formatted as context, injected into the system prompt |
+| 6️⃣ | **llama3.2** via Ollama generates a grounded answer (streamed as SSE tokens) |
+| 7️⃣ | **Source metadata** (PDF name + page number) sent first so UI shows citations immediately |
+| 8️⃣ | **In-memory session history** updated so next query has multi-turn context |
 
 <br />
 
 ### 📁 Project Structure
 
 ```
-piyu-rag/
+RAG-SQL-Python-Assistant/
+│
 ├── 📂 backend/
-│   ├── main.py               # FastAPI entry point
-│   ├── rag_pipeline.py       # Core RAG chain
-│   ├── vector_store.py       # ChromaDB manager
-│   ├── document_processor.py # PDF extraction
-│   ├── llm_config.py         # Ollama config
-│   ├── models.py             # Pydantic schemas
-│   ├── config.py             # Settings
-│   ├── initialize_db.py      # DB setup script
-│   └── routers/chat.py       # Chat endpoints
+│   ├── main.py                 # FastAPI app, CORS, rate limiter, lifespan
+│   ├── rag_pipeline.py         # Core RAG chain: retrieval → rerank → LLM → stream
+│   ├── vector_store.py         # ChromaDB manager + hybrid retriever (BM25 + Vector)
+│   ├── document_processor.py   # PyMuPDF extraction + chunking (fast & semantic modes)
+│   ├── llm_config.py           # Ollama connection manager + model validation
+│   ├── models.py               # Pydantic request/response schemas
+│   ├── config.py               # Pydantic Settings (reads from .env)
+│   ├── initialize_db.py        # One-time PDF → ChromaDB pipeline (~38s)
+│   ├── limiter.py              # SlowAPI rate limiter instance
+│   ├── .env                    # Your local config (not committed)
+│   ├── .env.example            # Config template
+│   ├── requirements.txt        # Python dependencies
+│   └── routers/
+│       └── chat.py             # /api/chat and /api/chat/stream endpoints
 │
 ├── 📂 frontend/
-│   ├── src/
-│   │   ├── components/       # UI components
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── services/         # API client
-│   │   ├── context/          # Theme context
-│   │   ├── App.jsx           # Root component
-│   │   └── index.css         # Design system
-│   └── tailwind.config.js
+│   └── src/
+│       ├── components/
+│       │   ├── ChatContainer.jsx   # Main chat area + system status panel
+│       │   ├── ChatMessage.jsx     # Renders user/assistant/error messages
+│       │   ├── ChatInput.jsx       # Query input with doc filter chips
+│       │   ├── Sidebar.jsx         # Conversation history + source filter
+│       │   ├── TypingIndicator.jsx # Animated dots while streaming
+│       │   ├── CodeBlock.jsx       # Syntax-highlighted code renderer
+│       │   ├── SourceCard.jsx      # Citation card (PDF + page)
+│       │   └── ThemeToggle.jsx     # Dark / light mode switch
+│       ├── hooks/
+│       │   └── useChat.js          # All chat state + localStorage persistence
+│       ├── services/
+│       │   └── api.js              # Fetch + SSE stream client
+│       ├── context/
+│       │   └── ThemeContext.jsx    # Dark/light theme provider
+│       ├── App.jsx                 # Root + health check with auto-retry
+│       └── index.css               # Tailwind + custom design tokens
 │
 ├── 📄 MySQL Handbook.pdf
 ├── 📄 The Ultimate Python Handbook.pdf
+├── 🚀 START APP.bat            # ← Double-click to launch everything
+├── 🔧 start.ps1                # PowerShell launcher (called by .bat)
+├── 🐳 docker-compose.yml
 ├── 🔧 setup.bat / setup.sh
 └── 📖 README.md
 ```
@@ -311,54 +362,61 @@ piyu-rag/
 
 ## 📡 API Reference
 
-> 📘 **Interactive docs:** Visit [`http://localhost:8000/docs`](http://localhost:8000/docs) for the Swagger UI.
+> 📘 **Interactive Swagger UI:** [`http://localhost:8000/docs`](http://localhost:8000/docs)
 
-<br />
-
-### `POST /api/chat` — Ask a question
-
-<table>
-<tr>
-<td width="50%">
+### `POST /api/chat/stream` — Streaming chat *(primary endpoint)*
 
 **Request**
 ```json
 {
   "query": "What is a SQL JOIN?",
+  "conversation_id": "conv_abc123",
   "doc_type": "mysql"
 }
 ```
-> `doc_type` is optional. Omit to search all.
 
-</td>
-<td width="50%">
+> `doc_type`: `"mysql"` | `"python"` | `null` (search all)  
+> `conversation_id`: Optional. Used to maintain multi-turn memory per session.
 
-**Response**
+**Response** — Server-Sent Events stream:
+```
+data: {"sources": [{"source": "MySQL Handbook.pdf", "page": 42, "content_preview": "..."}]}
+
+data: {"token": "SQL"}
+data: {"token": " JOINs"}
+data: {"token": " combine"}
+...
+data: [DONE]
+```
+
+<br />
+
+### `POST /api/chat` — Non-streaming chat
+
 ```json
+// Request
+{ "query": "What is a SQL JOIN?", "doc_type": "mysql" }
+
+// Response
 {
-  "answer": "A SQL JOIN combines rows...",
-  "sources": [{
-    "source": "MySQL Handbook.pdf",
-    "page": 42,
-    "doc_type": "mysql"
-  }],
+  "answer": "A SQL JOIN combines rows from two or more tables...",
+  "sources": [{ "source": "MySQL Handbook.pdf", "page": 42 }],
   "success": true
 }
 ```
 
-</td>
-</tr>
-</table>
-
 <br />
 
-### Other Endpoints
+### All Endpoints
 
-| Method | Endpoint | Description |
-|:---:|:---|:---|
-| `GET` | `/api/health` | System status — Ollama, model, vector store |
-| `GET` | `/api/documents` | Stats about indexed documents |
-| `POST` | `/api/initialize` | Reprocess PDFs & rebuild vector store |
+| Method | Endpoint | Rate Limit | Description |
+|:---:|:---|:---:|:---|
+| `POST` | `/api/chat/stream` | 5/min | Streaming SSE chat response |
+| `POST` | `/api/chat` | 10/min | Non-streaming chat response |
+| `GET` | `/api/health` | — | Ollama status, model, vectorstore health |
+| `GET` | `/api/documents` | — | Indexed document count + embedding info |
+| `POST` | `/api/initialize` | — | Reprocess PDFs & rebuild vector store |
+| `POST` | `/api/upload` | — | Upload a new PDF and index it |
 
 <br />
 
@@ -367,93 +425,139 @@ piyu-rag/
 ### Backend `.env`
 
 ```env
+# Ollama
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
+
+# Embeddings (HuggingFace, downloaded automatically)
 EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+
+# ChromaDB
 CHROMA_PERSIST_DIRECTORY=./chroma_db
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
+
+# Chunking
+CHUNK_SIZE=800
+CHUNK_OVERLAP=150
+
+# API Server
 API_HOST=0.0.0.0
 API_PORT=8000
+
+# CORS (add your frontend URL here)
+CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 ```
 
 ### Frontend
 
-API URL defaults to `http://localhost:8000`. Override with `VITE_API_URL` env variable.
+API URL defaults to `http://localhost:8000`. Override with:
+```env
+# frontend/.env.local
+VITE_API_URL=http://your-server:8000
+```
 
 <br />
 
 ## 🐛 Troubleshooting
 
 <details>
-<summary><b>❌ Ollama is not running</b></summary>
+<summary><b>❌ "Failed to fetch" / System Status shows errors</b></summary>
 
-```bash
-ollama serve
+This means the backend is not running or Ollama is offline. Use the one-click launcher:
 ```
-Make sure Ollama is installed and the service is active.
+Double-click: START APP.bat
+```
+Or manually:
+```bash
+ollama serve                                        # Terminal 1
+cd backend && venv\Scripts\activate && python main.py  # Terminal 2
+cd frontend && npm run dev                          # Terminal 3
+```
+The frontend auto-retries health checks 5× every 3 seconds — the status will update automatically once services are up.
 </details>
 
 <details>
-<summary><b>❌ Model not found</b></summary>
+<summary><b>❌ Ollama not running / not found in PATH</b></summary>
+
+1. Install Ollama from [ollama.com/download](https://ollama.com/download)
+2. Run `ollama serve` in a terminal
+3. Verify: `curl http://localhost:11434/api/tags`
+</details>
+
+<details>
+<summary><b>❌ llama3.2 model not found</b></summary>
 
 ```bash
 ollama pull llama3.2
+# Or for a faster/lighter model:
+ollama pull mistral
+# Then update OLLAMA_MODEL=mistral in backend/.env
 ```
-Or try `mistral` for faster responses.
 </details>
 
 <details>
-<summary><b>❌ Vector store not initialized</b></summary>
+<summary><b>❌ Vector store not initialized / "Documents Indexed: Pending"</b></summary>
 
 ```bash
 cd backend
-venv\Scripts\activate       # or: source venv/bin/activate
-python initialize_db.py
+venv\Scripts\activate          # or: source venv/bin/activate
+python initialize_db.py        # First-time (~38 seconds)
+python initialize_db.py --force  # Force rebuild
 ```
 </details>
 
 <details>
-<summary><b>❌ Frontend can't connect to backend</b></summary>
+<summary><b>❌ Frontend shows blank / can't connect</b></summary>
 
-- Ensure backend is running on port `8000`
-- Check CORS settings in `backend/config.py`
-- Try `http://localhost:8000/api/health` in browser
+- Confirm backend is running: visit `http://localhost:8000/api/health` in browser
+- Check CORS: ensure `http://localhost:5173` is in `CORS_ORIGINS` in `.env`
+- Check the browser console (F12) for the exact error
 </details>
 
 <details>
 <summary><b>⏳ Slow responses</b></summary>
 
-- Use a faster model: `ollama pull mistral`
-- Reduce retrieval count (`k`) in `rag_pipeline.py`
-- Increase `CHUNK_SIZE` in `.env`
+- Switch to a faster model: `ollama pull mistral` and update `OLLAMA_MODEL=mistral`
+- Reduce reranker output: change `top_n=5` → `top_n=3` in `rag_pipeline.py`
+- Reduce retrieval count: change `k=20` → `k=10`
+- Run on GPU: set `model_kwargs={'device': 'cuda'}` in `vector_store.py`
 </details>
 
 <br />
 
 ## 🗺️ Roadmap
 
-- [x] 🔄 Streaming responses (real-time tokens)
-- [x] 💾 Conversation memory (multi-turn context)
-- [x] 🔍 Hybrid search (BM25 + semantic)
-- [x] 📤 User PDF uploads
-- [x] 🧪 Automated evaluation harness
+- [x] 🔄 Real-time streaming responses (SSE)
+- [x] 💾 Multi-turn conversation memory (in-memory session store)
+- [x] 🔍 Hybrid search (BM25 + ChromaDB Vector)
+- [x] 🏆 FlashRank cross-encoder reranking
+- [x] 📤 User PDF uploads via API
+- [x] 🧪 Automated evaluation harness (`evals/runner.py`)
 - [x] 🐳 Docker Compose deployment
 - [x] 🤖 GitHub Actions CI
+- [x] 🚀 One-click `START APP.bat` launcher
+- [x] 🔁 Auto-retry health checks on frontend
 - [ ] 📊 Usage analytics dashboard
+- [ ] 🌐 Multi-language handbook support
+- [ ] 🔑 API key authentication
+- [ ] 💾 Persistent Redis memory (optional)
 
 <br />
 
 ## 🤝 Contributing
 
-```
-1. Fork the repo
-2. Create a branch:   git checkout -b feat/my-feature
-3. Commit changes:    git commit -m "feat: add streaming"
-4. Push & open PR:    git push origin feat/my-feature
-```
+```bash
+# 1. Fork the repo
+# 2. Create a feature branch
+git checkout -b feat/my-feature
 
-**Code style:** PEP 8 for Python · Functional components for React · [Conventional Commits](https://www.conventionalcommits.org/)
+# 3. Make your changes, following code style:
+#    Python → PEP 8 + type hints
+#    React  → Functional components + hooks
+#    Commits → Conventional Commits (feat:, fix:, docs:)
+
+# 4. Push and open a Pull Request
+git push origin feat/my-feature
+```
 
 <br />
 
@@ -461,16 +565,18 @@ python initialize_db.py
 
 <div align="center">
 
-| | Tech | Role |
+| | Technology | Role |
 |:---:|:---:|:---|
-| 🦜 | [LangChain](https://langchain.com) | RAG framework |
-| 🦙 | [Ollama](https://ollama.ai) | Local LLM runtime |
-| 📊 | [ChromaDB](https://www.trychroma.com) | Vector database |
-| ⚡ | [FastAPI](https://fastapi.tiangolo.com) | Backend framework |
-| ⚛️ | [React](https://react.dev) | Frontend library |
-| 🎨 | [Tailwind CSS](https://tailwindcss.com) | Utility CSS |
-| ✨ | [Framer Motion](https://www.framer.com/motion) | Animations |
-| 🤗 | [HuggingFace](https://huggingface.co) | Embeddings |
+| 🦜 | [LangChain 0.3+](https://langchain.com) | RAG orchestration framework |
+| 🦙 | [Ollama](https://ollama.ai) | Local LLM runtime (llama3.2) |
+| 📊 | [ChromaDB](https://www.trychroma.com) | Persistent vector database |
+| 🏆 | [FlashRank](https://github.com/PrithivirajDamodaran/FlashRank) | Cross-encoder reranking |
+| 🤗 | [HuggingFace](https://huggingface.co) | Sentence embeddings |
+| ⚡ | [FastAPI](https://fastapi.tiangolo.com) | Async Python backend |
+| ⚛️ | [React 18](https://react.dev) | Frontend library |
+| 🎨 | [Tailwind CSS](https://tailwindcss.com) | Utility-first CSS |
+| ✨ | [Framer Motion](https://www.framer.com/motion) | UI animations |
+| 📄 | [PyMuPDF](https://pymupdf.readthedocs.io) | PDF text extraction |
 
 </div>
 
@@ -488,7 +594,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 **Built with 💜 by [Piyu](https://github.com/Piyu242005)**
 
-**If this helped you, drop a ⭐ — it means a lot!**
+**If this helped you, drop a ⭐ — it means everything!**
 
 <br />
 
