@@ -32,101 +32,119 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Gradient accent */}
-      <div className="h-[1px] bg-gradient-to-r from-transparent via-primary-500/40 to-transparent flex-shrink-0" />
-
+    <div className="flex flex-col h-full relative">
       {/* Header */}
-      <header className="px-6 py-3 flex-shrink-0 bg-white/80 dark:bg-[#0D0F13]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/[0.04]">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-10 px-6 py-4 flex-shrink-0 bg-white/70 dark:bg-[#09090B]/70 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5">
+        <div className="max-w-4xl mx-auto flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-primary-500/20">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100">Piyu AI Assistant</h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {isSystemReady ? (
+                  <>
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">Ready</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wider">Initializing</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          
           <div className="flex items-center gap-2">
-            {isSystemReady ? (
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400/60 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-glow-emerald"></span>
-                </span>
-                <span className="text-[11px] text-emerald-400 font-medium">Online</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[11px] text-amber-400 font-medium">Not Ready</span>
-              </div>
+            {messages.length > 0 && (
+              <motion.button
+                onClick={clearMessages}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-200"
+                title="Clear Conversation"
+              >
+                <Trash2 className="w-4 h-4" />
+              </motion.button>
             )}
           </div>
-          {messages.length > 0 && (
-            <motion.button
-              onClick={clearMessages}
-              whileTap={{ scale: 0.92 }}
-              className="px-3 py-1.5 rounded-lg text-dark-300 hover:text-dark-50
-                hover:bg-white/[0.04] flex items-center gap-1.5 text-xs font-medium transition-all duration-200"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear
-            </motion.button>
-          )}
         </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-[#F3F4F6] dark:bg-deep-glow">
+      <div className="flex-1 overflow-y-auto scrollbar-hide bg-transparent">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center px-6">
-            <div className="text-center max-w-2xl w-full">
-              {/* Logo */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-10"
-              >
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary-500 to-violet-600
-                  flex items-center justify-center shadow-glow-primary-strong mb-6">
-                  <Sparkles className="w-7 h-7 text-white" />
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-dark-600 dark:text-dark-50 mb-3 tracking-tight">
-                  How can I help you?
-                </h2>
-                <p className="text-dark-300 text-sm max-w-md mx-auto leading-relaxed">
-                  Ask me anything about MySQL or Python. I search through the handbooks to find accurate, sourced answers.
-                </p>
-              </motion.div>
-
-              {/* Cards */}
+            <div className="text-center max-w-2xl w-full py-12">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 }}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto mb-10"
+                className="mb-12"
+              >
+                <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-primary-600 to-indigo-600 flex items-center justify-center shadow-2xl shadow-primary-500/40 mb-8 border border-white/20">
+                  <Sparkles className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight">
+                  Intelligent SQL & Python RAG
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 text-lg max-w-lg mx-auto font-medium">
+                  Experience production-grade document intelligence. Sourced answers, real-time streaming, and high precision.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto"
               >
                 {exampleQuestions.map((q, i) => (
-                  <motion.button
+                  <button
                     key={i}
-                    whileHover={{ y: -2, scale: 1.01 }}
-                    whileTap={{ scale: 0.97 }}
                     onClick={() => sendMessage(q.text, docFilter)}
-                    className="bg-white dark:bg-[#151A22] rounded-xl p-4 text-left group
-                      border border-black/5 dark:border-white/[0.04]
-                      hover:border-primary-500/20 dark:hover:border-primary-500/15
-                      hover:shadow-depth-md dark:hover:shadow-glow-primary
-                      transition-all duration-300"
+                    className="group relative bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-5 rounded-2xl text-left hover:border-primary-500/50 dark:hover:border-primary-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/5"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${q.color}
-                        flex items-center justify-center flex-shrink-0 shadow-depth-sm`}>
-                        <q.icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-dark-300">{q.tag}</span>
-                        <p className="text-xs text-dark-200 dark:text-dark-200 group-hover:text-dark-50 leading-relaxed mt-0.5 transition-colors">
-                          {q.text}
-                        </p>
-                      </div>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${q.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <q.icon className="w-5 h-5 text-white" />
                     </div>
-                  </motion.button>
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 mb-2">
+                      {q.tag}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-primary-500 transition-colors leading-snug">
+                      {q.text}
+                    </p>
+                  </button>
                 ))}
               </motion.div>
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto w-full px-6 py-8">
+            <AnimatePresence mode="popLayout">
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+            </AnimatePresence>
+            <AnimatePresence>{isLoading && <TypingIndicator />}</AnimatePresence>
+            <div ref={messagesEndRef} className="h-32" />
+          </div>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="sticky bottom-0 bg-gradient-to-t from-white dark:from-[#09090B] via-white/90 dark:via-[#09090B]/90 to-transparent pt-10 pb-6 px-6">
+        <div className="max-w-3xl mx-auto w-full">
+          <ChatInput onSendMessage={sendMessage} isLoading={isLoading} disabled={!isSystemReady}
+            docFilter={docFilter} onDocFilterChange={onDocFilterChange} />
+          <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-4 font-medium uppercase tracking-widest">
+            Powered by Ollama + ChromaDB + FlashRank
+          </p>
+        </div>
+      </div>
+    </div>
 
               {/* Status card */}
               {!isSystemReady && (

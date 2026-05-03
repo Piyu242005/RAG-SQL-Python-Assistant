@@ -32,12 +32,15 @@ class Settings(BaseSettings):
     api_host: str = os.getenv("API_HOST", "0.0.0.0")
     api_port: int = int(os.getenv("API_PORT", "8000"))
     
+    # Security
+    api_key: str = os.getenv("API_KEY", "your_secret_key_123")
+    
     # CORS
     cors_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
     
     # Paths
     base_dir: Path = Path(__file__).parent.parent
-    pdf_directory: Path = base_dir
+    pdf_directory: Path = base_dir / "pdfs"
     
     class Config:
         env_file = ".env"

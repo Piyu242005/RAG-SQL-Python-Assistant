@@ -63,7 +63,7 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen flex bg-[#F3F4F6] dark:bg-[#0B0D11] overflow-hidden">
+    <div className="h-screen flex bg-[#F8FAFC] dark:bg-[#09090B] overflow-hidden font-sans antialiased text-slate-900 dark:text-slate-100">
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -75,7 +75,10 @@ function AppContent() {
         docFilter={docFilter}
         onDocFilterChange={setDocFilter}
       />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        {/* Background Decorative Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-primary-500/5 blur-[120px] pointer-events-none" />
+        
         <ChatContainer
           healthStatus={healthStatus}
           docFilter={docFilter}

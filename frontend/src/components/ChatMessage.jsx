@@ -14,16 +14,19 @@ const ChatMessage = ({ message }) => {
   if (isUser) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.25 }}
-        className="flex items-start gap-3 mb-6 justify-end w-full"
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="flex items-start gap-4 mb-8 justify-end w-full group"
       >
-        <div className="max-w-[85%] sm:max-w-2xl">
-          <div className="bg-gradient-to-r from-primary-600 to-indigo-600 text-white
-            rounded-3xl rounded-tr-sm px-6 py-4 shadow-md shadow-primary-500/20">
-            <p className="text-[15px] leading-relaxed font-medium tracking-wide">{message.content}</p>
+        <div className="max-w-[85%] sm:max-w-xl">
+          <div className="bg-primary-600 dark:bg-primary-600 text-white
+            rounded-2xl rounded-tr-sm px-5 py-3 shadow-lg shadow-primary-500/10 border border-primary-500/20">
+            <p className="text-[15px] leading-relaxed font-medium tracking-tight whitespace-pre-wrap">{message.content}</p>
+          </div>
+          <div className="flex justify-end mt-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">You</span>
           </div>
         </div>
       </motion.div>
@@ -33,99 +36,102 @@ const ChatMessage = ({ message }) => {
   /* ─── AI MESSAGE ─── */
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      className="flex items-start gap-4 mb-8 w-full"
+      transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+      className="flex items-start gap-4 mb-10 w-full group"
     >
       {/* Avatar */}
-      <div className="flex-shrink-0 w-9 h-9 mt-1 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600
-        flex items-center justify-center shadow-md shadow-primary-500/30 border border-white/10">
-        <Bot className="w-5 h-5 text-white" />
+      <div className="flex-shrink-0 w-9 h-9 mt-1 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10
+        flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+        <Bot className="w-5 h-5 text-primary-600 dark:text-primary-400" />
       </div>
 
       {/* Bubble Container */}
       <div className="flex-1 min-w-0 max-w-3xl">
-        <div className={`relative overflow-hidden rounded-3xl rounded-tl-sm px-6 py-5 sm:px-7 sm:py-6
-          shadow-sm transition-colors duration-300
+        <div className={`relative overflow-hidden rounded-2xl rounded-tl-sm px-6 py-5 sm:px-8 sm:py-7
+          transition-all duration-300
           ${isError
-            ? 'bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20'
-            : 'bg-white dark:bg-[#151A22] border border-black/5 dark:border-white/[0.06] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.4)]'
+            ? 'bg-rose-500/5 border border-rose-500/20 shadow-lg shadow-rose-500/5'
+            : 'bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10 shadow-xl shadow-slate-200/20 dark:shadow-none backdrop-blur-sm'
           }`}
         >
-          {/* Optional decorative background glow for AI */}
+          {/* Header/Title Area */}
           {!isError && (
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500/20 via-violet-500/20 to-transparent" />
-          )}
-
-          {/* Header/Title Area (Optional) */}
-          {!isError && (
-            <div className="flex items-center gap-2 mb-3 text-primary-600 dark:text-primary-400">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-xs font-semibold tracking-wider uppercase">Extracted Answer</span>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-[10px] font-bold tracking-[0.2em] uppercase">AI Response</span>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">LLM-v1.0</span>
+              </div>
             </div>
           )}
 
           {isError ? (
-            <div className="flex items-start gap-3 text-rose-600 dark:text-rose-300">
+            <div className="flex items-start gap-3 text-rose-600 dark:text-rose-400">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <p className="text-[15px] leading-relaxed font-medium">{message.content}</p>
+              <p className="text-[15px] leading-relaxed font-bold">{message.content}</p>
             </div>
           ) : (
-            <div className="markdown-content text-[15px] text-gray-800 dark:text-gray-200">
+            <div className="markdown-content text-[16px] text-slate-700 dark:text-slate-200 leading-[1.8] font-normal">
               {message.content ? (
                 <ReactMarkdown
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');
                       return !inline && match ? (
-                        <div className="mt-4 mb-6 rounded-xl overflow-hidden shadow-sm border border-black/5 dark:border-white/10">
+                        <div className="my-6 rounded-xl overflow-hidden shadow-2xl border border-black/5 dark:border-white/10">
                           <CodeBlock language={match[1]} value={String(children).replace(/\n$/, '')} />
                         </div>
                       ) : (
-                        <code className="px-1.5 py-0.5 mx-0.5 rounded-md bg-primary-50 dark:bg-primary-500/15
-                          text-primary-700 dark:text-primary-300 text-[0.85em] font-mono border border-primary-100 dark:border-primary-500/20" {...props}>
+                        <code className="px-1.5 py-0.5 mx-0.5 rounded-md bg-slate-100 dark:bg-white/10
+                          text-primary-600 dark:text-primary-400 text-[0.85em] font-mono font-semibold" {...props}>
                           {children}
                         </code>
                       );
                     },
-                    p: ({ children }) => <p className="mb-4 last:mb-0 leading-[1.75] font-normal">{children}</p>,
-                    a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary-600 dark:text-primary-400 hover:underline underline-offset-4 decoration-primary-500/30 transition-all font-medium">{children}</a>,
-                    ul: ({ children }) => <ul className="list-disc list-outside ml-5 mb-4 space-y-2">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal list-outside ml-5 mb-4 space-y-2">{children}</ol>,
-                    li: ({ children }) => <li className="leading-relaxed pl-1">{children}</li>,
-                    h2: ({ children }) => <h2 className="text-xl font-bold mt-8 mb-4 text-gray-900 dark:text-white border-b border-black/5 dark:border-white/10 pb-2">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-lg font-semibold mt-6 mb-3 text-gray-900 dark:text-white">{children}</h3>,
-                    strong: ({ children }) => <strong className="font-semibold text-gray-900 dark:text-white bg-primary-500/5 px-1 rounded-sm">{children}</strong>,
+                    p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+                    a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary-600 dark:text-primary-400 hover:underline underline-offset-4 font-bold">{children}</a>,
+                    ul: ({ children }) => <ul className="list-disc list-outside ml-5 mb-5 space-y-2.5">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-outside ml-5 mb-5 space-y-2.5">{children}</ol>,
+                    li: ({ children }) => <li className="pl-1">{children}</li>,
+                    h2: ({ children }) => <h2 className="text-xl font-extrabold mt-10 mb-5 text-slate-900 dark:text-white flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-bold mt-8 mb-4 text-slate-900 dark:text-white">{children}</h3>,
+                    strong: ({ children }) => <strong className="font-bold text-slate-900 dark:text-white">{children}</strong>,
                   }}
                 >
                   {message.content}
                 </ReactMarkdown>
               ) : (
-                <p className="italic text-gray-400 dark:text-gray-500">Retrieving information...</p>
+                <div className="space-y-3 py-2">
+                  <div className="h-4 w-3/4 bg-slate-100 dark:bg-white/5 animate-pulse rounded" />
+                  <div className="h-4 w-full bg-slate-100 dark:bg-white/5 animate-pulse rounded" />
+                  <div className="h-4 w-5/6 bg-slate-100 dark:bg-white/5 animate-pulse rounded" />
+                </div>
               )}
             </div>
           )}
 
           {/* Sources Section */}
           {sourceCount > 0 && !isError && (
-            <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/[0.08]">
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5">
               <button
                 onClick={() => setShowSources(!showSources)}
-                className="group flex items-center gap-2 text-xs font-semibold uppercase tracking-wider
-                  text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors duration-200"
+                className="group/btn flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.15em]
+                  text-slate-400 hover:text-primary-500 transition-all duration-300"
               >
-                <div className="flex items-center justify-center w-5 h-5 rounded bg-gray-100 dark:bg-white/5 group-hover:bg-primary-50 dark:group-hover:bg-primary-500/10 transition-colors">
-                  <FileText className="w-3 h-3" />
+                <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 dark:bg-white/5 group-hover/btn:bg-primary-500/10 transition-colors">
+                  <FileText className="w-3.5 h-3.5" />
                 </div>
-                View Sources ({sourceCount})
+                Verification Sources ({sourceCount})
                 <motion.div
                   animate={{ rotate: showSources ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="ml-0.5"
+                  className="ml-1"
                 >
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className="w-3.5 h-3.5" />
                 </motion.div>
               </button>
 
@@ -135,36 +141,29 @@ const ChatMessage = ({ message }) => {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                    transition={{ duration: 0.3, ease: 'circOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-3 grid gap-2">
-                      {message.sources.map((source, i) => {
-                        const isPython = source.doc_type === 'python' ||
-                          (source.source && source.source.toLowerCase().includes('python'));
-                        return (
-                          <div key={i}
-                            className="group/source flex items-center gap-3 px-3 py-2.5 rounded-lg
-                              bg-gray-50 dark:bg-black/20 border border-black/5 dark:border-white/5
-                              hover:border-primary-500/20 dark:hover:border-primary-500/20 hover:bg-white dark:hover:bg-white/[0.02]
-                              transition-all duration-200"
-                          >
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 shadow-sm
-                              ${isPython ? 'bg-emerald-400 shadow-emerald-400/20' : 'bg-blue-500 shadow-blue-500/20'}`}
-                            />
-                            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                              <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300 truncate">
-                                {source.source || 'Unknown Source'}
-                              </span>
-                              {source.page && (
-                                <span className="text-[11px] font-mono text-gray-400 dark:text-gray-500 flex-shrink-0 bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">
-                                  Page {source.page}
-                                </span>
-                              )}
-                            </div>
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {message.sources.map((source, i) => (
+                        <div key={i}
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl
+                            bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5
+                            hover:border-primary-500/30 transition-all duration-200 group/item"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <FileText className="w-4 h-4 text-slate-400 group-hover/item:text-primary-500 transition-colors" />
                           </div>
-                        );
-                      })}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-bold text-slate-700 dark:text-slate-200 truncate">
+                              {source.source || 'Manual Document'}
+                            </p>
+                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mt-0.5">
+                              Reference • Page {source.page || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
                 )}

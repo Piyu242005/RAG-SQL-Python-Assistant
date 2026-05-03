@@ -25,30 +25,31 @@ def get_rag_pipeline() -> RAGPipeline:
 
 @router.post("/chat", response_model=ChatResponse)
 @limiter.limit("10/minute")
-async def chat(request: ChatRequest, fast_request: Request) -> ChatResponse:
+async def chat(chat_data: ChatRequest, request: Request) -> ChatResponse:
     """
     Process a chat query and return answer with sources.
     
     Args:
-        request: ChatRequest with query and optional filters
+        chat_data: ChatRequest with query and optional filters
+        request: FastAPI request object for rate limiting
         
     Returns:
         ChatResponse with answer and source documents
     """
     try:
         pipeline = get_rag_pipeline()
-        session_id = request.conversation_id or "default"
+        session_id = chat_data.conversation_id or "default"
         
         # Query with optional filter
-        if request.doc_type:
-            if request.doc_type not in ['mysql', 'python']:
+        if chat_data.doc_type:
+            if chat_data.doc_type not in ['mysql', 'python']:
                 raise HTTPException(
                     status_code=400,
                     detail="doc_type must be 'mysql' or 'python'"
                 )
-            result = pipeline.query_with_filter(request.query, request.doc_type, session_id=session_id)
+            result = pipeline.query_with_filter(chat_data.query, chat_data.doc_type, session_id=session_id)
         else:
-            result = pipeline.query(request.query, session_id=session_id)
+            result = pipeline.query(chat_data.query, session_id=session_id)
         
         # Convert sources to Pydantic models
         sources = [Source(**source) for source in result['sources']]
@@ -71,7 +72,7 @@ async def chat(request: ChatRequest, fast_request: Request) -> ChatResponse:
 
 @router.post("/chat/stream")
 @limiter.limit("5/minute")
-async def chat_stream(request: ChatRequest, fast_request: Request):
+async def chat_stream(chat_data: ChatRequest, request: Request):
     """
     Stream a chat response.
     """
@@ -80,9 +81,9 @@ async def chat_stream(request: ChatRequest, fast_request: Request):
         
         async def event_generator():
             # Use conversation_id as session_id for in-memory history
-            session_id = request.conversation_id or "default"
+            session_id = chat_data.conversation_id or "default"
             async for chunk in pipeline.stream_query(
-                request.query, request.doc_type, session_id=session_id
+                chat_data.query, chat_data.doc_type, session_id=session_id
             ):
                 yield chunk
 

@@ -5,10 +5,13 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+const API_KEY = import.meta.env.VITE_API_KEY || 'your_secret_key_123';
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'x-api-key': API_KEY
   },
 });
 
@@ -37,7 +40,10 @@ export const streamChatQuery = async (query, conversationId = null, docType = nu
   try {
     response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY
+      },
       body: JSON.stringify({
         query,
         conversation_id: conversationId,

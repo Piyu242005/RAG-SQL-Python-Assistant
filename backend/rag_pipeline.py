@@ -1,10 +1,11 @@
-"""RAG pipeline implementation using LangChain."""
+"""RAG pipeline implementation with Redis and optimized retrieval."""
 import asyncio
 import logging
+import json
 from typing import List, Dict, Optional
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory, RedisChatMessageHistory
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
@@ -18,14 +19,16 @@ try:
     from langchain.retrievers.document_compressors import FlashrankRerank
 except ImportError:
     from langchain_community.document_compressors import FlashrankRerank
+
 from vector_store import VectorStoreManager
 from llm_config import OllamaManager
+from redis_manager import redis_manager
 from config import settings
 
 logger = logging.getLogger("rag-pipeline")
 
 class RAGPipeline:
-    """RAG pipeline for question answering."""
+    """Optimized RAG pipeline with Redis caching and persistent history."""
     
     def __init__(self):
         """Initialize RAG pipeline."""
@@ -34,7 +37,7 @@ class RAGPipeline:
         self.llm = None
         self.retriever = None
         self.chain = None
-        self.history_store = {} # Session memory
+        self.in_memory_history = {} # Fallback
         
         # Initialize components
         self._initialize_llm()
@@ -43,81 +46,67 @@ class RAGPipeline:
         self._initialize_chain()
     
     def _initialize_llm(self):
-        """Initialize Ollama LLM."""
-        print(" Initializing Ollama LLM...")
+        """Initialize Ollama LLM with optimized parameters."""
+        logger.info("Initializing Ollama LLM...")
         self.llm = Ollama(
             base_url=settings.ollama_base_url,
             model=settings.ollama_model,
-            temperature=0.2,
-            num_ctx=2048,
-            num_predict=512,
-            top_k=30,
-            top_p=0.8,
+            temperature=0.1,  # Lower for more factual answers
+            num_ctx=4096,     # Increased context window
+            num_predict=1024,
+            top_k=20,
+            top_p=0.9,
             repeat_penalty=1.1,
         )
-        print("[OK] LLM initialized")
+        logger.info("[OK] LLM initialized (num_ctx=4096)")
     
     def _initialize_retriever(self, use_hybrid: bool = True):
-        """Initialize document retriever.
-        
-        Args:
-            use_hybrid: Whether to use hybrid search (Vector + BM25)
-        """
-        print(f" Initializing {'hybrid ' if use_hybrid else ''}retriever...")
+        """Initialize document retriever (Hybrid search)."""
+        logger.info(f"Initializing {'hybrid ' if use_hybrid else ''}retriever...")
         self.vector_store_manager.initialize_vectorstore()
         
         if use_hybrid:
+            # Retrieve 20 candidates for reranking
             self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=20)
         else:
-            self.base_retriever = self.vector_store_manager.get_retriever(
-                k=20,
-                search_type="mmr"
-            )
+            self.base_retriever = self.vector_store_manager.get_retriever(k=20, search_type="mmr")
         
-        # Initially, retriever is the base retriever
         self.retriever = self.base_retriever
-        print("[OK] Base retriever initialized (k=20 for reranking)")
-        
+    
     def _initialize_reranker(self):
-        """Initialize FlashRank reranker for better precision."""
-        print(" Initializing FlashRank reranker...")
+        """Initialize FlashRank reranker (Select top 5)."""
+        logger.info("Initializing FlashRank reranker...")
         try:
+            # Top 5 final results after reranking 20 candidates
             compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=5)
             self.retriever = ContextualCompressionRetriever(
                 base_compressor=compressor, 
                 base_retriever=self.base_retriever
             )
-            print("[OK] Reranker initialized")
+            logger.info("[OK] Reranker initialized (Top 5)")
         except Exception as e:
-            print(f"[X] Failed to initialize reranker: {str(e)}")
-            print("Falling back to base retriever.")
+            logger.error(f"[X] Failed to initialize reranker: {str(e)}")
             self.retriever = self.base_retriever
     
     def _initialize_chain(self):
-        """Initialize RAG chain."""
-        print(" Initializing RAG chain...")
+        """Initialize RAG chain with improved prompt and Redis history."""
+        logger.info("Initializing RAG chain...")
         
-        # Create prompt template
-        template = """You are an expert SQL and Python assistant. Answer using ONLY the provided reference material. Be concise.
-
-Reference:
-{context}
-
-Question: {question}
+        system_prompt = """You are a senior SQL and Python technical assistant. 
+Answer the question ONLY using the provided context. 
 
 Rules:
-- Start with a direct answer (2-3 sentences)
-- Include a code example if relevant (```sql or ```python)
-- Use markdown formatting
-- Do NOT hallucinate or mention "context"
-- If info is insufficient, say so
+1. If the information is not in the context, say exactly: "I'm sorry, but that information is not available in the provided documents."
+2. Do NOT use outside knowledge or hallucinate.
+3. Always include a concise code example if applicable (SQL or Python).
+4. Use clear markdown formatting.
+5. Provide a direct and professional answer.
+6. Always cite the Source and Page number if available."""
 
-Answer:"""
-        
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an expert SQL and Python assistant."),
+            ("system", system_prompt),
             MessagesPlaceholder(variable_name="history"),
-            ("human", template)
+            ("human", "Context:\n{context}\n\nQuestion: {question}\n\nAnswer:")
         ])
         
         # Create RAG chain
@@ -132,11 +121,16 @@ Answer:"""
             | StrOutputParser()
         )
         
-        # In-memory session store (no Redis dependency required)
-        def get_session_history(session_id: str) -> ChatMessageHistory:
-            if session_id not in self.history_store:
-                self.history_store[session_id] = ChatMessageHistory()
-            return self.history_store[session_id]
+        def get_session_history(session_id: str):
+            """Get Redis-backed or in-memory history."""
+            if redis_manager.client:
+                return RedisChatMessageHistory(
+                    session_id=f"chat_history:{session_id}",
+                    url=settings.redis_url
+                )
+            if session_id not in self.in_memory_history:
+                self.in_memory_history[session_id] = ChatMessageHistory()
+            return self.in_memory_history[session_id]
 
         self.chain = RunnableWithMessageHistory(
             self.base_chain,
@@ -145,144 +139,37 @@ Answer:"""
             history_messages_key="history",
         )
         
-        print("[OK] RAG chain with in-memory session history initialized")
+        logger.info("[OK] RAG chain with persistent history initialized")
     
     def _format_docs(self, docs: List[Document]) -> str:
-        """Format retrieved documents for context.
-        
-        Args:
-            docs: List of retrieved documents
-            
-        Returns:
-            Formatted context string
-        """
+        """Format retrieved documents with metadata."""
         formatted = []
         for i, doc in enumerate(docs, 1):
             source = doc.metadata.get('source', 'Unknown')
             page = doc.metadata.get('page', 'N/A')
-            formatted.append(f"[Source: {source}, Page: {page}]\n{doc.page_content}\n")
-        
+            formatted.append(f"--- Document {i} (Source: {source}, Page: {page}) ---\n{doc.page_content}\n")
         return "\n".join(formatted)
     
-    def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
-        """Query the RAG system.
-        
-        Args:
-            question: User question
-            session_id: Session ID for conversation memory
-            
-        Returns:
-            Dictionary with answer and source documents
-        """
-        try:
-            # Retrieve relevant documents first
-            docs = self.retriever.invoke(question)
-            
-            # Generate answer with session-aware history
-            config = {"configurable": {"session_id": session_id}}
-            answer = self.chain.invoke({"question": question}, config=config)
-            
-            # Format sources
-            sources = []
-            seen = set()  # Avoid duplicate sources
-            
-            for doc in docs:
-                source_key = f"{doc.metadata.get('source')}_{doc.metadata.get('page')}"
-                if source_key not in seen:
-                    sources.append({
-                        "source": doc.metadata.get('source', 'Unknown'),
-                        "page": doc.metadata.get('page', 'N/A'),
-                        "content_preview": doc.page_content[:200] + "..."
-                    })
-                    seen.add(source_key)
-            
-            return {
-                "answer": answer,
-                "sources": sources,
-                "success": True
-            }
-        
-        except Exception as e:
-            logger.error(f"Query error: {e}", exc_info=True)
-            raise RuntimeError(f"Error processing query: {str(e)}")
-    
-    def query_with_filter(
-        self, question: str, doc_type: Optional[str] = None, session_id: str = "default"
-    ) -> Dict[str, any]:
-        """Query with document type filter.
-        
-        Args:
-            question: User question
-            doc_type: Filter by document type ('mysql' or 'python')
-            session_id: Session ID for conversation memory
-            
-        Returns:
-            Dictionary with answer and source documents
-        """
-        try:
-            # Retrieve with filter
-            if doc_type:
-                docs = self.vector_store_manager.similarity_search(
-                    query=question,
-                    k=8,
-                    filter={"doc_type": doc_type}
-                )
-            else:
-                docs = self.retriever.invoke(question)
-            
-            # Generate answer (context injected by chain via retriever)
-            config = {"configurable": {"session_id": session_id}}
-            answer = self.chain.invoke({"question": question}, config=config)
-            
-            # Format sources
-            sources = []
-            seen = set()
-            
-            for doc in docs:
-                source_key = f"{doc.metadata.get('source')}_{doc.metadata.get('page')}"
-                if source_key not in seen:
-                    sources.append({
-                        "source": doc.metadata.get('source', 'Unknown'),
-                        "page": doc.metadata.get('page', 'N/A'),
-                        "doc_type": doc.metadata.get('doc_type', 'Unknown'),
-                        "content_preview": doc.page_content[:200] + "..."
-                    })
-                    seen.add(source_key)
-            
-            return {
-                "answer": answer,
-                "sources": sources,
-                "success": True,
-                "filter_applied": doc_type
-            }
-        
-        except Exception as e:
-            logger.error(f"Query with filter error: {e}", exc_info=True)
-            raise RuntimeError(f"Error processing query: {str(e)}")
-
     async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
-        """Stream the RAG response with source documentation.
+        """Stream response with Redis caching."""
+        # 1. Check Cache
+        cache_key = f"rag_cache:{question}:{doc_type or 'all'}"
+        cached_response = redis_manager.get_cache(cache_key)
         
-        EnsembleRetriever / BM25Retriever are sync-only; we run them in a
-        thread-pool executor so we don't block the async event loop.
-        """
-        import json
-        try:
-            # 1. Retrieve docs in thread-pool (sync retrievers are not async-safe)
-            loop = asyncio.get_event_loop()
-            if doc_type:
-                docs = await loop.run_in_executor(
-                    None,
-                    lambda: self.vector_store_manager.similarity_search(
-                        query=question, k=8, filter={"doc_type": doc_type}
-                    )
-                )
-            else:
-                docs = await loop.run_in_executor(
-                    None, lambda: self.retriever.invoke(question)
-                )
+        if cached_response:
+            logger.info(f"Serving from cache: {question}")
+            yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
+            for token in cached_response['answer'].split(' '):
+                yield f"data: {json.dumps({'token': token + ' '})}\n\n"
+                await asyncio.sleep(0.01) # Simulate streaming for cache
+            yield "data: [DONE]\n\n"
+            return
 
-            # 2. Build sources list
+        try:
+            # 2. Retrieve docs
+            loop = asyncio.get_event_loop()
+            docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(question))
+
             sources = []
             seen = set()
             for doc in docs:
@@ -295,15 +182,19 @@ Answer:"""
                     })
                     seen.add(source_key)
 
-            # 3. Send sources to UI immediately
+            # 3. Stream and Capture for Caching
             yield f"data: {json.dumps({'sources': sources})}\n\n"
 
-            # 4. Stream LLM tokens
+            full_answer = ""
             config = {"configurable": {"session_id": session_id}}
             async for chunk in self.chain.astream({"question": question}, config=config):
                 if chunk:
+                    full_answer += chunk
                     yield f"data: {json.dumps({'token': chunk})}\n\n"
 
+            # 4. Save to Cache (Expire in 1 hour)
+            redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=3600)
+            
             yield "data: [DONE]\n\n"
 
         except Exception as e:
@@ -311,34 +202,9 @@ Answer:"""
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             yield "data: [DONE]\n\n"
 
-
-# Example usage and testing
-if __name__ == "__main__":
-    print("=" * 60)
-    print(" Testing RAG Pipeline")
-    print("=" * 60)
-    
-    # Initialize pipeline
-    rag = RAGPipeline()
-    
-    # Test queries
-    test_queries = [
-        "What is a SQL JOIN?",
-        "How do I create a Python class?",
-        "Explain SELECT statement in SQL"
-    ]
-    
-    for query in test_queries:
-        print(f"\n{'='*60}")
-        print(f"Question: {query}")
-        print(f"{'='*60}")
-        
-        result = rag.query(query)
-        
-        if result['success']:
-            print(f"\nAnswer:\n{result['answer']}")
-            print(f"\nSources:")
-            for source in result['sources']:
-                print(f"  - {source['source']} (Page {source['page']})")
-        else:
-            print(f"\nError: {result.get('error', 'Unknown error')}")
+    def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
+        """Sync query wrapper (not used by frontend but good for testing)."""
+        config = {"configurable": {"session_id": session_id}}
+        answer = self.chain.invoke({"question": question}, config=config)
+        docs = self.retriever.invoke(question)
+        return {"answer": answer, "sources": [d.metadata for d in docs], "success": True}

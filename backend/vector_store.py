@@ -174,13 +174,13 @@ class VectorStoreManager:
             search_kwargs={"k": k}
         )
     
-    def get_hybrid_retriever(self, k: int = 4, vector_weight: float = 0.5, bm25_weight: float = 0.5):
+    def get_hybrid_retriever(self, k: int = 4, vector_weight: float = 0.7, bm25_weight: float = 0.3):
         """Get a hybrid retriever (Vector + BM25).
         
         Args:
             k: Number of documents to retrieve
-            vector_weight: Weight for vector search results
-            bm25_weight: Weight for BM25 search results
+            vector_weight: Weight for vector search results (default 0.7)
+            bm25_weight: Weight for BM25 search results (default 0.3)
             
         Returns:
             EnsembleRetriever instance
@@ -188,40 +188,42 @@ class VectorStoreManager:
         if self.vectorstore is None:
             self.initialize_vectorstore()
             
-        # Get all documents from vector store to build BM25 index
-        # Note: In a production system, you'd want a persisted BM25 index
-        print(" Building BM25 index for hybrid search...")
-        try:
-            # Fetch documents from Chroma
-            results = self.vectorstore.get()
-            documents = []
-            for i in range(len(results['ids'])):
-                documents.append(Document(
-                    page_content=results['documents'][i],
-                    metadata=results['metadatas'][i]
-                ))
-            
-            if not documents:
-                print("[!] Warning: No documents found to build BM25 index. Falling back to vector search.")
-                return self.get_retriever(k=k)
+        # Check if we already have a cached BM25 retriever
+        if hasattr(self, '_bm25_retriever') and self._bm25_retriever:
+            print(" Using cached BM25 index...")
+            bm25_retriever = self._bm25_retriever
+        else:
+            print(" Building BM25 index for hybrid search...")
+            try:
+                # Fetch documents from Chroma
+                results = self.vectorstore.get()
+                documents = []
+                for i in range(len(results['ids'])):
+                    documents.append(Document(
+                        page_content=results['documents'][i],
+                        metadata=results['metadatas'][i]
+                    ))
                 
-            bm25_retriever = BM25Retriever.from_documents(documents)
-            bm25_retriever.k = k
-            
-            vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
-            
-            ensemble_retriever = EnsembleRetriever(
-                retrievers=[vector_retriever, bm25_retriever],
-                weights=[vector_weight, bm25_weight]
-            )
-            
-            print("[OK] Hybrid retriever initialized")
-            return ensemble_retriever
-            
-        except Exception as e:
-            print(f"[X] Error creating hybrid retriever: {str(e)}")
-            print("Falling back to standard vector search.")
-            return self.get_retriever(k=k)
+                if not documents:
+                    print("[!] Warning: No documents found to build BM25 index. Falling back to vector search.")
+                    return self.get_retriever(k=k)
+                    
+                bm25_retriever = BM25Retriever.from_documents(documents)
+                self._bm25_retriever = bm25_retriever
+            except Exception as e:
+                print(f"[X] Error creating BM25 index: {str(e)}")
+                return self.get_retriever(k=k)
+
+        bm25_retriever.k = k
+        vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
+        
+        ensemble_retriever = EnsembleRetriever(
+            retrievers=[vector_retriever, bm25_retriever],
+            weights=[vector_weight, bm25_weight]
+        )
+        
+        print(f"[OK] Hybrid retriever initialized (Vector: {vector_weight}, BM25: {bm25_weight})")
+        return ensemble_retriever
     
     def get_stats(self) -> dict:
         """Get statistics about the vector store.

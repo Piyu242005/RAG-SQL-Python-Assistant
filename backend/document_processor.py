@@ -127,35 +127,34 @@ class DocumentProcessor:
         return documents
     
     def process_all_pdfs(self) -> List[Document]:
-        """Process all PDF files in the workspace.
+        """Process all PDF files in the configured PDF directory.
         
         Returns:
             List of all processed Document objects
         """
         print("=" * 60)
-        print(" Starting PDF Processing")
+        print(" Starting PDF Processing (Auto-Discovery)")
         print("=" * 60)
         
         all_documents = []
+        pdf_dir = settings.pdf_directory
         
-        # Define PDFs to process with their types
-        pdf_configs = [
-            {"filename": "MySQL Handbook.pdf", "doc_type": "mysql"},
-            {"filename": "The Ultimate Python Handbook.pdf", "doc_type": "python"}
-        ]
-        
-        for config in pdf_configs:
-            pdf_path = settings.pdf_directory / config["filename"]
+        if not pdf_dir.exists():
+            print(f"[!] Warning: PDF directory not found: {pdf_dir}")
+            return []
+
+        # Walk directory for all PDFs
+        for file_path in pdf_dir.glob("*.pdf"):
+            filename = file_path.name
             
-            if not pdf_path.exists():
-                print(f"[!]  Warning: {config['filename']} not found at {pdf_path}")
-                continue
+            # Simple heuristic for doc_type based on filename
+            doc_type = "mysql" if "sql" in filename.lower() else "python" if "python" in filename.lower() else "custom"
             
             try:
-                documents = self.process_pdf(pdf_path, config["doc_type"])
+                documents = self.process_pdf(file_path, doc_type)
                 all_documents.extend(documents)
             except Exception as e:
-                print(f"[X] Failed to process {config['filename']}: {str(e)}")
+                print(f"[X] Failed to process {filename}: {str(e)}")
         
         print("\n" + "=" * 60)
         print(f"[OK] Processing Complete: {len(all_documents)} total chunks")

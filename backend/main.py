@@ -14,8 +14,8 @@ import time
 from pythonjsonlogger import jsonlogger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from fastapi import Request
 from limiter import limiter
+from fastapi.responses import JSONResponse
 
 # Setup Logging
 log_handler = logging.StreamHandler()
@@ -84,6 +84,32 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API Key Middleware
+@app.middleware("http")
+async def api_key_auth(request: Request, call_next):
+    # Only protect /api/chat and /api/initialize, etc.
+    # Root and Health can be public
+    if request.url.path.startswith("/api") and not request.url.path.endswith("/health"):
+        # Check API Key
+        key = request.headers.get("x-api-key")
+        if key != settings.api_key:
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Unauthorized: Invalid or missing API Key"}
+            )
+    
+    response = await call_next(request)
+    return response
+
+# Global Error Handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global error: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": f"Internal Server Error: {str(exc)}"}
+    )
 
 # Middleware for request logging
 @app.middleware("http")
