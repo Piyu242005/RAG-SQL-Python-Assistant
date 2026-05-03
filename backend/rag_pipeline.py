@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import json
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory, RedisChatMessageHistory
@@ -51,8 +51,8 @@ class RAGPipeline:
         self.llm = Ollama(
             base_url=settings.ollama_base_url,
             model=settings.ollama_model,
-            temperature=0.1,  # Lower for more factual answers
-            num_ctx=4096,     # Increased context window
+            temperature=0.1,  
+            num_ctx=4096,     
             num_predict=1024,
             top_k=20,
             top_p=0.9,
@@ -66,7 +66,6 @@ class RAGPipeline:
         self.vector_store_manager.initialize_vectorstore()
         
         if use_hybrid:
-            # Retrieve 20 candidates for reranking
             self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=20)
         else:
             self.base_retriever = self.vector_store_manager.get_retriever(k=20, search_type="mmr")
@@ -77,7 +76,6 @@ class RAGPipeline:
         """Initialize FlashRank reranker (Select top 5)."""
         logger.info("Initializing FlashRank reranker...")
         try:
-            # Top 5 final results after reranking 20 candidates
             compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=5)
             self.retriever = ContextualCompressionRetriever(
                 base_compressor=compressor, 
@@ -109,7 +107,6 @@ Rules:
             ("human", "Context:\n{context}\n\nQuestion: {question}\n\nAnswer:")
         ])
         
-        # Create RAG chain
         self.base_chain = (
             {
                 "context": self.retriever | self._format_docs,
@@ -122,7 +119,6 @@ Rules:
         )
         
         def get_session_history(session_id: str):
-            """Get Redis-backed or in-memory history."""
             if redis_manager.client:
                 return RedisChatMessageHistory(
                     session_id=f"chat_history:{session_id}",
@@ -138,39 +134,49 @@ Rules:
             input_messages_key="question",
             history_messages_key="history",
         )
-        
-        logger.info("[OK] RAG chain with persistent history initialized")
+        logger.info("[OK] RAG chain initialized")
     
     def _format_docs(self, docs: List[Document]) -> str:
-        """Format retrieved documents with metadata."""
         formatted = []
         for i, doc in enumerate(docs, 1):
             source = doc.metadata.get('source', 'Unknown')
             page = doc.metadata.get('page', 'N/A')
             formatted.append(f"--- Document {i} (Source: {source}, Page: {page}) ---\n{doc.page_content}\n")
         return "\n".join(formatted)
+
+    def _extract_text(self, content: Any) -> str:
+        """Safely extract text from various LangChain/Ollama response types."""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, dict):
+            # Try common keys used by different models/parsers
+            for key in ['text', 'answer', 'content', 'output']:
+                if key in content and isinstance(content[key], str):
+                    return content[key]
+            # Fallback to string representation of the dict
+            return str(content)
+        return str(content) if content is not None else ""
     
     async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
-        """Stream response with Redis caching."""
-        # 1. Check Cache
+        """Stream response with Redis caching and type-safe handling."""
         cache_key = f"rag_cache:{question}:{doc_type or 'all'}"
         cached_response = redis_manager.get_cache(cache_key)
         
-        if cached_response and isinstance(cached_response.get('answer'), str):
-            logger.info(f"Serving from cache: {question}")
-            yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
-            # Split by whitespace to simulate streaming tokens
-            tokens = cached_response['answer'].split(' ')
-            for i, token in enumerate(tokens):
-                # Add space back except for the last token
-                t = token + (' ' if i < len(tokens) - 1 else '')
-                yield f"data: {json.dumps({'token': t})}\n\n"
-                await asyncio.sleep(0.01)
-            yield "data: [DONE]\n\n"
-            return
+        if cached_response:
+            answer_text = self._extract_text(cached_response.get('answer'))
+            if answer_text:
+                logger.info(f"Serving from cache: {question}")
+                yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
+                
+                tokens = answer_text.split(' ')
+                for i, token in enumerate(tokens):
+                    t = token + (' ' if i < len(tokens) - 1 else '')
+                    yield f"data: {json.dumps({'token': t})}\n\n"
+                    await asyncio.sleep(0.01)
+                yield "data: [DONE]\n\n"
+                return
 
         try:
-            # 2. Retrieve docs
             loop = asyncio.get_event_loop()
             docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(question))
 
@@ -186,24 +192,20 @@ Rules:
                     })
                     seen.add(source_key)
 
-            # 3. Stream and Capture for Caching
             yield f"data: {json.dumps({'sources': sources})}\n\n"
 
             full_answer = ""
             config = {"configurable": {"session_id": session_id}}
             
-            # Use astream on the base_chain to ensure StrOutputParser works correctly
-            # RunnableWithMessageHistory sometimes wraps chunks in metadata
             async for chunk in self.chain.astream({"question": question}, config=config):
-                if chunk:
-                    # Defensive: ensure chunk is a string
-                    text_chunk = str(chunk) if not isinstance(chunk, str) else chunk
-                    full_answer += text_chunk
-                    yield f"data: {json.dumps({'token': text_chunk})}\n\n"
+                if chunk is not None:
+                    # Robust extraction from AddableDict or other types
+                    text_token = self._extract_text(chunk)
+                    full_answer += text_token
+                    yield f"data: {json.dumps({'token': text_token})}\n\n"
 
-            # 4. Save to Cache (Expire in 1 hour)
+            # Cache the clean string
             redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=3600)
-            
             yield "data: [DONE]\n\n"
 
         except Exception as e:
@@ -212,8 +214,9 @@ Rules:
             yield "data: [DONE]\n\n"
 
     def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
-        """Sync query wrapper (not used by frontend but good for testing)."""
+        """Sync query wrapper."""
         config = {"configurable": {"session_id": session_id}}
-        answer = self.chain.invoke({"question": question}, config=config)
+        result = self.chain.invoke({"question": question}, config=config)
+        answer = self._extract_text(result)
         docs = self.retriever.invoke(question)
         return {"answer": answer, "sources": [d.metadata for d in docs], "success": True}
