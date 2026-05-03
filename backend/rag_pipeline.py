@@ -1,10 +1,12 @@
 """RAG pipeline implementation using LangChain."""
+import asyncio
+import logging
 from typing import List, Dict, Optional
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory, RedisChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.documents import Document
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import OllamaLLM as Ollama
 try:
@@ -19,6 +21,8 @@ except ImportError:
 from vector_store import VectorStoreManager
 from llm_config import OllamaManager
 from config import settings
+
+logger = logging.getLogger("rag-pipeline")
 
 class RAGPipeline:
     """RAG pipeline for question answering."""
@@ -128,13 +132,11 @@ Answer:"""
             | StrOutputParser()
         )
         
-        # Wrap with message history using Redis
-        def get_session_history(session_id: str):
-            return RedisChatMessageHistory(
-                session_id=session_id,
-                url=settings.redis_url,
-                ttl=3600 # 1 hour TTL
-            )
+        # In-memory session store (no Redis dependency required)
+        def get_session_history(session_id: str) -> ChatMessageHistory:
+            if session_id not in self.history_store:
+                self.history_store[session_id] = ChatMessageHistory()
+            return self.history_store[session_id]
 
         self.chain = RunnableWithMessageHistory(
             self.base_chain,
@@ -143,7 +145,7 @@ Answer:"""
             history_messages_key="history",
         )
         
-        print("[OK] RAG chain with memory initialized")
+        print("[OK] RAG chain with in-memory session history initialized")
     
     def _format_docs(self, docs: List[Document]) -> str:
         """Format retrieved documents for context.
@@ -162,21 +164,23 @@ Answer:"""
         
         return "\n".join(formatted)
     
-    def query(self, question: str) -> Dict[str, any]:
+    def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
         """Query the RAG system.
         
         Args:
             question: User question
+            session_id: Session ID for conversation memory
             
         Returns:
             Dictionary with answer and source documents
         """
         try:
-            # Retrieve relevant documents
+            # Retrieve relevant documents first
             docs = self.retriever.invoke(question)
             
-            # Generate answer
-            answer = self.chain.invoke(question)
+            # Generate answer with session-aware history
+            config = {"configurable": {"session_id": session_id}}
+            answer = self.chain.invoke({"question": question}, config=config)
             
             # Format sources
             sources = []
@@ -199,14 +203,18 @@ Answer:"""
             }
         
         except Exception as e:
+            logger.error(f"Query error: {e}", exc_info=True)
             raise RuntimeError(f"Error processing query: {str(e)}")
     
-    def query_with_filter(self, question: str, doc_type: Optional[str] = None) -> Dict[str, any]:
+    def query_with_filter(
+        self, question: str, doc_type: Optional[str] = None, session_id: str = "default"
+    ) -> Dict[str, any]:
         """Query with document type filter.
         
         Args:
             question: User question
             doc_type: Filter by document type ('mysql' or 'python')
+            session_id: Session ID for conversation memory
             
         Returns:
             Dictionary with answer and source documents
@@ -216,17 +224,15 @@ Answer:"""
             if doc_type:
                 docs = self.vector_store_manager.similarity_search(
                     query=question,
-                    k=3,
+                    k=8,
                     filter={"doc_type": doc_type}
                 )
             else:
                 docs = self.retriever.invoke(question)
             
-            # Format context
-            context = self._format_docs(docs)
-            
-            # Generate answer
-            answer = self.chain.invoke(question)
+            # Generate answer (context injected by chain via retriever)
+            config = {"configurable": {"session_id": session_id}}
+            answer = self.chain.invoke({"question": question}, config=config)
             
             # Format sources
             sources = []
@@ -251,14 +257,32 @@ Answer:"""
             }
         
         except Exception as e:
+            logger.error(f"Query with filter error: {e}", exc_info=True)
             raise RuntimeError(f"Error processing query: {str(e)}")
 
     async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
-        """Stream the RAG response with source documentation."""
+        """Stream the RAG response with source documentation.
+        
+        EnsembleRetriever / BM25Retriever are sync-only; we run them in a
+        thread-pool executor so we don't block the async event loop.
+        """
         import json
         try:
-            # 1. Retrieve relevant documents for sources
-            docs = await self.retriever.ainvoke(question)
+            # 1. Retrieve docs in thread-pool (sync retrievers are not async-safe)
+            loop = asyncio.get_event_loop()
+            if doc_type:
+                docs = await loop.run_in_executor(
+                    None,
+                    lambda: self.vector_store_manager.similarity_search(
+                        query=question, k=8, filter={"doc_type": doc_type}
+                    )
+                )
+            else:
+                docs = await loop.run_in_executor(
+                    None, lambda: self.retriever.invoke(question)
+                )
+
+            # 2. Build sources list
             sources = []
             seen = set()
             for doc in docs:
@@ -270,19 +294,20 @@ Answer:"""
                         "content_preview": doc.page_content[:200] + "..."
                     })
                     seen.add(source_key)
-            
-            # Send metadata/sources first so UI can display them immediately
+
+            # 3. Send sources to UI immediately
             yield f"data: {json.dumps({'sources': sources})}\n\n"
 
-            # 2. Stream the LLM response
+            # 4. Stream LLM tokens
             config = {"configurable": {"session_id": session_id}}
-            async for chunk in self.chain.astream(question, config=config):
+            async for chunk in self.chain.astream({"question": question}, config=config):
                 if chunk:
                     yield f"data: {json.dumps({'token': chunk})}\n\n"
-            
+
             yield "data: [DONE]\n\n"
-            
+
         except Exception as e:
+            logger.error(f"Stream error: {e}", exc_info=True)
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             yield "data: [DONE]\n\n"
 

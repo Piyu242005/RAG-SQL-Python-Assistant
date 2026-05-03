@@ -33,59 +33,56 @@ export const sendChatQuery = async (query, docType = null) => {
  * Stream a chat query response from the RAG system.
  */
 export const streamChatQuery = async (query, conversationId = null, docType = null, onChunk) => {
+  let response;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
+    response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        query, 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
         conversation_id: conversationId,
-        doc_type: docType 
+        doc_type: docType,
       }),
     });
+  } catch {
+    throw new Error('Cannot connect to backend. Is the server running on port 8000?');
+  }
 
-    if (!response.ok) {
-      throw new Error('Failed to start stream');
-    }
+  if (!response.ok) {
+    let detail = `Backend error ${response.status}`;
+    try { const j = await response.json(); detail = j.detail || detail; } catch {}
+    throw new Error(detail);
+  }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let partialChunk = "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let partialChunk = '';
 
+  try {
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
 
       partialChunk += decoder.decode(value, { stream: true });
       const lines = partialChunk.split('\n');
-      
-      partialChunk = lines.pop(); // Keep last incomplete line
+      partialChunk = lines.pop(); // keep last incomplete line
 
       for (const line of lines) {
-        if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-          try {
-            const data = JSON.parse(line.replace('data: ', ''));
-            if (data.token && onChunk) {
-              onChunk({ token: data.token });
-            } else if (data.sources && onChunk) {
-              onChunk({ sources: data.sources });
-            } else if (data.error) {
-              throw new Error(data.error);
-            }
-          } catch (e) {
-            if (e.message && e.message.includes('Failed to parse')) {
-              console.error("Stream parse error:", e);
-            } else if (data?.error) {
-               throw new Error(data.error);
-            }
-          }
+        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
+        try {
+          const data = JSON.parse(line.slice(6)); // remove 'data: ' prefix
+          if (data.error) throw new Error(data.error);
+          if (data.token && onChunk) onChunk({ token: data.token });
+          else if (data.sources && onChunk) onChunk({ sources: data.sources });
+        } catch (parseErr) {
+          // Only re-throw real errors, not JSON parse failures on partial chunks
+          if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr;
+          console.warn('Stream parse warning:', parseErr.message);
         }
       }
     }
-  } catch (error) {
-    throw new Error(error.message || 'Failed to stream query');
+  } finally {
+    reader.releaseLock();
   }
 };
 

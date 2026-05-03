@@ -37,6 +37,7 @@ async def chat(request: ChatRequest, fast_request: Request) -> ChatResponse:
     """
     try:
         pipeline = get_rag_pipeline()
+        session_id = request.conversation_id or "default"
         
         # Query with optional filter
         if request.doc_type:
@@ -45,9 +46,9 @@ async def chat(request: ChatRequest, fast_request: Request) -> ChatResponse:
                     status_code=400,
                     detail="doc_type must be 'mysql' or 'python'"
                 )
-            result = pipeline.query_with_filter(request.query, request.doc_type)
+            result = pipeline.query_with_filter(request.query, request.doc_type, session_id=session_id)
         else:
-            result = pipeline.query(request.query)
+            result = pipeline.query(request.query, session_id=session_id)
         
         # Convert sources to Pydantic models
         sources = [Source(**source) for source in result['sources']]
@@ -78,12 +79,22 @@ async def chat_stream(request: ChatRequest, fast_request: Request):
         pipeline = get_rag_pipeline()
         
         async def event_generator():
-            # Use conversation_id as session_id for Redis memory
+            # Use conversation_id as session_id for in-memory history
             session_id = request.conversation_id or "default"
-            async for chunk in pipeline.stream_query(request.query, request.doc_type, session_id=session_id):
+            async for chunk in pipeline.stream_query(
+                request.query, request.doc_type, session_id=session_id
+            ):
                 yield chunk
 
-        return StreamingResponse(event_generator(), media_type="text/event-stream")
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",         # Disable nginx buffering
+                "Access-Control-Allow-Origin": "*", # SSE CORS fix
+            }
+        )
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

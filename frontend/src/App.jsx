@@ -17,17 +17,34 @@ function AppContent() {
   const chat = useChat();
 
   useEffect(() => {
+    let attempts = 0;
+    const MAX_ATTEMPTS = 5;
+    const RETRY_DELAY = 3000; // 3 seconds
+
     const checkHealth = async () => {
       try {
         const response = await fetch('http://localhost:8000/api/health');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         setHealthStatus(data);
-      } catch (error) {
-        setHealthStatus({ status: 'error', ollama_running: false, model_available: false, vectorstore_initialized: false });
-      } finally {
         setIsLoading(false);
+      } catch {
+        attempts++;
+        if (attempts < MAX_ATTEMPTS) {
+          // Backend may still be starting — retry
+          setTimeout(checkHealth, RETRY_DELAY);
+        } else {
+          setHealthStatus({
+            status: 'error',
+            ollama_running: false,
+            model_available: false,
+            vectorstore_initialized: false,
+          });
+          setIsLoading(false);
+        }
       }
     };
+
     checkHealth();
   }, []);
 
