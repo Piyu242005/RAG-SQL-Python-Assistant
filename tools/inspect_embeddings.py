@@ -1,13 +1,7 @@
-"""
-Piyu RAG - Embedding Inspector & Visualizer
-Exports vectors to CSV and generates a 2D semantic map.
-"""
+import sys
+# Add backend to path so we can import vector_store
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-import os
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
 from vector_store import VectorStoreManager
 
 def export_to_csv():
@@ -34,7 +28,10 @@ def export_to_csv():
         'embedding_preview': [str(e[:5]) + "..." for e in data['embeddings']]
     })
     
-    output_file = "embeddings_audit.csv"
+    # Save to exports folder
+    output_dir = Path("../exports")
+    output_dir.mkdir(exist_ok=True)
+    output_file = output_dir / "embeddings_audit.csv"
     df.to_csv(output_file, index=False)
     print(f"Exported to: {output_file}")
     return data
@@ -47,7 +44,6 @@ def visualize_embeddings(data):
     sources = [m.get('source', 'Unknown') for m in data['metadatas']]
     
     # Reduce dimensions to 2D using T-SNE
-    # Ensure perplexity is smaller than the number of samples
     n_samples = len(embeddings)
     perplexity = min(30, max(1, n_samples - 1))
     
@@ -76,7 +72,8 @@ def visualize_embeddings(data):
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.3)
     
-    output_img = "embedding_visualization.png"
+    output_dir = Path("../exports")
+    output_img = output_dir / "embedding_visualization.png"
     plt.savefig(output_img)
     print(f"Visualization saved to: {output_img}")
 

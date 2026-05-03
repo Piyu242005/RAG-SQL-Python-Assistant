@@ -16,9 +16,12 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
-# Configuration (Aligned with project requirements)
-PDF_DIR = Path("../pdfs")
-CHROMA_DIR = Path("./chroma_db")
+# Add backend to path so we can import config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
+
+# Configuration (Aligned with new organization)
+PDF_DIR = Path("../data/pdfs")
+CHROMA_DIR = Path("../data/chroma_db")
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
