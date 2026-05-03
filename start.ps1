@@ -6,8 +6,9 @@
 $ROOT     = $PSScriptRoot
 $BACKEND  = Join-Path $ROOT "backend"
 $FRONTEND = Join-Path $ROOT "frontend"
+$DATA     = Join-Path $ROOT "data"
 $VENV     = Join-Path $BACKEND "venv\Scripts\Activate.ps1"
-$CHROMA   = Join-Path $BACKEND "chroma_db\chroma.sqlite3"
+$CHROMA   = Join-Path $DATA "chroma_db\chroma.sqlite3"
 
 function Write-Step($msg) {
     Write-Host ""
@@ -70,9 +71,9 @@ try {
 Write-Step "STEP 2 - Vector Database / Embeddings"
 
 if (Test-Path $CHROMA) {
-    Write-OK "ChromaDB already exists - skipping embedding"
+    Write-OK "ChromaDB already exists in /data - skipping embedding"
 } else {
-    Write-WARN "ChromaDB not found - running initialize_db.py (takes ~40s first time)..."
+    Write-WARN "ChromaDB not found in /data - running initialize_db.py..."
 
     $activateAndRun = "& '$VENV'; Set-Location '$BACKEND'; python initialize_db.py"
     $initProc = Start-Process -FilePath "powershell" `
@@ -80,7 +81,7 @@ if (Test-Path $CHROMA) {
         -PassThru -Wait -WindowStyle Normal
 
     if ($initProc.ExitCode -eq 0) {
-        Write-OK "Embeddings created and indexed into ChromaDB"
+        Write-OK "Embeddings created and indexed into /data/chroma_db"
     } else {
         Write-ERR "Embedding initialization failed (exit $($initProc.ExitCode)) - app may have limited functionality"
         Start-Sleep -Seconds 2

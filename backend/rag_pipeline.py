@@ -118,6 +118,20 @@ Rules:
             | StrOutputParser()
         )
         
+        # Redis Caching setup with graceful degradation
+        self.redis_client = None
+        self.redis_available = False
+        try:
+            import redis
+            self.redis_client = redis.from_url(settings.redis_url)
+            if self.redis_client.ping():
+                self.redis_available = True
+                print("[OK] Redis Cache: Active")
+            else:
+                print("[!] Redis Cache: Refused connection. Falling back to memory-only.")
+        except Exception as e:
+            print(f"[!] Redis Cache: Not available ({e}). Falling back to memory-only.")
+
         def get_session_history(session_id: str):
             if redis_manager.client:
                 return RedisChatMessageHistory(

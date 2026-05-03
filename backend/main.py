@@ -1,5 +1,5 @@
 """Main FastAPI application."""
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -146,23 +146,24 @@ async def root():
 
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """
-    Check system health and status.
-    
-    Returns:
-        HealthResponse with system status
-    """
+    """Check system health and status with absolute path verification."""
     ollama_manager = OllamaManager()
     vector_manager = VectorStoreManager()
     
     status = ollama_manager.validate_setup()
-    vectorstore_exists = vector_manager._vectorstore_exists()
+    
+    # Verify vectorstore using absolute path stats
+    stats = vector_manager.get_stats()
+    vectorstore_initialized = "error" not in stats and stats.get('total_documents', 0) > 0
+    
+    # We consider it healthy if core RAG is working (Ollama + Vector Store)
+    is_healthy = status['ollama_running'] and vectorstore_initialized
     
     return HealthResponse(
-        status="healthy" if status['ollama_running'] and vectorstore_exists else "degraded",
+        status="healthy" if is_healthy else "degraded",
         ollama_running=status['ollama_running'],
         model_available=status['model_available'],
-        vectorstore_initialized=vectorstore_exists,
+        vectorstore_initialized=vectorstore_initialized,
         configured_model=status['configured_model'],
         available_models=status['available_models']
     )
