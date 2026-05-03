@@ -28,7 +28,7 @@
 
 <br />
 
-<img src="./Welcome%20Screen.png" width="100%" alt="Welcome Screen Demo" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(99,102,241,0.25);" />
+<img src="welcome_screen.png" width="100%" alt="Welcome Screen Demo" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(99,102,241,0.25);" />
 
 ---
 
@@ -52,7 +52,10 @@
            📄 Source: MySQL Handbook.pdf — Page 47
 ```
 
-<img src="./chat%20response.png" width="100%" alt="Chat Response Demo" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); margin: 16px 0;" />
+<p align="center">
+  <img src="chat_response.png" width="100%" alt="Chat Response Demo" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(99,102,241,0.25);" />
+</p>
+
 
 **No API keys. No cloud. No data leaks. Zero running cost.**
 
