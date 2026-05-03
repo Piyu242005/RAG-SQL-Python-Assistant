@@ -1,7 +1,8 @@
 <!-- HEADER -->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0077b6,100:00b4d8&height=200&section=header&text=Piyu%20RAG%20v2.0&fontSize=40&fontAlignY=35&fontColor=ffffff&desc=SQL%20%26%20Python%20Expert%20%7C%20Local%20%26%20Private%20AI&descAlignY=55&descAlign=50" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0077b6&height=200&section=header&text=Piyu%20RAG%20v2.0&fontSize=40&fontAlignY=35&fontColor=ffffff&desc=SQL%20and%20Python%20Expert%20%7C%20Local%20and%20Private%20AI&descAlignY=55&descAlign=50" />
 </p>
+
 
 
 
