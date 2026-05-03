@@ -66,7 +66,8 @@ class RAGPipeline:
         self.vector_store_manager.initialize_vectorstore()
         
         if use_hybrid:
-            self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=20)
+            # Context Guard: Use k=8 to prevent context overflow during reranker fallback
+            self.base_retriever = self.vector_store_manager.get_hybrid_retriever(k=8)
         else:
             self.base_retriever = self.vector_store_manager.get_retriever(k=20, search_type="mmr")
         
@@ -133,14 +134,18 @@ Rules:
             print(f"[!] Redis Cache: Not available ({e}). Falling back to memory-only.")
 
         def get_session_history(session_id: str):
-            if redis_manager.client:
-                return RedisChatMessageHistory(
-                    session_id=f"chat_history:{session_id}",
-                    url=settings.redis_url
-                )
-            if session_id not in self.in_memory_history:
-                self.in_memory_history[session_id] = ChatMessageHistory()
-            return self.in_memory_history[session_id]
+            history = RedisChatMessageHistory(
+                session_id=f"chat_history:{session_id}",
+                url=settings.redis_url
+            )
+            
+            # Sliding Window Memory: Keep only last 10 messages (5 turns)
+            if len(history.messages) > 10:
+                # Trim the history (simple clear for now, could be more surgical)
+                history.clear()
+                print(f"[!] Conversation history trimmed for session {session_id}")
+                
+            return history
 
         self.chain = RunnableWithMessageHistory(
             self.base_chain,
@@ -177,18 +182,18 @@ Rules:
         cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:
-            answer_text = self._extract_text(cached_response.get('answer'))
-            if answer_text:
-                logger.info(f"Serving from cache: {question}")
-                yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
-                
-                tokens = answer_text.split(' ')
-                for i, token in enumerate(tokens):
-                    t = token + (' ' if i < len(tokens) - 1 else '')
-                    yield f"data: {json.dumps({'token': t})}\n\n"
-                    await asyncio.sleep(0.01)
-                yield "data: [DONE]\n\n"
-                return
+            logger.info(f"Serving from cache: {question}")
+            # CACHE HIT PATH
+            print(f"[CACHE] Hit for query: {question[:50]}...")
+            answer_text = cached_response["answer"]
+            
+            # STREAM CHAR-BY-CHAR (Preserves markdown and code blocks)
+            for char in answer_text:
+                chunk = {"token": char, "sources": cached_response.get("sources", [])}
+                yield f"data: {json.dumps(chunk)}\n\n"
+                await asyncio.sleep(0.003)
+            yield "data: [DONE]\n\n"
+            return
 
         try:
             loop = asyncio.get_event_loop()

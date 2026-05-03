@@ -73,26 +73,14 @@ class DocumentProcessor:
         
         return pages_data
     
-    def _detect_topic(self, text: str) -> str:
-        """Detect the primary topic of a chunk for metadata filtering."""
-        text = text.lower()
-        
-        # SQL Heuristics
-        sql_keywords = ['join', 'select', 'where', 'group by', 'insert', 'update', 'delete', 'table', 'database']
-        # Python Heuristics
-        python_keywords = ['def ', 'class ', 'import ', 'decorators', 'list comprehension', 'try:', 'except:', 'async', 'await']
-        
-        if any(k in text for k in sql_keywords):
-            if 'join' in text: return "sql_joins"
-            if 'select' in text: return "sql_queries"
-            return "sql_general"
-        
-        if any(k in text for k in python_keywords):
-            if 'decorator' in text: return "python_decorators"
-            if 'class' in text: return "python_oop"
-            return "python_general"
-            
-        return "general_tech"
+    def _detect_topic(self, text: str, source: str = "") -> str:
+        """Detect the primary topic of a chunk based on source metadata (Reliable)."""
+        source_lower = source.lower()
+        if "mysql" in source_lower or "sql" in source_lower:
+            return "sql"
+        if "python" in source_lower:
+            return "python"
+        return "general"
 
     def chunk_documents(self, pages_data: List[Dict[str, any]], doc_type: str) -> List[Document]:
         """Split pages into chunks and create LangChain Document objects with topic tagging."""
@@ -103,8 +91,8 @@ class DocumentProcessor:
             chunks = self.text_splitter.split_text(page_data["text"])
             
             for i, chunk in enumerate(chunks):
-                # Detect topic for this specific chunk
-                topic = self._detect_topic(chunk)
+                # Detect topic for this specific chunk using source metadata
+                topic = self._detect_topic(chunk, source=page_data["source"])
                 
                 # Create Document with metadata
                 doc = Document(

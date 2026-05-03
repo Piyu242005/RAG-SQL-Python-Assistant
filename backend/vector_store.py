@@ -191,31 +191,25 @@ class VectorStoreManager:
         if self.vectorstore is None:
             self.initialize_vectorstore()
             
+        # BM25 Persistence Logic
+        import pickle
+        bm25_cache_path = Path(self.persist_directory) / "bm25_retriever.pkl"
+        
         # Check if we already have a cached BM25 retriever
         if hasattr(self, '_bm25_retriever') and self._bm25_retriever:
-            print(" Using cached BM25 index...")
+            print(" Using instance-cached BM25 index...")
             bm25_retriever = self._bm25_retriever
-        else:
-            print(" Building BM25 index for hybrid search...")
+        elif bm25_cache_path.exists():
+            print(" Loading BM25 index from disk...")
             try:
-                # Fetch documents from Chroma
-                results = self.vectorstore.get()
-                documents = []
-                for i in range(len(results['ids'])):
-                    documents.append(Document(
-                        page_content=results['documents'][i],
-                        metadata=results['metadatas'][i]
-                    ))
-                
-                if not documents:
-                    print("Warning: No documents found to build BM25 index. Falling back to vector search.")
-                    return self.get_retriever(k=k)
-                    
-                bm25_retriever = BM25Retriever.from_documents(documents)
+                with open(bm25_cache_path, "rb") as f:
+                    bm25_retriever = pickle.load(f)
                 self._bm25_retriever = bm25_retriever
             except Exception as e:
-                print(f"[X] Error creating BM25 index: {str(e)}")
-                return self.get_retriever(k=k)
+                print(f" Warning: Failed to load BM25 cache ({e}). Rebuilding...")
+                bm25_retriever = self._rebuild_bm25(k, bm25_cache_path)
+        else:
+            bm25_retriever = self._rebuild_bm25(k, bm25_cache_path)
 
         bm25_retriever.k = k
         vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
@@ -227,6 +221,34 @@ class VectorStoreManager:
         
         print(f"[OK] Hybrid retriever initialized (Vector: {vector_weight}, BM25: {bm25_weight})")
         return ensemble_retriever
+
+    def _rebuild_bm25(self, k, cache_path):
+        """Rebuilds the BM25 index from ChromaDB and persists it."""
+        print(" Building BM25 index from scratch...")
+        import pickle
+        try:
+            results = self.vectorstore.get()
+            documents = []
+            for i in range(len(results['ids'])):
+                documents.append(Document(
+                    page_content=results['documents'][i],
+                    metadata=results['metadatas'][i]
+                ))
+            
+            if not documents:
+                return self.get_retriever(k=k)
+                
+            bm25_retriever = BM25Retriever.from_documents(documents)
+            
+            # Persist to disk
+            with open(cache_path, "wb") as f:
+                pickle.dump(bm25_retriever, f)
+            
+            self._bm25_retriever = bm25_retriever
+            return bm25_retriever
+        except Exception as e:
+            print(f"[X] Error building BM25: {e}")
+            return self.get_retriever(k=k)
     
     def get_stats(self) -> dict:
         """Get statistics about the vector store.
