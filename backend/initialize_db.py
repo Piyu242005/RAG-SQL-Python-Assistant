@@ -107,10 +107,13 @@ def split_documents(
     return documents
 
 
-# ------------------------------------------------------------------
-#  3. CREATE EMBEDDINGS
-# ------------------------------------------------------------------
-
+def create_embeddings(model_name: str) -> HuggingFaceEmbeddings:
+    """Load the HuggingFace embedding model."""
+    print(f"\n[INFO] Loading embedding model: {model_name}")
+    try:
+        return HuggingFaceEmbeddings(model_name=model_name)
+    except Exception as e:
+        raise RuntimeError(f"Failed to load embedding model: {e}")
 
 
 # ------------------------------------------------------------------
