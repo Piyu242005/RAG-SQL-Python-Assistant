@@ -23,7 +23,7 @@ function AppContent() {
 
     const checkHealth = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/health');
+        const response = await fetch('/api/health');
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         setHealthStatus(data);
