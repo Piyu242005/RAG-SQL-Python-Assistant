@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { sendChatQuery, streamChatQuery } from '../services/api';
+import { streamChatQuery } from '../services/api';
 import toast from 'react-hot-toast';
 
 // ── localStorage helpers ──────────────────────────────────
@@ -22,7 +22,7 @@ const saveToStorage = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Storage full or unavailable — silently ignore
+    // Storage full or unavailable
   }
 };
 
@@ -36,10 +36,8 @@ const removeFromStorage = (key) => {
 
 /**
  * Custom hook for managing chat state, conversations, and interactions.
- * All conversations and messages are persisted to localStorage.
  */
 export const useChat = () => {
-  // Load initial state from localStorage
   const [conversations, setConversations] = useState(() =>
     loadFromStorage(STORAGE_KEYS.CONVERSATIONS, [])
   );
@@ -53,25 +51,22 @@ export const useChat = () => {
       : [];
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState(null);
 
-  // Track activeConversationId for use inside sendMessage without stale closures
   const activeIdRef = useRef(activeConversationId);
   useEffect(() => {
     activeIdRef.current = activeConversationId;
   }, [activeConversationId]);
 
-  // ── Persist conversations list whenever it changes ──────
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.CONVERSATIONS, conversations);
   }, [conversations]);
 
-  // ── Persist active conversation ID ──────────────────────
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.ACTIVE_ID, activeConversationId);
   }, [activeConversationId]);
 
-  // ── Persist messages for the active conversation ────────
   useEffect(() => {
     const id = activeIdRef.current;
     if (id && messages.length > 0) {
@@ -79,21 +74,19 @@ export const useChat = () => {
     }
   }, [messages]);
 
-  // ── Send a message ──────────────────────────────────────
   const sendMessage = async (query, docType = null) => {
-    if (!query.trim()) return;
+    if (!query.trim() || isLoading) return;
 
     let convId = activeIdRef.current;
 
-    // Auto-create a conversation if none exists
+    // Create conversation if none exists
     if (!convId) {
-      const newId = Date.now().toString();
-      const title = query.slice(0, 40) + (query.length > 40 ? '...' : '');
-      const newConv = { id: newId, title, createdAt: new Date().toISOString() };
+      convId = Date.now().toString();
+      const title = query.slice(0, 35) + (query.length > 35 ? '...' : '');
+      const newConv = { id: convId, title, createdAt: new Date().toISOString() };
       setConversations((prev) => [newConv, ...prev]);
-      setActiveConversationId(newId);
-      activeIdRef.current = newId;
-      convId = newId;
+      setActiveConversationId(convId);
+      activeIdRef.current = convId;
     }
 
     const userMessage = {
@@ -115,14 +108,18 @@ export const useChat = () => {
 
     setMessages((prev) => [...prev, userMessage, initialAiMessage]);
     setIsLoading(true);
+    setIsStreaming(true);
     setError(null);
+
+    let accumulatedContent = '';
 
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
         if (chunk.token) {
+          accumulatedContent += chunk.token;
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === aiMessageId ? { ...m, content: m.content + chunk.token } : m
+              m.id === aiMessageId ? { ...m, content: accumulatedContent } : m
             )
           );
         } else if (chunk.sources) {
@@ -134,33 +131,34 @@ export const useChat = () => {
         }
       });
 
-      // Persist final state
-      setMessages((prev) => {
-        const updated = [...prev];
-        saveToStorage(STORAGE_KEYS.MESSAGES + convId, updated);
-        return updated;
-      });
+      // Update conversation title if it's the first message
+      setConversations(prev => prev.map(c => {
+        if (c.id === convId && c.title.includes('...')) {
+          return { ...c, title: query.slice(0, 40) };
+        }
+        return c;
+      }));
+
     } catch (err) {
       setError(err.message);
-      toast.error(err.message || 'Failed to get response');
-
-      const errorMessage = {
-        id: Date.now() + 5,
-        type: 'error',
-        content: err.message,
-        timestamp: new Date().toISOString(),
-      };
+      toast.error(err.message || 'Streaming failed');
 
       setMessages((prev) => {
         const filtered = prev.filter(m => m.id !== aiMessageId || m.content.length > 0);
+        const errorMessage = {
+          id: Date.now() + 5,
+          type: 'error',
+          content: err.message || 'Failed to connect to AI service.',
+          timestamp: new Date().toISOString(),
+        };
         return [...filtered, errorMessage];
       });
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
-  // ── Clear messages for current conversation ─────────────
   const clearMessages = useCallback(() => {
     const id = activeIdRef.current;
     setMessages([]);
@@ -170,7 +168,6 @@ export const useChat = () => {
     }
   }, []);
 
-  // ── Start a new chat ────────────────────────────────────
   const startNewChat = useCallback(() => {
     setMessages([]);
     setActiveConversationId(null);
@@ -178,17 +175,14 @@ export const useChat = () => {
     setError(null);
   }, []);
 
-  // ── Select a conversation and load its messages ─────────
   const selectConversation = useCallback((id) => {
     setActiveConversationId(id);
     activeIdRef.current = id;
-    // Load messages from localStorage for this conversation
     const savedMessages = loadFromStorage(STORAGE_KEYS.MESSAGES + id, []);
     setMessages(savedMessages);
     setError(null);
   }, []);
 
-  // ── Delete a conversation and its messages ──────────────
   const deleteConversation = useCallback((id) => {
     setConversations((prev) => prev.filter((c) => c.id !== id));
     removeFromStorage(STORAGE_KEYS.MESSAGES + id);
@@ -204,6 +198,7 @@ export const useChat = () => {
     activeConversationId,
     messages,
     isLoading,
+    isStreaming,
     error,
     sendMessage,
     clearMessages,
