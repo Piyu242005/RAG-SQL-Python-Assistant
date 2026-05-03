@@ -110,9 +110,12 @@ app.include_router(chat.router)
 async def root():
     """Root endpoint."""
     return {
-        "message": "RAG System API",
+        "message": "Welcome to Piyu's RAG AI Assistant 🚀",
+        "description": "Ask anything about SQL or Python and get accurate answers with page-level citations.",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "author": "Piyush Ramteke",
+        "status": "Running successfully"
     }
 
 @app.get("/api/health", response_model=HealthResponse)
