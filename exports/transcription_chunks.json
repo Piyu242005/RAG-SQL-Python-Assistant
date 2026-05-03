@@ -3,6 +3,7 @@
         "id": "chunk_0",
         "source": "MySQL Handbook.pdf",
         "page": 2,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Installing MySQL\nWhat is MySQL workbench?\nMySQL Workbench is a visual tool for database architects, developers, and DBAs. It\nprovides data modeling, SQL development, and comprehensive administration\ntools for server configuration, user administration, backup, and much more.\nWhat is a Database Management System (DBMS)?\nA Database Management System (DBMS) is software that interacts with end users,\napplications, and the database itself to capture and analyze data. It allows for the\ncreation, retrieval, updating, and management of data in databases. If you know\none DBMS, you can easily transition to another, as they share similar concepts and\nfunctionalities.\nWindows / macOS Installation\nDownload from: https://dev.mysql.com/downloads/installer/\nRun the installer and choose Developer Default.\nSet a root password when prompted.\nInstall MySQL Workbench (optional but helpful GUI).\nLinux (Ubuntu) Installation\nFollow these steps to install MySQL and create a user:\n1. \n2. \n3. \n4.",
         "char_count": 983
@@ -11,6 +12,7 @@
         "id": "chunk_1",
         "source": "MySQL Handbook.pdf",
         "page": 3,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Step 1: Update Package Index\nStep 2: Install MySQL Server\nStep 3: Secure the Installation\nChoose your options (yes to most).\nStep 4: Create a User 'harry'@'localhost'\nLog into MySQL:\nRun the following SQL commands:\nsudo apt update\nsudo apt install mysql-server\nsudo mysql_secure_installation\nsudo mysql\nCREATE USER 'harry'@'localhost' IDENTIFIED BY 'password';\nGRANT ALL PRIVILEGES ON *.* TO 'harry'@'localhost' WITH GRANT OPTION;\nFLUSH PRIVILEGES;\nEXIT;",
         "char_count": 454
@@ -19,6 +21,7 @@
         "id": "chunk_2",
         "source": "MySQL Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "Step 5: Test Login\nEnter the password: password\nMake sure to replace 'password'  with a secure password of your choice in\nproduction environments.\nmysql -u harry -p",
         "char_count": 164
@@ -27,6 +30,7 @@
         "id": "chunk_3",
         "source": "MySQL Handbook.pdf",
         "page": 5,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Getting Started with MySQL\nWhat is a Database?\nA database is a container that stores related data in an organized way. In MySQL, a\ndatabase holds one or more tables.\nThink of it like:\nFolder analogy:\nA database is like a folder.\nEach table is a file inside that folder.\nThe rows in the table are like the content inside each file.\nExcel analogy:\nA database is like an Excel workbook.\nEach table is a separate sheet inside that workbook.\nEach row in the table is like a row in Excel.\nStep 1: Create a Database\nAfter creating the database, either:\nRight-click it in MySQL Workbench and select “Set as Default Schema”, or\nUse this SQL command:\n• \n• \n• \n• \n• \n• \n• \n• \nCREATE DATABASE startersql;\n• \n• \nUSE startersql;",
         "char_count": 714
@@ -35,6 +39,7 @@
         "id": "chunk_4",
         "source": "MySQL Handbook.pdf",
         "page": 6,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Step 2: Create a Table\nNow we’ll create a simple users  table:\nThis table will store basic user info.\nStep 3: Drop the Database\nYou can delete the entire database (and all its tables) using:\nBe careful — this will delete everything in that database.\nData Types Explained\nINT : Integer type, used for whole numbers.\nVARCHAR(100) : Variable-length string, up to 100 characters.\nENUM : A string object with a value chosen from a list of permitted values. eg. \ngender ENUM('Male', 'Female', 'Other')\nDATE : Stores date values. eg date_of_birth DATE\nCREATE TABLE users (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(100) NOT NULL,\n    email VARCHAR(100) UNIQUE NOT NULL,\n    gender ENUM('Male', 'Female', 'Other'),\n    date_of_birth DATE,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\nDROP DATABASE startersql;\n• \n• \n• \n•",
         "char_count": 831
@@ -43,6 +48,7 @@
         "id": "chunk_5",
         "source": "MySQL Handbook.pdf",
         "page": 7,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "TIMESTAMP : Stores date and time, automatically set to the current timestamp\nwhen a row is created.\nBOOLEAN : Stores TRUE or FALSE values, often used for flags like is_active .\nDECIMAL(10, 2) : Stores exact numeric data\nvalues, useful for financial data. The first number is\nthe total number of digits, and the second is the\nnumber of digits after the decimal point.\nConstraints Explained\nAUTO_INCREMENT : Automatically generates a unique number for each row.\nPRIMARY KEY : Uniquely identifies each row in the table.\nNOT NULL : Ensures a column cannot have a NULL value.\nUNIQUE : Ensures all values in a column are different.\nDEFAULT : Sets a default value for a column if no value is provided. eg. \ncreated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP , is_active BOOLEAN \nDEFAULT TRUE\n• \n• \n• \n• \n• \n• \n• \n•",
         "char_count": 803
@@ -51,6 +57,7 @@
         "id": "chunk_6",
         "source": "MySQL Handbook.pdf",
         "page": 8,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Working with Tables in MySQL\nSelecting Data from a Table\nSelect All Columns\nThis fetches every column and every row from the users  table.\nSelect Specific Columns\nThis only fetches the name  and email  columns from all rows.\nRenaming a Table\nTo rename an existing table:\nTo rename it back:\nSELECT * FROM users;\nSELECT name, email FROM users;\nRENAME TABLE users TO customers;\nRENAME TABLE customers TO users;",
         "char_count": 407
@@ -59,6 +66,7 @@
         "id": "chunk_7",
         "source": "MySQL Handbook.pdf",
         "page": 9,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Altering a Table\nYou can use ALTER TABLE  to modify an existing table.\nAdd a Column\nDrop a Column\nModify a Column Type\nMove a Column to the First Position\nTo move a column (e.g., email ) to the first position:\nTo move a column after another column (e.g., move gender  after name ):\nALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE;\nALTER TABLE users DROP COLUMN is_active;\nALTER TABLE users MODIFY COLUMN name VARCHAR(150);\nALTER TABLE users MODIFY COLUMN email VARCHAR(100) FIRST;\nALTER TABLE users MODIFY COLUMN gender ENUM('Male', 'Female', 'Other') AFTER name;",
         "char_count": 575
@@ -67,6 +75,7 @@
         "id": "chunk_8",
         "source": "MySQL Handbook.pdf",
         "page": 10,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Inserting Data into MySQL Tables\nTo add data into a table, we use the INSERT INTO  statement.\nInsert Without Specifying Column Names (Full Row\nInsert)\nThis method requires you to provide values for all columns in order, except\ncolumns with default values or AUTO_INCREMENT .\nNot recommended if your table structure might change (e.g., new columns\nadded later).\nInsert by Specifying Column Names (Best Practice)\nThis method is safer and more readable. You only insert into specific columns.\nor for multiple rows:\nINSERT INTO users VALUES\n(1, 'Alice', 'alice@example.com', 'Female', '1995-05-14', DEFAULT);\nINSERT INTO users (name, email, gender, date_of_birth) VALUES\n('Bob', 'bob@example.com', 'Male', '1990-11-23');\nINSERT INTO users (name, email, gender, date_of_birth) VALUES\n('Bob', 'bob@example.com', 'Male', '1990-11-23'),\n('Charlie', 'charlie@example.com', 'Other', '1988-02-17');",
         "char_count": 887
@@ -75,6 +84,7 @@
         "id": "chunk_9",
         "source": "MySQL Handbook.pdf",
         "page": 11,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "The remaining columns like id  (which is AUTO_INCREMENT ) and created_at\n(which has a default) are automatically handled by MySQL.\nInsert Multiple Rows at Once\nThis is more efficient than inserting rows one by one.\nINSERT INTO users (name, email, gender, date_of_birth) VALUES\n('Charlie', 'charlie@example.com', 'Other', '1988-02-17'),\n('David', 'david@example.com', 'Male', '2000-08-09'),\n('Eva', 'eva@example.com', 'Female', '1993-12-30');",
         "char_count": 441
@@ -83,6 +93,7 @@
         "id": "chunk_10",
         "source": "MySQL Handbook.pdf",
         "page": 12,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Querying Data in MySQL using SELECT\nThe SELECT  statement is used to query data from a table.\nBasic Syntax\nTo select all columns:\nFiltering Rows with WHERE\nEqual To\nNot Equal To\nSELECT column1, column2 FROM table_name;\nSELECT * FROM users;\nSELECT * FROM users WHERE gender = 'Male';\nSELECT * FROM users WHERE gender != 'Female';\n-- or\nSELECT * FROM users WHERE gender <> 'Female';",
         "char_count": 380
@@ -91,6 +102,7 @@
         "id": "chunk_11",
         "source": "MySQL Handbook.pdf",
         "page": 13,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Greater Than / Less Than\nGreater Than or Equal / Less Than or Equal\nWorking with NULL\nIS NULL\nIS NOT NULL\nBETWEEN\nSELECT * FROM users WHERE date_of_birth < '1995-01-01';\nSELECT * FROM users WHERE id > 10;\nSELECT * FROM users WHERE id >= 5;\nSELECT * FROM users WHERE id <= 20;\nSELECT * FROM users WHERE date_of_birth IS NULL;\nSELECT * FROM users WHERE date_of_birth IS NOT NULL;\nSELECT * FROM users WHERE date_of_birth BETWEEN '1990-01-01' AND '2000-12-31';",
         "char_count": 456
@@ -99,6 +111,7 @@
         "id": "chunk_12",
         "source": "MySQL Handbook.pdf",
         "page": 14,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "IN\nLIKE (Pattern Matching)\nAND / OR\nORDER BY\nLIMIT\nSELECT * FROM users WHERE gender IN ('Male', 'Other');\nSELECT * FROM users WHERE name LIKE 'A%';\n-- Starts with A\nSELECT * FROM users WHERE name LIKE '%a';\n-- Ends with a\nSELECT * FROM users WHERE name LIKE '%li%'; -- Contains 'li'\nSELECT * FROM users WHERE gender = 'Female' AND date_of_birth > '1990-01-01';\nSELECT * FROM users WHERE gender = 'Male' OR gender = 'Other';\nSELECT * FROM users ORDER BY date_of_birth ASC;\nSELECT * FROM users ORDER BY name DESC;\nSELECT * FROM users LIMIT 5;\n-- Top 5 rows\nSELECT * FROM users LIMIT 10 OFFSET 5;\n-- Skip first 5 rows, then get next 10\nSELECT * FROM users LIMIT 5, 10;\n-- Get 10 rows starting from the 6th row (Same as",
         "char_count": 715
@@ -107,6 +120,7 @@
         "id": "chunk_13",
         "source": "MySQL Handbook.pdf",
         "page": 15,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Quick Quiz\nWhat does the following queries do?\nabove)\nSELECT * FROM users ORDER BY created_at DESC LIMIT 10;\nSELECT * FROM users WHERE salary > 60000 ORDER BY created_at DESC LIMIT 5;\nSELECT * FROM users ORDER BY salary DESC;\nSELECT * FROM users WHERE salary BETWEEN 50000 AND 70000;",
         "char_count": 283
@@ -115,6 +129,7 @@
         "id": "chunk_14",
         "source": "MySQL Handbook.pdf",
         "page": 16,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "UPDATE - Modifying Existing Data\nThe UPDATE  statement is used to change values in one or more rows.\nBasic Syntax\nExample: Update One Column\nThis changes the name of the user with id = 1  to “Alicia”.\nExample: Update Multiple Columns\nWithout WHERE Clause (Warning)\nUPDATE table_name\nSET column1 = value1, column2 = value2\nWHERE condition;\nUPDATE users\nSET name = 'Alicia'\nWHERE id = 1;\nUPDATE users\nSET name = 'Robert', email = 'robert@example.com'\nWHERE id = 2;\nUPDATE users\nSET gender = 'Other';",
         "char_count": 497
@@ -123,6 +138,7 @@
         "id": "chunk_15",
         "source": "MySQL Handbook.pdf",
         "page": 17,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "This updates every row in the table. Be very careful when omitting the WHERE\nclause.\nQuick Quiz: Practice Your UPDATE  Skills\nTry answering or running these queries based on your users  table.\n1. Update the salary of user with id = 5  to ₹70,000.\n2. Change the name of the user with email aisha@example.com\nto Aisha Khan .\n3. Increase salary by ₹10,000 for all users whose salary is less\nthan ₹60,000.\nUPDATE users\nSET salary = 70000\nWHERE id = 5;\nUPDATE users\nSET name = 'Aisha Khan'\nWHERE email = 'aisha@example.com';\nUPDATE users\nSET salary = salary + 10000\nWHERE salary < 60000;",
         "char_count": 582
@@ -131,6 +147,7 @@
         "id": "chunk_16",
         "source": "MySQL Handbook.pdf",
         "page": 18,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "4. Set the gender of user Ishaan  to Other .\n5. Reset salary of all users to ₹50,000 (Careful - affects all rows).\nNote: This query will overwrite salary for every user. Use with caution!\nUPDATE users\nSET gender = 'Other'\nWHERE name = 'Ishaan';\nUPDATE users\nSET salary = 50000;",
         "char_count": 277
@@ -139,6 +156,7 @@
         "id": "chunk_17",
         "source": "MySQL Handbook.pdf",
         "page": 19,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "DELETE - Removing Data from a Table\nThe DELETE  statement removes rows from a table.\nBasic Syntax\nExample: Delete One Row\nDelete Multiple Rows\nDelete All Rows (but keep table structure)\nDrop the Entire Table (use with caution)\nDELETE FROM table_name\nWHERE condition;\nDELETE FROM users\nWHERE id = 3;\nDELETE FROM users\nWHERE gender = 'Other';\nDELETE FROM users;\nDROP TABLE users;",
         "char_count": 377
@@ -147,6 +165,7 @@
         "id": "chunk_18",
         "source": "MySQL Handbook.pdf",
         "page": 20,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "This removes the table structure and all data permanently.\nBest Practices\nAlways use WHERE  unless you’re intentionally updating/deleting everything.\nConsider running a SELECT  with the same WHERE  clause first to confirm what\nwill be affected:\nAlways back up important data before performing destructive operations.\nQuick Quiz: Practice Your DELETE  Skills\nwhat will happen if you run these queries?\n• \n• \nSELECT * FROM users WHERE id = 3;\n• \nDELETE FROM users\nWHERE salary < 50000;\nDELETE FROM users\nWHERE salary IS NULL;",
         "char_count": 523
@@ -155,6 +174,7 @@
         "id": "chunk_19",
         "source": "MySQL Handbook.pdf",
         "page": 21,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "MySQL Constraints\nConstraints in MySQL are rules applied to table columns to ensure the accuracy, \nvalidity, and integrity of the data.\n1. UNIQUE  Constraint\nEnsures that all values in a column are different.\nExample (during table creation):\nAdd UNIQUE  using ALTER TABLE :\n2. NOT NULL  Constraint\nEnsures that a column cannot contain NULL values.\nCREATE TABLE users (\nid INT PRIMARY KEY,\n    email VARCHAR(100) UNIQUE\n);\nALTER TABLE users\nADD CONSTRAINT unique_email UNIQUE (email);",
         "char_count": 483
@@ -163,6 +183,7 @@
         "id": "chunk_20",
         "source": "MySQL Handbook.pdf",
         "page": 22,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Example:\nChange an existing column to NOT NULL:\nMake a column nullable again:\n3. CHECK  Constraint\nEnsures that values in a column satisfy a specific condition.\nExample: Allow only dates of birth after Jan 1, 2000\nNaming the constraint ( chk_dob ) helps if you want to drop it later.\n4. DEFAULT  Constraint\nSets a default value for a column if none is provided during insert.\nCREATE TABLE users (\nid INT PRIMARY KEY,\n    name VARCHAR(100) NOT NULL\n);\nALTER TABLE users\nMODIFY COLUMN name VARCHAR(100) NOT NULL;\nALTER TABLE users\nMODIFY COLUMN name VARCHAR(100) NULL;\nALTER TABLE users\nADD CONSTRAINT chk_dob CHECK (date_of_birth > '2000-01-01');",
         "char_count": 645
@@ -171,6 +192,7 @@
         "id": "chunk_21",
         "source": "MySQL Handbook.pdf",
         "page": 23,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Example:\nAdd DEFAULT using ALTER TABLE :\n5. PRIMARY KEY  Constraint\nUniquely identifies each row. Must be NOT NULL and UNIQUE.\nExample:\nAdd later with ALTER TABLE :\n6. AUTO_INCREMENT\nUsed with PRIMARY KEY  to automatically assign the next number.\nCREATE TABLE users (\nid INT PRIMARY KEY,\n    is_active BOOLEAN DEFAULT TRUE\n);\nALTER TABLE users\nALTER COLUMN is_active SET DEFAULT TRUE;\nCREATE TABLE users (\nid INT PRIMARY KEY,\n    name VARCHAR(100)\n);\nALTER TABLE users\nADD PRIMARY KEY (id);",
         "char_count": 490
@@ -179,6 +201,7 @@
         "id": "chunk_22",
         "source": "MySQL Handbook.pdf",
         "page": 24,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Example:\nEach new row gets the next available integer value in id .\nSummary Table\nConstraint\nPurpose\nUNIQUE\nPrevents duplicate values\nNOT NULL\nEnsures value is not NULL\nCHECK\nRestricts values using a condition\nDEFAULT\nSets a default value\nPRIMARY KEY\nUniquely identifies each row\nAUTO_INCREMENT\nAutomatically generates unique numbers\nCREATE TABLE users (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(100)\n);",
         "char_count": 414
@@ -187,6 +210,7 @@
         "id": "chunk_23",
         "source": "MySQL Handbook.pdf",
         "page": 25,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "SQL Functions (MySQL)\nSQL functions help you analyze, transform, or summarize data in your tables.\nWe’ll use the users  table which includes:\nid , name , email , gender , date_of_birth , salary , created_at\n1. Aggregate Functions\nThese return a single value from a set of rows.\nCOUNT()\nCount total number of users:\nCount users who are Female:\nMIN()  and MAX()\nGet the minimum and maximum salary:\n• \nSELECT COUNT(*) FROM users;\nSELECT COUNT(*) FROM users WHERE gender = 'Female';\nSELECT MIN(salary) AS min_salary, MAX(salary) AS max_salary FROM users;",
         "char_count": 550
@@ -195,6 +219,7 @@
         "id": "chunk_24",
         "source": "MySQL Handbook.pdf",
         "page": 26,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "SUM()\nCalculate total salary payout:\nAVG()\nFind average salary:\nGrouping with GROUP BY\nAverage salary by gender:\n2. String Functions\nLENGTH()\nLength of user names:\nSELECT SUM(salary) AS total_payroll FROM users;\nSELECT AVG(salary) AS avg_salary FROM users;\nSELECT gender, AVG(salary) AS avg_salary\nFROM users\nGROUP BY gender;\nSELECT name, LENGTH(name) AS name_length FROM users;",
         "char_count": 378
@@ -203,6 +228,7 @@
         "id": "chunk_25",
         "source": "MySQL Handbook.pdf",
         "page": 27,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "LOWER()  and UPPER()\nConvert names to lowercase or uppercase:\nCONCAT()\nCombine name and email:\n3. Date Functions\nNOW()\nCurrent date and time:\nYEAR() , MONTH() , DAY()\nExtract parts of date_of_birth :\nSELECT name, LOWER(name) AS lowercase_name FROM users;\nSELECT name, UPPER(name) AS uppercase_name FROM users;\nSELECT CONCAT(name, ' <', email, '>') AS user_contact FROM users;\nSELECT NOW();\nSELECT name, YEAR(date_of_birth) AS birth_year FROM users;",
         "char_count": 448
@@ -211,6 +237,7 @@
         "id": "chunk_26",
         "source": "MySQL Handbook.pdf",
         "page": 28,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "DATEDIFF()\nFind number of days between today and birthdate:\nTIMESTAMPDIFF()\nCalculate age in years:\n4. Mathematical Functions\nROUND() , FLOOR() , CEIL()\nMOD()\nFind even or odd user IDs:\nSELECT name, DATEDIFF(CURDATE(), date_of_birth) AS days_lived FROM users;\nSELECT name, TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) AS age FROM users;\nSELECT salary,\n       ROUND(salary) AS rounded,\n       FLOOR(salary) AS floored,\n       CEIL(salary) AS ceiled\nFROM users;\nSELECT id, MOD(id, 2) AS remainder FROM users;",
         "char_count": 507
@@ -219,6 +246,7 @@
         "id": "chunk_27",
         "source": "MySQL Handbook.pdf",
         "page": 29,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "5. Conditional Functions\nIF()\nSummary Table\nFunction\nPurpose\nCOUNT()\nCount rows\nSUM()\nTotal of a column\nAVG()\nAverage of values\nMIN() / MAX()\nLowest / highest value\nLENGTH()\nString length\nCONCAT()\nMerge strings\nYEAR() / DATEDIFF()\nDate breakdown / age\nROUND()\nRounding numbers\nIF()\nConditional logic\nSELECT name, gender,\n       IF(gender = 'Female', 'Yes', 'No') AS is_female\nFROM users;",
         "char_count": 387
@@ -227,6 +255,7 @@
         "id": "chunk_28",
         "source": "MySQL Handbook.pdf",
         "page": 30,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "MySQL Transactions and AutoCommit\nBy default, MySQL operates in AutoCommit mode. This means that every SQL\nstatement is treated as a transaction and is committed automatically. However, for\nmore control over when changes are saved, you can turn AutoCommit off and\nmanage transactions manually.\n1. Disabling AutoCommit\nWhen AutoCommit is off, you can explicitly control when to commit or rollback\nchanges.\nTo disable AutoCommit:\nThis turns off AutoCommit, meaning that changes you make won’t be saved to the\ndatabase unless you explicitly tell MySQL to commit them.\nImportant: Until you execute a COMMIT , your changes are not permanent.\n2. COMMIT — Save Changes to the Database\nOnce you’ve made changes and you’re confident that everything is correct, you can\nuse the COMMIT  command to save those changes.\nTo commit a transaction:\nSET autocommit = 0;\nCOMMIT;",
         "char_count": 859
@@ -235,6 +264,7 @@
         "id": "chunk_29",
         "source": "MySQL Handbook.pdf",
         "page": 31,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "This saves all the changes made since the last COMMIT  or ROLLBACK . After this\npoint, the changes become permanent.\n3. ROLLBACK — Revert Changes to the Last Safe Point\nIf you make an error or decide you don’t want to save your changes, you can \nrollback the transaction to its previous state.\nTo rollback a transaction:\nThis undoes all changes since the last COMMIT  or ROLLBACK .\nExample Workflow\nHere’s a simple example of using COMMIT  and ROLLBACK  in a transaction:\nTurn off AutoCommit:\nMake some changes (e.g., updating a salary):\nDecide whether to commit or rollback:\nIf you’re happy with the changes, run:\nIf you’re not happy and want to revert the changes, run:\nROLLBACK;\n1. \nSET autocommit = 0;\n2. \nUPDATE users SET salary = 80000 WHERE id = 5;\n3. \n1. \nCOMMIT;\n2.",
         "char_count": 774
@@ -243,6 +273,7 @@
         "id": "chunk_30",
         "source": "MySQL Handbook.pdf",
         "page": 32,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "4. Enabling AutoCommit Again\nIf you want to turn AutoCommit back on (so that every statement is automatically\ncommitted), you can do so with:\nBest Practices\nUse COMMIT  when you want to make changes permanent.\nUse ROLLBACK  to discard changes if something goes wrong.\nConsider disabling AutoCommit when performing complex updates to avoid\nsaving partial or incorrect data.\nROLLBACK;\nSET autocommit = 1;\n• \n• \n•",
         "char_count": 410
@@ -251,6 +282,7 @@
         "id": "chunk_31",
         "source": "MySQL Handbook.pdf",
         "page": 33,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Understanding PRIMARY KEY  in MySQL\nA PRIMARY KEY  is a constraint in SQL that uniquely identifies each row in a table.\nIt is one of the most important concepts in database design.\nWhat is a Primary Key?\nA PRIMARY KEY :\nMust be unique\nCannot be NULL\nIs used to identify rows in a table\nCan be a single column or a combination of columns\nEach table can have only one primary key\nExample:\nHow Is PRIMARY KEY  Different from UNIQUE ?\nAt first glance, PRIMARY KEY  and UNIQUE  might seem similar since both prevent\nduplicate values. But there are important differences:\n• \n• \n• \n• \n• \n• \nCREATE TABLE users (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(100)\n);",
         "char_count": 664
@@ -259,6 +291,7 @@
         "id": "chunk_32",
         "source": "MySQL Handbook.pdf",
         "page": 34,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Feature\nPRIMARY KEY\nUNIQUE\nMust be\nunique\nYes\nYes\nAllows NULL\nvalues\nNo\nYes (one or more NULLs\nallowed)\nHow many\nallowed\nOnly one per table\nCan have multiple\nRequired by\ntable\nRecommended, often\nrequired\nOptional\nDropping\nCannot be easily dropped\nCan be dropped anytime\nExample with UNIQUE\nIn this example:\nid  is the unique identifier for each row.\nemail  must be unique, but is not the primary key.\nCan I Drop a PRIMARY KEY?\nYes, but it is more restricted than dropping a UNIQUE  constraint.\nCREATE TABLE users (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    email VARCHAR(100) UNIQUE,\n    name VARCHAR(100)\n);\n• \n• \nALTER TABLE users DROP PRIMARY KEY;",
         "char_count": 647
@@ -267,6 +300,7 @@
         "id": "chunk_33",
         "source": "MySQL Handbook.pdf",
         "page": 35,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "This may fail if the primary key is being used elsewhere (like in a foreign key\nor auto_increment column).\nTo drop a UNIQUE  constraint:\nAuto Increment\nIn MySQL, a PRIMARY KEY  is often used with the AUTO_INCREMENT  attribute to\nautomatically generate unique values for new rows.\nThis means that every time you insert a new row, MySQL will automatically assign a\nunique value to the id  column. You can change the starting value of \nAUTO_INCREMENT  using:\nKey Takeaways\nUse PRIMARY KEY  for the main identifier of a row.\nUse UNIQUE  for enforcing non-duplicate values in other columns (like email\nor phone).\nYou can have only one primary key, but you can have many unique\nconstraints.\nALTER TABLE users DROP INDEX email;\nCREATE TABLE users (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(100)\n);\nALTER TABLE users AUTO_INCREMENT = 1000;\n• \n• \n•",
         "char_count": 850
@@ -275,6 +309,7 @@
         "id": "chunk_34",
         "source": "MySQL Handbook.pdf",
         "page": 36,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Foreign Keys in MySQL\nA foreign key is a column that creates a link between two tables. It ensures that\nthe value in one table must match a value in another table.\nThis is used to maintain data integrity between related data.\nWhy Use Foreign Keys?\nImagine this scenario:\nYou have a users  table. Now you want to store each user’s address. Instead of\nputting address columns inside the users  table, you create a separate \naddresses  table, and link it to users  using a foreign key.\nCreating a Table with a Foreign Key\nLet’s create an addresses  table where each address belongs to a user.\nCREATE TABLE addresses (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    user_id INT,\n    street VARCHAR(255),\n    city VARCHAR(100),\n    state VARCHAR(100),\n    pincode VARCHAR(10),\n    FOREIGN KEY (user_id) REFERENCES users(id)\n);",
         "char_count": 813
@@ -283,6 +318,7 @@
         "id": "chunk_35",
         "source": "MySQL Handbook.pdf",
         "page": 37,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Explanation:\nuser_id  is a foreign key.\nIt references the id  column in the users  table.\nThis ensures that every address must be linked to a valid user.\nDropping a Foreign Key\nTo drop a foreign key, you need to know its constraint name. MySQL auto-\ngenerates it if you don’t specify one, or you can name it yourself:\nTo drop it:\nAdding a Foreign Key Later (Using ALTER)\nSuppose the foreign key was not defined during table creation. You can add it\nlater using ALTER TABLE :\n• \n• \n• \nCREATE TABLE addresses (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    user_id INT,\n    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)\n);\nALTER TABLE addresses\nDROP FOREIGN KEY fk_user;\nALTER TABLE addresses\nADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id);",
         "char_count": 766
@@ -291,6 +327,7 @@
         "id": "chunk_36",
         "source": "MySQL Handbook.pdf",
         "page": 38,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Adding ON DELETE  Action\nBy default, if you delete a user that has related addresses, MySQL will throw an\nerror. You can control this behavior with ON DELETE .\nExample with ON DELETE CASCADE :\nIf you want addresses to be automatically deleted when the user is deleted:\nOr alter it later:\nOther ON DELETE Options\nON DELETE\nOption\nBehavior\nCASCADE\nDeletes all related rows in child table\nSET NULL\nSets the foreign key to NULL in the child table\nRESTRICT\nPrevents deletion of parent if child exists (default)\nCREATE TABLE addresses (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    user_id INT,\n    street VARCHAR(255),\n    city VARCHAR(100),\n    state VARCHAR(100),\n    pincode VARCHAR(10),\n    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n);\nALTER TABLE addresses\nADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE \nCASCADE;",
         "char_count": 874
@@ -299,6 +336,7 @@
         "id": "chunk_37",
         "source": "MySQL Handbook.pdf",
         "page": 39,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Summary\nForeign keys connect tables and enforce valid references.\nYou can create them inline or with ALTER TABLE .\nYou can drop them by name.\nUse ON DELETE  to control what happens when the parent row is deleted.\n• \n• \n• \n•",
         "char_count": 223
@@ -307,6 +345,7 @@
         "id": "chunk_38",
         "source": "MySQL Handbook.pdf",
         "page": 40,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "SQL JOINs in MySQL\nIn SQL, JOINs are used to combine rows from two or more tables based on related\ncolumns — usually a foreign key in one table referencing a primary key in another.\nWe’ll use the following two tables:\nusers  table\nid\nname\n1\nAarav\n2\nSneha\n3\nRaj\naddresses  table\nid\nuser_id\ncity\n1\n1\nMumbai\n2\n2\nKolkata\n3\n4\nDelhi\nNote: user_id  is a foreign key that references users.id .\n1. INNER JOIN\nReturns only the matching rows from both tables.",
         "char_count": 448
@@ -315,6 +354,7 @@
         "id": "chunk_39",
         "source": "MySQL Handbook.pdf",
         "page": 41,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "Output:\nname\ncity\nAarav\nMumbai\nSneha\nKolkata\nRaj  is excluded because there is no matching address. Delhi  is excluded\nbecause its user_id  (4) is not in users .\nVisual Representation:\n2. LEFT JOIN\nReturns all rows from the left table ( users ), and matching rows from the right\ntable ( addresses ). If no match is found, NULLs are returned.\nSELECT users.name, addresses.city\nFROM users\nINNER JOIN addresses ON users.id = addresses.user_id;\nusers          addresses\n-----\n------\n|\n1\n|\n|\n1\n|\n|\n2\n|\n|\n2\n|\n|\n|\n|\n|\n=> only matching pairs\nSELECT users.name, addresses.city\nFROM users\nLEFT JOIN addresses ON users.id = addresses.user_id;",
         "char_count": 631
@@ -323,6 +363,7 @@
         "id": "chunk_40",
         "source": "MySQL Handbook.pdf",
         "page": 42,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "Output:\nname\ncity\nAarav\nMumbai\nSneha\nKolkata\nRaj\nNULL\nRaj  is shown even though he doesn’t have an address.\nVisual Representation:\n3. RIGHT JOIN\nReturns all rows from the right table ( addresses ), and matching rows from the\nleft table ( users ). If no match is found, NULLs are returned.\nOutput:\nname\ncity\nAarav\nMumbai\nSneha\nKolkata\nusers          addresses\n-----\n------\n|\n1\n|\n|\n1\n|\n|\n2\n|\n|\n2\n|\n|\n3\n|\n|\n|\n=> all users + matched addresses (or NULL)\nSELECT users.name, addresses.city\nFROM users\nRIGHT JOIN addresses ON users.id = addresses.user_id;",
         "char_count": 547
@@ -331,6 +372,7 @@
         "id": "chunk_41",
         "source": "MySQL Handbook.pdf",
         "page": 43,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "name\ncity\nNULL\nDelhi\nDelhi  is shown even though it points to a user_id  that doesn’t exist.\nVisual Representation:\nSummary Table\nJOIN Type\nDescription\nINNER JOIN\nOnly matching rows from both tables\nLEFT JOIN\nAll rows from left table + matching from right\nRIGHT JOIN\nAll rows from right table + matching from left\nusers          addresses\n-----\n------\n|\n1\n|\n|\n1\n|\n|\n2\n|\n|\n2\n|\n|\n|\n|\n4\n|\n=> all addresses + matched users (or NULL)",
         "char_count": 428
@@ -339,6 +381,7 @@
         "id": "chunk_42",
         "source": "MySQL Handbook.pdf",
         "page": 44,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "SQL UNION  and UNION ALL\nThe UNION  operator in SQL is used to combine the result sets of two or more \nSELECT  statements. It removes duplicates by default.\nIf you want to include all rows including duplicates, use UNION ALL .\nExample Scenario\nYou already have a users  table for active users. Now, we’ll create an \nadmin_users  table to store users who are administrators or have special roles. We\nwill then combine the names from both tables using UNION .\nStep 1: Create the admin_users  Table\nCREATE TABLE admin_users (\nid INT PRIMARY KEY,\n    name VARCHAR(100),\n    email VARCHAR(100),\n    gender ENUM('Male', 'Female', 'Other'),\n    date_of_birth DATE,\n    salary INT\n);",
         "char_count": 675
@@ -347,6 +390,7 @@
         "id": "chunk_43",
         "source": "MySQL Handbook.pdf",
         "page": 45,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Step 2: Insert Sample Data into admin_users\nStep 3: Use UNION  to Combine Data\nLet’s combine the active and admin user names.\nThis returns a single list of unique names from both tables.\nUNION ALL  Example\nIf you want to keep duplicate names (if any), use UNION ALL .\nUsing More Than One Column\nYou can also select multiple columns as long as both SELECT  queries return the \nsame number of columns with compatible types.\nINSERT INTO admin_users (id, name, email, gender, date_of_birth, salary) VALUES\n(101, 'Anil Kumar', 'anil@example.com', 'Male', '1985-04-12', 60000),\n(102, 'Pooja Sharma', 'pooja@example.com', 'Female', '1992-09-20', 58000),\n(103, 'Rakesh Yadav', 'rakesh@example.com', 'Male', '1989-11-05', 54000),\n(104, 'Fatima Begum', 'fatima@example.com', 'Female', '1990-06-30', 62000);\nSELECT name FROM users\nUNION\nSELECT name FROM admin_users;\nSELECT name FROM users\nUNION ALL\nSELECT name FROM admin_users;",
         "char_count": 918
@@ -355,6 +399,7 @@
         "id": "chunk_44",
         "source": "MySQL Handbook.pdf",
         "page": 46,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Adding separate roles\nUsing Order By with UNION\nRules of UNION\nThe number of columns and their data types must match in all SELECT\nstatements.\nUNION  removes duplicates by default.\nUNION ALL  keeps duplicates.\nSELECT name, salary FROM users\nUNION\nSELECT name, salary FROM admin_users;\nSELECT name, 'User' AS role FROM users\nUNION\nSELECT name, 'Admin' AS role FROM admin_users;\nSELECT name FROM users\nUNION\nSELECT name FROM admin_users\nORDER BY name;\n1. \n2. \n3.",
         "char_count": 460
@@ -363,6 +408,7 @@
         "id": "chunk_45",
         "source": "MySQL Handbook.pdf",
         "page": 47,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "When to Use UNION\nWhen you have two similar tables (like current and archived data).\nWhen you need to combine filtered results (e.g., high-salary users from two\nsources).\nWhen performing cross-category reporting.\nSummary\nOperator\nBehavior\nUNION\nCombines results, removes duplicates\nUNION ALL\nCombines results, keeps duplicates\n• \n• \n•",
         "char_count": 334
@@ -371,6 +417,7 @@
         "id": "chunk_46",
         "source": "MySQL Handbook.pdf",
         "page": 48,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "Self JOIN in MySQL\nA Self JOIN is a regular join, but the table is joined with itself.\nThis is useful when rows in the same table are related to each other. For example,\nwhen users refer other users, and we store the ID of the person who referred them\nin the same users  table.\nStep 1: Add a referred_by_id  Column\nWe’ll extend the existing users  table to include a column called referred_by_id ,\nwhich holds the id  of the user who referred them.\nThis column:\nWill be NULL for users who were not referred.\nWill contain the id  of another user who referred them.\nStep 2: Insert Referral Data (Optional)\nAssuming id = 1  is the first user, and referred others:\nALTER TABLE users\nADD COLUMN referred_by_id INT;\n• \n• \nUPDATE users SET referred_by_id = 1 WHERE id IN (2, 3); -- User 1 referred Users 2\nand 3\nUPDATE users SET referred_by_id = 2 WHERE id = 4;\n-- User 2 referred User 4",
         "char_count": 880
@@ -379,6 +426,7 @@
         "id": "chunk_47",
         "source": "MySQL Handbook.pdf",
         "page": 49,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "Step 3: Use a Self JOIN to Get Referrer Names\nWe want to get each user’s name along with the name of the person who referred\nthem.\nExplanation:\na  refers to the user being queried.\nb  refers to the user who referred them.\nLEFT JOIN  is used so that users with NULL  in referred_by_id  are also\nincluded.\nSample Output:\nid\nuser_name\nreferred_by\n1\nAarav\nNULL\n2\nSneha\nAarav\n3\nRaj\nAarav\n4\nFatima\nSneha\nSummary\nUse Self JOIN when you need to join a table with itself.\nIn referral-based relationships, store the referrer’s id  in the same table.\nSELECT \n  a.id,\n  a.name AS user_name,\n  b.name AS referred_by\nFROM users a\nINNER JOIN users b ON a.referred_by_id = b.id;\n• \n• \n• \n• \n•",
         "char_count": 676
@@ -387,6 +435,7 @@
         "id": "chunk_48",
         "source": "MySQL Handbook.pdf",
         "page": 50,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Use aliases like a  and b  to differentiate the two instances of the same table.\n•",
         "char_count": 82
@@ -395,6 +444,7 @@
         "id": "chunk_49",
         "source": "MySQL Handbook.pdf",
         "page": 51,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "MySQL Views\nA view in MySQL is a virtual table based on the result of a SELECT  query. It does\nnot store data itself — it always reflects the current data in the base tables.\nViews are useful when:\nYou want to simplify complex queries\nYou want to reuse logic\nYou want to hide certain columns from users\nYou want a “live snapshot” of filtered data\nCreating a View\nSuppose we want a view that lists all users earning more than ₹70,000.\nQuerying the View\nThis will return all users from the users  table where salary is above ₹70,000.\n• \n• \n• \n• \nCREATE VIEW high_salary_users AS\nSELECT id, name, salary\nFROM users\nWHERE salary > 70000;\nSELECT * FROM high_salary_users;",
         "char_count": 666
@@ -403,6 +453,7 @@
         "id": "chunk_50",
         "source": "MySQL Handbook.pdf",
         "page": 52,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Demonstrating That a View is Always Up-To-Date\nLet’s see what happens when the underlying data changes.\nStep 1: View before update\nOutput:\nid\nname\nsalary\n2\nSneha\n75000\n5\nFatima\n80000\nStep 2: Update a user’s salary\nStep 3: Query the view again\nNew Output:\nid\nname\nsalary\n2\nSneha\n75000\n5\nFatima\n80000\n3\nRaj\n72000\nNotice how Raj is now included in the view — without updating the view\nitself. That’s because views always reflect live data from the original table.\nSELECT * FROM high_salary_users;\nUPDATE users\nSET salary = 72000\nWHERE name = 'Raj';\nSELECT * FROM high_salary_users;",
         "char_count": 578
@@ -411,6 +462,7 @@
         "id": "chunk_51",
         "source": "MySQL Handbook.pdf",
         "page": 53,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Dropping a View\nTo remove a view:\nSummary\nViews act like saved SELECT queries\nViews are not duplicated data\nChanges to base tables are reflected automatically\nGreat for simplifying complex queries or creating filtered access\nDROP VIEW high_salary_users;\n• \n• \n• \n•",
         "char_count": 264
@@ -419,6 +471,7 @@
         "id": "chunk_52",
         "source": "MySQL Handbook.pdf",
         "page": 54,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "MySQL Indexes\nIndexes in MySQL are used to speed up data retrieval. They work like the index of\na book — helping the database engine find rows faster, especially for searches,\nfilters, and joins.\nViewing Indexes on a Table\nTo see the indexes on a table, use:\nThis shows all the indexes currently defined on the users  table, including the\nautomatically created primary key index.\nCreating a Single-Column Index\nSuppose you’re frequently searching users by their email . You can speed this up\nby indexing the email  column.\nWhat this does:\nCreates an index named idx_email\nImproves performance of queries like:\nSHOW INDEXES FROM users;\nCREATE INDEX idx_email ON users(email);\n• \n• \nSELECT * FROM users WHERE email = 'example@example.com';",
         "char_count": 737
@@ -427,6 +480,7 @@
         "id": "chunk_53",
         "source": "MySQL Handbook.pdf",
         "page": 55,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "Important Notes\nIndexes consume extra disk space\nIndexes slow down INSERT , UPDATE , and DELETE  operations slightly\n(because the index must be updated)\nUse indexes only when needed (i.e., for columns used in WHERE , JOIN , \nORDER BY )\nCreating a Multi-Column Index\nIf you often query users using both gender  and salary , a multi-column index is\nmore efficient than separate indexes.\nUsage Example:\nThis query can take advantage of the combined index on gender  and salary .\nIndex Order Matters\nFor a multi-column index on (gender, salary) :\nThis works efficiently:\n• \n• \n• \nCREATE INDEX idx_gender_salary ON users(gender, salary);\nSELECT * FROM users\nWHERE gender = 'Female' AND salary > 70000;\n• \nWHERE gender = 'Female' AND salary > 70000",
         "char_count": 742
@@ -435,6 +489,7 @@
         "id": "chunk_54",
         "source": "MySQL Handbook.pdf",
         "page": 56,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "But this may not use the index effectively:\nBecause the first column in the index ( gender ) is missing in the filter.\nDropping an Index\nTo delete an index:\nSummary\nFeature\nDescription\nSHOW INDEXES\nView current indexes on a table\nCREATE INDEX\nCreate single or multi-column indexes\nDROP INDEX\nRemove an index\nUse when\nQuery performance on large tables is a concern\nAvoid on\nColumns that are rarely queried or always unique\n• \nWHERE salary > 70000\nDROP INDEX idx_email ON users;",
         "char_count": 476
@@ -443,6 +498,7 @@
         "id": "chunk_55",
         "source": "MySQL Handbook.pdf",
         "page": 57,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Subqueries in MySQL\nA subquery is a query nested inside another query. Subqueries are useful for\nbreaking down complex problems into smaller parts.\nThey can be used in:\nSELECT  statements\nWHERE  clauses\nFROM  clauses\nExample Scenario: Salary Comparison\nSuppose we want to find all users who earn more than the average salary of all\nusers.\nScalar Subquery Example\nThis subquery returns a single value — the average salary — and we compare each\nuser’s salary against it.\nExplanation:\nThe inner query: SELECT AVG(salary) FROM users  returns the average salary.\n• \n• \n• \nSELECT id, name, salary\nFROM users\nWHERE salary > (\n    SELECT AVG(salary) FROM users\n);\n•",
         "char_count": 657
@@ -451,6 +507,7 @@
         "id": "chunk_56",
         "source": "MySQL Handbook.pdf",
         "page": 58,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "The outer query selects all users with a salary greater than that average.\nSubquery with IN\nNow let’s say we want to find users who have been referred by someone who earns\nmore than ₹75,000.\nExplanation:\nThe inner query: SELECT id FROM users WHERE salary > 75000  returns a list\nof user IDs (referrers) who earn more than ₹75,000.\nThe outer query selects users whose referred_by_id  is in that list.\nOther Places Subqueries Are Used\nYou can also use subqueries:\nInside SELECT  columns (called scalar subqueries)\nIn the FROM  clause to create derived tables\nExample in SELECT :\nThis shows each user’s salary along with the overall average.\n• \nSELECT id, name, referred_by_id\nFROM users\nWHERE referred_by_id IN (\n    SELECT id FROM users WHERE salary > 75000\n);\n• \n• \n• \n• \nSELECT name, salary,\n(SELECT AVG(salary) FROM users) AS average_salary\nFROM users;",
         "char_count": 854
@@ -459,6 +516,7 @@
         "id": "chunk_57",
         "source": "MySQL Handbook.pdf",
         "page": 59,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Summary\nSubquery Type\nUse Case\nScalar Subquery\nReturns one value (e.g. AVG, MAX)\nSubquery with IN\nReturns multiple values\nSubquery in SELECT\nShows related calculated value\nSubquery in FROM\nActs as a virtual table\nSubqueries are powerful tools when filtering based on computed or dynamic\nconditions.",
         "char_count": 298
@@ -467,6 +525,7 @@
         "id": "chunk_58",
         "source": "MySQL Handbook.pdf",
         "page": 60,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "GROUP BY and HAVING in MySQL\nThe GROUP BY  clause is used to group rows that have the same values in\nspecified columns. It is typically used with aggregate functions like COUNT , SUM , \nAVG , MIN , or MAX .\nThe HAVING  clause is used to filter groups after aggregation — similar to how \nWHERE  filters individual rows.\nExample Table: users\nAssume this is your users  table:\nid\nname\ngender\nsalary\nreferred_by_id\n1\nAarav\nMale\n80000\nNULL\n2\nSneha\nFemale\n75000\n1\n3\nRaj\nMale\n72000\n1\n4\nFatima\nFemale\n85000\n2\n5\nPriya\nFemale\n70000\nNULL\nGROUP BY Example: Average Salary by Gender\nSELECT gender, AVG(salary) AS average_salary\nFROM users\nGROUP BY gender;",
         "char_count": 642
@@ -475,6 +534,7 @@
         "id": "chunk_59",
         "source": "MySQL Handbook.pdf",
         "page": 61,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Explanation:\nThis groups users by gender.\nThen calculates the average salary for each group.\nGROUP BY with COUNT\nFind how many users were referred by each user:\nOutput:\nreferred_by_id\ntotal_referred\n1\n2\n2\n1\nHAVING Clause: Filtering Groups\nLet’s say we only want to show genders where the average salary is greater than\n₹75,000.\n• \n• \nSELECT referred_by_id, COUNT(*) AS total_referred\nFROM users\nWHERE referred_by_id IS NOT NULL\nGROUP BY referred_by_id;\nSELECT gender, AVG(salary) AS avg_salary\nFROM users\nGROUP BY gender\nHAVING AVG(salary) > 75000;",
         "char_count": 548
@@ -483,6 +543,7 @@
         "id": "chunk_60",
         "source": "MySQL Handbook.pdf",
         "page": 62,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Why not WHERE ?\nWHERE  is used before grouping.\nHAVING  is used after groups are formed — it’s the only way to filter\naggregated values.\nAnother Example: Groups with More Than 1 Referral\nSummary\nClause\nPurpose\nCan use\naggregates?\nWHERE\nFilters rows before grouping\nNo\nGROUP \nBY\nGroups rows based on column values\nN/A\nHAVING\nFilters groups after aggregation\nYes\nUse GROUP BY  to organize data, and HAVING  to filter those groups based on\naggregate conditions.\nROLLUP\nTo get subtotals and grand totals, you can use ROLLUP :\n• \n• \nSELECT referred_by_id, COUNT(*) AS total_referred\nFROM users\nWHERE referred_by_id IS NOT NULL\nGROUP BY referred_by_id\nHAVING COUNT(*) > 1;",
         "char_count": 666
@@ -491,6 +552,7 @@
         "id": "chunk_61",
         "source": "MySQL Handbook.pdf",
         "page": 63,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Explanation:\nThis will give you a count of users by gender, along with a grand total for all\nusers.\nSELECT gender, COUNT(*) AS total_users\nFROM users\nGROUP BY gender WITH ROLLUP;\n•",
         "char_count": 180
@@ -499,6 +561,7 @@
         "id": "chunk_62",
         "source": "MySQL Handbook.pdf",
         "page": 64,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Stored Procedures in MySQL\nA stored procedure is a saved SQL block that can be executed later. It’s useful\nwhen you want to encapsulate logic that can be reused multiple times — like\nqueries, updates, or conditional operations.\nWhy Change the Delimiter?\nBy default, MySQL uses ;  to end SQL statements.\nBut when defining stored procedures, we use ; inside the procedure as well. This\ncan confuse MySQL. To avoid this, we temporarily change the delimiter (e.g. to \n$$  or // ) while creating the procedure.\nSyntax for Creating a Stored Procedure\nAfter the procedure is created, we reset the delimiter back to ; .\nDELIMITER $$\nCREATE PROCEDURE procedure_name()\nBEGIN\n-- SQL statements go here\nEND$$\nDELIMITER ;",
         "char_count": 708
@@ -507,6 +570,7 @@
         "id": "chunk_63",
         "source": "MySQL Handbook.pdf",
         "page": 65,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Creating a Procedure with Input Parameters\nLet’s say you want to create a stored procedure that inserts a new user into the \nusers  table.\nExample:\nThis creates a procedure named AddUser  that accepts five input parameters.\nCalling the Procedure\nYou can call the procedure using:\nThis will insert the new user into the users  table.\nDELIMITER $$\nCREATE PROCEDURE AddUser(\n    IN p_name VARCHAR(100),\n    IN p_email VARCHAR(100),\n    IN p_gender ENUM('Male', 'Female', 'Other'),\n    IN p_dob DATE,\n    IN p_salary INT\n)\nBEGIN\n    INSERT INTO users (name, email, gender, date_of_birth, salary)\n    VALUES (p_name, p_email, p_gender, p_dob, p_salary);\nEND$$\nDELIMITER ;\nCALL AddUser('Kiran Sharma', 'kiran@example.com', 'Female', '1994-06-15', 72000);",
         "char_count": 748
@@ -515,6 +579,7 @@
         "id": "chunk_64",
         "source": "MySQL Handbook.pdf",
         "page": 66,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Notes\nInput parameters are declared using the IN  keyword.\nStored procedures are stored in the database and can be reused.\nViewing Stored Procedures\nDropping a Stored Procedure\nSummary\nCommand\nPurpose\nDELIMITER $$\nTemporarily change statement delimiter\nCREATE PROCEDURE\nDefines a new stored procedure\nCALL procedure_name(...)\nExecutes a stored procedure\nDROP PROCEDURE\nRemoves an existing procedure\n• \n• \nSHOW PROCEDURE STATUS WHERE Db = 'startersql';\nDROP PROCEDURE IF EXISTS AddUser;",
         "char_count": 485
@@ -523,6 +588,7 @@
         "id": "chunk_65",
         "source": "MySQL Handbook.pdf",
         "page": 67,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Triggers in MySQL\nA trigger is a special kind of stored program that is automatically executed\n(triggered) when a specific event occurs in a table — such as INSERT , UPDATE , or \nDELETE .\nTriggers are commonly used for:\nLogging changes\nEnforcing additional business rules\nAutomatically updating related data\nBasic Trigger Structure\nTriggers can be fired:\nBEFORE  or AFTER  an event\nOn INSERT , UPDATE , or DELETE\nScenario: Log Every New User Insertion\nSuppose we want to log every time a new user is inserted into the users  table.\nWe’ll create a separate table called user_log  to store log entries.\n• \n• \n• \nCREATE TRIGGER trigger_name\nAFTER INSERT ON table_name\nFOR EACH ROW\nBEGIN\n-- statements to execute\nEND;\n• \n•",
         "char_count": 718
@@ -531,6 +597,7 @@
         "id": "chunk_66",
         "source": "MySQL Handbook.pdf",
         "page": 68,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "Step 1: Create the Log Table\nStep 2: Create the Trigger\nWe now define a trigger that runs after a new user is added.\nExplanation:\nAFTER INSERT  means the trigger fires after the user is inserted.\nNEW  refers to the new row being added to the users  table.\nWe insert the new user’s ID and name into the user_log  table.\nCREATE TABLE user_log (\nid INT AUTO_INCREMENT PRIMARY KEY,\n    user_id INT,\n    name VARCHAR(100),\n    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\nDELIMITER $$\nCREATE TRIGGER after_user_insert\nAFTER INSERT ON users\nFOR EACH ROW\nBEGIN\n    INSERT INTO user_log (user_id, name)\n    VALUES (NEW.id, NEW.name);\nEND$$\nDELIMITER ;\n• \n• \n•",
         "char_count": 656
@@ -539,6 +606,7 @@
         "id": "chunk_67",
         "source": "MySQL Handbook.pdf",
         "page": 69,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Step 3: Test the Trigger\nNow check the user_log  table:\nYou should see Ritika’s info automatically logged.\nDropping a Trigger\nIf you need to remove a trigger:\nSummary\nTrigger Component\nDescription\nBEFORE  / AFTER\nWhen the trigger runs\nINSERT  / UPDATE  / \nDELETE\nWhat kind of action triggers it\nNEW.column\nRefers to the new row (for INSERT , UPDATE )\nOLD.column\nRefers to the old row (for UPDATE , DELETE )\nFOR EACH ROW\nExecutes for each affected row\nCALL AddUser('Ritika Jain', 'ritika@example.com', 'Female', '1996-03-12', 74000);\nSELECT * FROM user_log;\nDROP TRIGGER IF EXISTS after_user_insert;",
         "char_count": 598
@@ -547,6 +615,7 @@
         "id": "chunk_68",
         "source": "MySQL Handbook.pdf",
         "page": 70,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "More on MySQL\nThis section covers some essential MySQL features and operators that help you\nwrite more powerful and flexible queries.\n1. Logical Operators\nLogical operators are used to combine multiple conditions in a WHERE  clause.\nOperator\nDescription\nExample\nAND\nAll conditions must be true\nsalary > 50000 AND gender = \n'Male'\nOR\nAt least one condition is\ntrue\ngender = 'Male' OR gender = \n'Other'\nNOT\nReverses a condition\nNOT gender = 'Female'\n2. Add a Column to an Existing Table\nUse ALTER TABLE  to add a column:\nThis adds a new column named city  to the users  table.\nALTER TABLE users\nADD COLUMN city VARCHAR(100);",
         "char_count": 622
@@ -555,6 +624,7 @@
         "id": "chunk_69",
         "source": "MySQL Handbook.pdf",
         "page": 71,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "3. Wildcard Operators\nWildcards are used with the LIKE  operator for pattern matching in text.\nWildcard\nDescription\nExample\n%\nMatches any\nsequence\nWHERE name LIKE 'A%'  (starts with A)\n_\nMatches a single\ncharacter\nWHERE name LIKE '_a%'  (second letter\nis ‘a’)\n4. LIMIT with OFFSET\nLIMIT  is used to limit the number of rows returned. OFFSET  skips a number of\nrows before starting to return rows.\nThis skips the first 10 rows and returns the next 5.\nAlternative syntax:\nThis also skips 10 and returns 5 (syntax: LIMIT offset, count ).\n5. DISTINCT Keyword\nDISTINCT  is used to return only unique values.\nSELECT * FROM users\nORDER BY id\nLIMIT 5 OFFSET 10;\nSELECT * FROM users\nORDER BY id\nLIMIT 10, 5;",
         "char_count": 698
@@ -563,6 +633,7 @@
         "id": "chunk_70",
         "source": "MySQL Handbook.pdf",
         "page": 72,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "Returns a list of unique gender values from the users  table.\n6. TRUNCATE Keyword\nTRUNCATE  removes all rows from a table, but keeps the table structure.\nFaster than DELETE FROM users\nCannot be rolled back (unless in a transaction-safe environment)\n7. CHANGE vs MODIFY Column\nBoth CHANGE  and MODIFY  are used to alter existing columns in a table, but they\nwork slightly differently.\nCHANGE: Rename and change datatype\nThis renames city  to location  and changes its type.\nMODIFY: Only change datatype\nThis changes only the datatype of salary .\nSELECT DISTINCT gender FROM users;\nTRUNCATE TABLE users;\n• \n• \nALTER TABLE users\nCHANGE COLUMN city location VARCHAR(150);\nALTER TABLE users\nMODIFY COLUMN salary BIGINT;",
         "char_count": 714
@@ -571,6 +642,7 @@
         "id": "chunk_71",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 2,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "1 \n \nPREFACE \nWelcome to the “Ultimate Python Programming Handbook,\" your comprehensive guide to \nmastering Python programming. This handbook is designed for beginners and anyone looking to \nstrengthen their foundational knowledge of Python, a versatile and user-friendly programming \nlanguage. \nPURPOSE AND AUDIENCE \nThis handbook aims to make programming accessible and enjoyable for everyone. Whether \nyou're a student new to coding, a professional seeking to enhance your skills, or an enthusiast \nexploring Python, this handbook will definitely be helpful. Python's simplicity and readability \nmake it an ideal starting point for anyone interested in programming. \nSTRUCTURE AND CONTENT \nThe handbook is divided into clear, concise chapters, each focused on a specific aspect of \nPython: \n• \nFundamental Concepts: Start with the basics, such as installing Python and writing your \nfirst program. \n• \nPractical Examples: Illustrative examples and sample code demonstrate the",
         "char_count": 978
@@ -579,6 +651,7 @@
         "id": "chunk_72",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 2,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "Python: \n• \nFundamental Concepts: Start with the basics, such as installing Python and writing your \nfirst program. \n• \nPractical Examples: Illustrative examples and sample code demonstrate the \napplication of concepts. \n• \nHands-On Exercises: End-of-chapter exercises reinforce learning and build confidence. \n• \nAdditional Resources: References to official Python documentation for deeper \nexploration. \nWHY PYTHON? \nPython is known for its simplicity and readability, making it perfect for beginners. It is a high-\nlevel, interpreted language with a broad range of libraries and frameworks, supporting \napplications in web development, data analysis, AI, and more. Python's versatility and ease of \nuse make it a valuable tool for both novice and experienced programmers. \nACKNOWLEDGEMENTS \nI extend my gratitude to the educators, programmers, and contributors who have shared their \nknowledge and insights, shaping the content of this handbook. Special thanks to all the",
         "char_count": 974
@@ -587,6 +660,7 @@
         "id": "chunk_73",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 2,
+        "topic": "general_tech",
         "chunk_index": 2,
         "content": "ACKNOWLEDGEMENTS \nI extend my gratitude to the educators, programmers, and contributors who have shared their \nknowledge and insights, shaping the content of this handbook. Special thanks to all the \nstudents watching my content on YouTube and Python community for maintaining a supportive \nand inspiring environment for learners worldwide. \nCONCLUSION \nLearning programming can be both exciting and challenging. The “Ultimate Python \nProgramming Handbook\" aims to make your journey smooth and rewarding. Watch my video \nalong with following this handbook for optimal learning. Let this guide be your stepping stone to \nsuccess in the world of programming.",
         "char_count": 656
@@ -595,6 +669,7 @@
         "id": "chunk_74",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "2 \n \nCONTENTS \nPREFACE ........................................................................................................................................... 1 \nPurpose and Audience .................................................................................................................... 1 \nStructure and Content ..................................................................................................................... 1 \nWhy Python? ................................................................................................................................... 1 \nAcknowledgements ........................................................................................................................ 1 \nConclusion ..................................................................................................................................... 1",
         "char_count": 884
@@ -603,6 +678,7 @@
         "id": "chunk_75",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "Conclusion ..................................................................................................................................... 1 \nContents ........................................................................................................................................ 2 \nPython programming Handbook .......................................................................................................... 6 \nWhat is Programming? .................................................................................................................... 6 \nWhat is Python? .............................................................................................................................. 6 \nFeatures of Python .......................................................................................................................... 6",
         "char_count": 865
@@ -611,6 +687,7 @@
         "id": "chunk_76",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 2,
         "content": "Features of Python .......................................................................................................................... 6 \nInstallation ..................................................................................................................................... 6 \nChapter 1 – Modules, Comments & pip ................................................................................................ 7 \nModules ......................................................................................................................................... 7 \npip ................................................................................................................................................. 7 \nTypes of Modules ............................................................................................................................ 7",
         "char_count": 876
@@ -619,6 +696,7 @@
         "id": "chunk_77",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 3,
         "content": "Types of Modules ............................................................................................................................ 7 \nUsing python as a calculator ............................................................................................................ 7 \nComments ..................................................................................................................................... 7 \nTypes of Comments ........................................................................................................................ 7 \nChapter 1 – Practice Set ...................................................................................................................... 9 \nChapter 2 – Variables and Datatype ................................................................................................... 10",
         "char_count": 858
@@ -627,6 +705,7 @@
         "id": "chunk_78",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 4,
         "content": "Chapter 2 – Variables and Datatype ................................................................................................... 10 \nData Types ................................................................................................................................... 10 \nRules for choosing an identifier ...................................................................................................... 10 \nOperators in Python ...................................................................................................................... 10 \ntype() function and typecasting. ..................................................................................................... 11 \ninput() Function ............................................................................................................................ 11 \nChapter 2 – Practice Set .................................................................................................................... 12",
         "char_count": 998
@@ -635,6 +714,7 @@
         "id": "chunk_79",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 5,
         "content": "Chapter 2 – Practice Set .................................................................................................................... 12 \nChapter 3 – Strings ........................................................................................................................... 13 \nString Slicing ................................................................................................................................. 13 \nSlicing With Skip Value .................................................................................................................. 14 \nString Functions ............................................................................................................................ 14 \nEscape Sequence Characters ........................................................................................................ 15",
         "char_count": 866
@@ -643,6 +723,7 @@
         "id": "chunk_80",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 3,
+        "topic": "general_tech",
         "chunk_index": 6,
         "content": "Escape Sequence Characters ........................................................................................................ 15 \nChapter 3 – Practice Set .................................................................................................................... 16 \nChapter 4 – Lists And Tuples ............................................................................................................. 17 \nList Indexing ................................................................................................................................. 17",
         "char_count": 571
@@ -651,6 +732,7 @@
         "id": "chunk_81",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "3 \n \nList methods. ................................................................................................................................ 17 \nTuples in Python ........................................................................................................................... 17 \nTuple Methods .............................................................................................................................. 17 \nChapter 4 - Practice Set .................................................................................................................... 19 \nChapter 5 – Dictionary & Sets ............................................................................................................ 20 \nProperties of Python Dictionaries ................................................................................................... 20",
         "char_count": 867
@@ -659,6 +741,7 @@
         "id": "chunk_82",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "Properties of Python Dictionaries ................................................................................................... 20 \nDictionary Methods ....................................................................................................................... 20 \nSets in Python. .............................................................................................................................. 20 \nProperties of Sets .......................................................................................................................... 21 \nOperations on sets ........................................................................................................................ 21 \nChapter 5 – Practice Set .................................................................................................................... 22",
         "char_count": 862
@@ -667,6 +750,7 @@
         "id": "chunk_83",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 2,
         "content": "Chapter 5 – Practice Set .................................................................................................................... 22 \nChapter 6 – Conditional Expression ................................................................................................... 23 \nIf Else and Elif in Python ................................................................................................................. 23 \nCode example. ............................................................................................................................. 23 \nRelational Operators ..................................................................................................................... 24 \nLogical Operators ......................................................................................................................... 24",
         "char_count": 859
@@ -675,6 +759,7 @@
         "id": "chunk_84",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 3,
         "content": "Logical Operators ......................................................................................................................... 24 \nElif clause ..................................................................................................................................... 24 \nImportant notes: ........................................................................................................................... 24 \nChapter 6 – Practice Set .................................................................................................................... 25 \nChapter 7 – Loops in Python .............................................................................................................. 26 \nTypes of Loops in Python ............................................................................................................... 26",
         "char_count": 867
@@ -683,6 +768,7 @@
         "id": "chunk_85",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 4,
         "content": "Types of Loops in Python ............................................................................................................... 26 \nWhile loop .................................................................................................................................... 26 \nFor loop ........................................................................................................................................ 27 \nrange() Function in Python ............................................................................................................. 27 \nAn Example Demonstrating range() function. .................................................................................. 27 \nFor Loop with Else ......................................................................................................................... 27 \nThe Break Statement ..................................................................................................................... 27",
         "char_count": 995
@@ -691,6 +777,7 @@
         "id": "chunk_86",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 5,
         "content": "The Break Statement ..................................................................................................................... 27 \nThe Continue Statement ................................................................................................................ 28 \nPass statement ............................................................................................................................. 28 \nChapter 7 – Practice Set .................................................................................................................... 29 \nChapter 8 – Functions & Recursions .................................................................................................. 30 \nExample and syntax of a function ................................................................................................... 30 \nFunction call ................................................................................................................................. 30",
         "char_count": 994
@@ -699,6 +786,7 @@
         "id": "chunk_87",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 4,
+        "topic": "general_tech",
         "chunk_index": 6,
         "content": "Function call ................................................................................................................................. 30 \nFunction Definition ....................................................................................................................... 30 \nTypes of Functions in Python ......................................................................................................... 30 \nFunctions with Arguments ............................................................................................................. 30 \nDefault Parameter Value ............................................................................................................... 31",
         "char_count": 708
@@ -707,6 +795,7 @@
         "id": "chunk_88",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "4 \n \nRecursion ..................................................................................................................................... 31 \nChapter 8 – Practice Set .................................................................................................................... 33 \nProject 1: Snake, Water, Gun Game ................................................................................................... 34 \nChapter 9 – File I/O ........................................................................................................................... 35 \nType of Files. ................................................................................................................................. 35 \nOpening a File ............................................................................................................................... 35",
         "char_count": 880
@@ -715,6 +804,7 @@
         "id": "chunk_89",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "Opening a File ............................................................................................................................... 35 \nReading a File in Python ................................................................................................................. 35 \nOther methods to read the file. ...................................................................................................... 36 \nModes of opening a file .................................................................................................................. 36 \nWrite Files in Python ...................................................................................................................... 36 \nWith Statement ............................................................................................................................. 36",
         "char_count": 860
@@ -723,6 +813,7 @@
         "id": "chunk_90",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "general_tech",
         "chunk_index": 2,
         "content": "With Statement ............................................................................................................................. 36 \nChapter 9 – Practice Set .................................................................................................................... 37 \nChapter 10 - Object Oriented Programming ....................................................................................... 38 \nClass............................................................................................................................................ 38 \nObject .......................................................................................................................................... 38 \nModelling a problem in OOPs ......................................................................................................... 38",
         "char_count": 860
@@ -731,6 +822,7 @@
         "id": "chunk_91",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "python_oop",
         "chunk_index": 3,
         "content": "Modelling a problem in OOPs ......................................................................................................... 38 \nClass Attributes ............................................................................................................................ 38 \nInstance attributes ........................................................................................................................ 39 \nself parameter .............................................................................................................................. 39 \nstatic method ............................................................................................................................... 39 \n__init__() constructor ..................................................................................................................... 40",
         "char_count": 864
@@ -739,6 +831,7 @@
         "id": "chunk_92",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "general_tech",
         "chunk_index": 4,
         "content": "__init__() constructor ..................................................................................................................... 40 \nChapter 10 – Practice Set .................................................................................................................. 41 \nChapter 11 - Inheritance & more on OOPs .......................................................................................... 42 \nTypes of Inheritance ...................................................................................................................... 42 \nSingle Inheritance ......................................................................................................................... 42 \nMultiple Inheritance ...................................................................................................................... 43",
         "char_count": 856
@@ -747,6 +840,7 @@
         "id": "chunk_93",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "python_decorators",
         "chunk_index": 5,
         "content": "Multiple Inheritance ...................................................................................................................... 43 \nMultilevel Inheritance .................................................................................................................... 43 \nsuper() method ............................................................................................................................. 43 \nclass method ................................................................................................................................ 44 \n@property Decorators ................................................................................................................... 44 \n@.getters and @.setters ................................................................................................................ 44 \nOperator Overloading in Python ..................................................................................................... 44",
         "char_count": 996
@@ -755,6 +849,7 @@
         "id": "chunk_94",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 5,
+        "topic": "general_tech",
         "chunk_index": 6,
         "content": "Operator Overloading in Python ..................................................................................................... 44 \nChapter 11- Practice set ................................................................................................................... 46 \nProject 2 – The Perfect Guess ............................................................................................................ 47 \nChapter 12 – Advanced Python 1 ....................................................................................................... 48 \nNewly added features in python ..................................................................................................... 48 \nWalrus Operator ........................................................................................................................... 48",
         "char_count": 843
@@ -763,6 +858,7 @@
         "id": "chunk_95",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 6,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "5 \n \nTypes Definitions in Python ............................................................................................................ 48 \nAdvanced Type Hints ..................................................................................................................... 48 \nMatch Case .................................................................................................................................. 49 \nDictionary Merge & Update Operators ............................................................................................ 49 \nException handling in Python ......................................................................................................... 50 \nRaising Exceptions ........................................................................................................................ 50 \ntry with else clause ....................................................................................................................... 50",
         "char_count": 993
@@ -771,6 +867,7 @@
         "id": "chunk_96",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 6,
+        "topic": "python_general",
         "chunk_index": 1,
         "content": "try with else clause ....................................................................................................................... 50 \ntry with finally ............................................................................................................................... 51 \nIf __name__== ‘__main__’ in python ................................................................................................ 51 \nThe global keyword ....................................................................................................................... 51 \nenumerate function in python ........................................................................................................ 51 \nList comprehensions ..................................................................................................................... 51 \nChapter 12 – Practice set .................................................................................................................. 52",
         "char_count": 996
@@ -779,6 +876,7 @@
         "id": "chunk_97",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 6,
+        "topic": "general_tech",
         "chunk_index": 2,
         "content": "Chapter 12 – Practice set .................................................................................................................. 52 \nChapter 13 – Advanced Python 2 ....................................................................................................... 53 \nVirtual envirionment ...................................................................................................................... 53 \nInstallation ................................................................................................................................... 53 \npip freeze command ..................................................................................................................... 53 \nLambda functions ......................................................................................................................... 53",
         "char_count": 859
@@ -787,6 +885,7 @@
         "id": "chunk_98",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 6,
+        "topic": "sql_joins",
         "chunk_index": 3,
         "content": "Lambda functions ......................................................................................................................... 53 \njoin method (strings) ..................................................................................................................... 54 \nformat method (strings) ................................................................................................................. 54 \nMap, Filter & Reduce ..................................................................................................................... 54 \nChapter 13 – Practice Set .................................................................................................................. 56 \nMEGA Project 1: Jarvis  ...................................................................................................................... 57",
         "char_count": 862
@@ -795,6 +894,7 @@
         "id": "chunk_99",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 6,
+        "topic": "general_tech",
         "chunk_index": 4,
         "content": "MEGA Project 1: Jarvis  ...................................................................................................................... 57 \nFeatures ....................................................................................................................................... 57 \nWorkflow ...................................................................................................................................... 57 \nLibraries Used............................................................................................................................... 58 \nMega Project 2: Auto Reply AI Chatbot ............................................................................................... 59 \nDescription ................................................................................................................................... 59",
         "char_count": 874
@@ -803,6 +903,7 @@
         "id": "chunk_100",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 6,
+        "topic": "general_tech",
         "chunk_index": 5,
         "content": "Description ................................................................................................................................... 59 \nFeatures ....................................................................................................................................... 59 \nWorkflow ...................................................................................................................................... 59 \nLibraries Used............................................................................................................................... 60",
         "char_count": 589
@@ -811,6 +912,7 @@
         "id": "chunk_101",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 7,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "6 \n \nPYTHON PROGRAMMING HANDBOOK \nWHAT IS PROGRAMMING?  \nJust like we use Hindi or English to communicate with each other, we use a \nprogramming language like Python to communicate with the computer. \nProgramming is a way to instruct the computer to perform various tasks. \nWHAT IS PYTHON? \nPython is a simple and easy to understand language which feels like reading simple \nEnglish. This Pseudo code nature is easy to learn and understandable by beginners. \nFEATURES OF PYTHON \n• Easy to understand = Less development time  \n• Free and open source \n• High level language \n• Portable: Works on Linux / Windows / Mac. \n• Fun to work with! \nINSTALLATION \nPython can be easily installed from python.org. When you click on the download \nbutton, python can be installed right after you complete the setup by executing the file \nfor your platform.",
         "char_count": 841
@@ -819,6 +921,7 @@
         "id": "chunk_102",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 8,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "7 \n \nCHAPTER 1 – MODULES, COMMENTS & PIP \nLet’s write our very first python program. Create a file called hello.py and paste the \nbelow code in it. \nprint(\"hello world\") # print is a function (more later) \nExecute this file (.py file) by typing python hello.py and you will see Hello World printed \non the screen. \nMODULES \nA module is a file containing code written by somebody else (usually) which can be \nimported and used in our programs. \nPIP \nPip is the package manager for python. You can use pip to install a module on your \nsystem. \npip install flask # Installs Flask Module \nTYPES OF MODULES \nThere are two types of modules in Python. \n1. Built in Modules (Preinstalled in Python) \n2. External Modules (Need to install using pip) \nSome examples of built in modules are os, random etc. \nSome examples of external modules are tensorflow, flask etc. \nUSING PYTHON AS A CALCULATOR \nWe can use python as a calculator by typing “python” + ↵ on the terminal.",
         "char_count": 961
@@ -827,6 +930,7 @@
         "id": "chunk_103",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 8,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "Some examples of external modules are tensorflow, flask etc. \nUSING PYTHON AS A CALCULATOR \nWe can use python as a calculator by typing “python” + ↵ on the terminal. \nThis opens REPL or Read Evaluate Print Loop. \nCOMMENTS \nComments are used to write something which the programmer does not want to \nexecute. This can be used to mark author name, date etc. \nTYPES OF COMMENTS \nThere are two types of comments in python.",
         "char_count": 418
@@ -835,6 +939,7 @@
         "id": "chunk_104",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 9,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "8 \n \n1. Single Line Comments: To write a single line comment just add a ‘#’ at the start \nof the line. \n# This is a Single-Line Comment \n \n2. Multiline Comments: To write multi-line comments you can use ‘#’ at each line \nor you can use the multiline string (\"\"\" \"\"\") \n\"\"\"This is an amazing \n    example of a Multiline \n    comment!\"\"\"",
         "char_count": 334
@@ -843,6 +948,7 @@
         "id": "chunk_105",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 10,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "9 \n \nCHAPTER 1 – PRACTICE SET \n1. Write a program to print Twinkle twinkle little star poem in python. \n2. Use REPL and print the table of 5 using it.  \n3. Install an external module and use it to perform an operation of your interest.  \n4. Write a python program to print the contents of a directory using the os module. \nSearch online for the function which does that.  \n5. Label the program written in problem 4 with comments.",
         "char_count": 429
@@ -851,6 +957,7 @@
         "id": "chunk_106",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 11,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "10 \n \nCHAPTER 2 – VARIABLES AND DATATYPE \nA variable is the name given to a memory location in a program. For example. \na= 30      # variables = container to store a value. \nb= \"harry\" # keywords = reserved words in python  \nc= 71.22   # identifiers = class/function/variable name \nDATA TYPES \nPrimarily these are the following data types in Python: \n1. Integers \n2. Floating point numbers \n3. Strings \n4. Booleans  \n5. None \nPython is a fantastic language that automatically identifies the type of data for us. \na= 71         # identifies a as class <int> \nb=88.44       # identifies b as class <float> \nname= \"harry\" # identifies name as class <str> \nRULES FOR CHOOSING AN IDENTIFIER \n• A variable name can contain alphabets, digits, and underscores. \n• A variable name can only start with an alphabet and underscores. \n• A variable name can’t start with a digit. \n• No while space is allowed to be used inside a variable name.",
         "char_count": 929
@@ -859,6 +966,7 @@
         "id": "chunk_107",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 11,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "• A variable name can only start with an alphabet and underscores. \n• A variable name can’t start with a digit. \n• No while space is allowed to be used inside a variable name. \nExamples of a few variable names are: harry, one8, seven, _seven etc. \nOPERATORS IN PYTHON \nFollowing are some common operators in python: \n1. Arithmetic operators: +, -, *, / etc. \n2. Assignment operators:  =, +=, -= etc. \n3. Comparison operators: ==, >, >=, <,  != etc. \n4. Logical operators: and, or, not.",
         "char_count": 485
@@ -867,6 +975,7 @@
         "id": "chunk_108",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 12,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "11 \n \nTYPE() FUNCTION AND TYPECASTING.  \ntype() function is used to find the data type of a given variable in python. \na = 31  \ntype(a) # class <int> \n \nb = \"31\" \ntype (b) # class <str> \nA number can be converted into a string and vice versa (if possible) \nThere are many functions to convert one data type into another. \nstr(31)    =>\"31\"   # integer to string conversion \nint(\"32\")  => 32    # string to integer conversion \nfloat(32)  => 32.0  # integer to float conversion \n… and so, on \nHere \"31\" is a string literal and 31 a numeric literal. \nINPUT () FUNCTION \nThis function allows the user to take input from the keyboard as a string. \nA = input (\"enter name\")   # if a is \"harry\", the user entered harry \nIt is important to note that the output of input is always a string (even is a number is \nentered).",
         "char_count": 812
@@ -875,6 +984,7 @@
         "id": "chunk_109",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 13,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "12 \n \nCHAPTER 2 – PRACTICE SET \n1. Write a python program to add two numbers. \n2. Write a python program to find remainder when a number is divided by z. \n3. Check the type of variable assigned using input () function. \n4. Use comparison operator to find out whether ‘a’ given variable a is greater than \n‘b’ or not. Take a = 34 and b = 80 \n5. Write a python program to find an average of two numbers entered by the user. \n6. Write a python program to calculate the square of a number entered by the user.",
         "char_count": 505
@@ -883,6 +993,7 @@
         "id": "chunk_110",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 14,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "13 \n \nCHAPTER 3 – STRINGS \nString is a data type in python. \nString is a sequence of characters enclosed in quotes. \nWe can primarily write a string in these three ways. \na ='harry'       # Single quoted string \nb = \"harry\"      # Double quoted string \nc = '''harry'''  # Triple quoted string \nSTRING SLICING \nA string in python can be sliced for getting a part of the strings. \nConsider the following string: \n  \n \n \nThe index in a sting starts from 0 to (length -1) in Python. In order to slice a string, we use \nthe following syntax:  \n  \n \n \nNegative Indices: Negative indices can also be used as shown in the figure above. -1 \ncorresponds to the (length - 1) index, -2 to (length - 2).",
         "char_count": 690
@@ -891,6 +1002,7 @@
         "id": "chunk_111",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 15,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "14 \n \nSLICING WITH SKIP VALUE \nWe can provide a skip value as a part of our slice like this: \nword = \"amazing\" \nword[1: 6: 2] # \"mzn\" \nOther advanced slicing techniques: \nWord = \"amazing\" \nWord = [:7]  # word [0:7] – 'amazing' \nWord = [0:]  # word [0:7] – 'amazing' \n \nSTRING FUNCTIONS \nSome of the commonly used functions to perform operations on or manipulate strings \nare as follows. Let us assume there is a string ‘str’ as follows: \nstr = 'harry' \nNow when operated on this string ‘str’, these functions do the following: \n1. len () function – This function returns the length of the strings. \nstr = \"harry\" \nprint(len(str))  # Output: 5 \n2. String.endswith(\"rry\") – This function_ tells whether the variable string ends with \nthe string \"rry\" or not. If string is \"harry\", it returns true for \"rry\" since Harry ends \nwith rry. \nstr = \"harry\" \nprint(str.endswith(\"rry\"))  # Output: True \n3. string.count(\"c\") – counts the total number of occurrences of any character. \nstr = \"harry\"",
         "char_count": 987
@@ -899,6 +1011,7 @@
         "id": "chunk_112",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 15,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "with rry. \nstr = \"harry\" \nprint(str.endswith(\"rry\"))  # Output: True \n3. string.count(\"c\") – counts the total number of occurrences of any character. \nstr = \"harry\" \ncount = str.count(\"r\") \nprint(count)  # Output: 2 \n4. the first character of a given string. \nstr = \"harry\" \ncapitalized_string = str.capitalize() \nprint(capitalized_string)  # Output: \"Harry\" \n5. string.find(word) – This function friends a word and returns the index of first \noccurrence of that word in the string. \nstr = \"harry\"",
         "char_count": 497
@@ -907,6 +1020,7 @@
         "id": "chunk_113",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 16,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "15 \n \nindex = str.find(\"rr\") \nprint(index)  # Output: 2 \n6. string.replace (old word, new word ) – This function replace the old word with \nnew word in the entire string. \nstr = \"harry\" \nreplaced_string = str.replace(\"r\", \"l\") \nprint(replaced_string)  # Output: \"hally\" \n \n \nESCAPE SEQUENCE CHARACTERS \nSequence of characters after backslash \"\\\" → Escape Sequence characters \nEscape Sequence characters comprise of more than one character but represent one \ncharacter when used within the strings.",
         "char_count": 497
@@ -915,6 +1029,7 @@
         "id": "chunk_114",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 17,
+        "topic": "sql_queries",
         "chunk_index": 0,
         "content": "16 \n \nCHAPTER 3 – PRACTICE SET \n1. Write a python program to display a user entered name followed by Good \nAfternoon using input () function. \n2. Write a program to fill in a letter template given below with name and date. \nletter = '''  \n       Dear <|Name|>, \n       You are selected! \n       <|Date|> \n        ''' \n \n3. Write a program to detect double space in a string.  \n4. Replace the double space from problem 3 with single spaces. \n5. Write a program to format the following letter using escape sequence \ncharacters. \nletter = \"Dear Harry, this python course is nice. Thanks!\"",
         "char_count": 585
@@ -923,6 +1038,7 @@
         "id": "chunk_115",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 18,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "17 \n \nCHAPTER 4 – LISTS AND TUPLES \nPython lists are containers to store a set of values of any data type.  \n      \n \nLIST INDEXING \nA list can be indexed just like a string. \nl1 = [7,9,\"harry\"] \nl1[0] # 7 \nl1[1] # 9 \nl1[70]  # error \nl1[0:2] # [7,9]  #list slicing  \nLIST METHODS.  \nConsider the following list: \nl1 = [1,8,7,2,21,15] \n• l1.sort(): updates the list to [1,2,7,8,15,21] \n• l1.reverse(): updates the list to [15,21,2,7,8,1] \n• l1.append(8): adds 8 at the end of the list  \n• l1.insert(3,8): This will add 8 at 3 index \n• l1.pop(2): Will delete element at index 2 and return its value. \n• l1.remove(21): Will remove 21 from the list.  \nTUPLES IN PYTHON \nA tuple is an immutable data type in python. \na = () # empty tuple \na = (1,) # tuple with only one element needs a comma \na = (1,7,2) # tuple with more than one element \n \nTUPLE METHODS \nConsider the following tuple.",
         "char_count": 883
@@ -931,6 +1047,7 @@
         "id": "chunk_116",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 19,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "18 \n \na = (1, 7, 2) \n• a.count (1): a count (1) will return number of times 1 occurs in a. \n• a.index (1) will return the index of first occurrence of 1 in a.",
         "char_count": 158
@@ -939,6 +1056,7 @@
         "id": "chunk_117",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 20,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "19 \n \nCHAPTER 4 - PRACTICE SET \n1. Write a program to store seven fruits in a list entered by the user. \n2. Write a program to accept marks of 6 students and display them in a sorted \nmanner. \n3. Check that a tuple type cannot be changed in python. \n4. Write a program to sum a list with 4 numbers. \n5. Write a program to count the number of zeros in the following tuple: \na = (7, 0, 8, 0, 0, 9)",
         "char_count": 395
@@ -947,6 +1065,7 @@
         "id": "chunk_118",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 21,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "20 \n \nCHAPTER 5 – DICTIONARY & SETS \nDictionary is a collection of keys-value pairs. \nSyntax:   \na = { \n    \"key\": \"value\", \n    \"harry\": \"code\", \n    \"marks\": \"100\", \n    \"list\": [1, 2, 9] \n} \n \nprint(a[\"key\"])  # Output: \"value\" \nprint(a[\"list\"])  # Output: [1, 2, 9] \n \nPROPERTIES OF PYTHON DICTIONARIES \n1. It is unordered. \n2. It is mutable. \n3. It is indexed. \n4. Cannot contain duplicate keys. \nDICTIONARY METHODS \nConsider the following dictionary. \na={\"name\":\"harry\" \n   \"from\":\"india\" \n   \"marks\":[92,98,96]} \n• a.items(): Returns a list of (key,value)tuples. \n• a.keys(): Returns a list containing dictionary's keys. \n• a.update({\"friends\":}): Updates the dictionary with supplied key-value pairs. \n• a.get(\"name\"): Returns the value of the specified keys (and value is returned \neg.\"harry\" is returned here). \nMore methods are available on docs.python.org \nSETS IN PYTHON. \nSet is a collection of non-repetitive elements. \ns = set()           # no repetition allowed! \ns.add(1)",
         "char_count": 989
@@ -955,6 +1074,7 @@
         "id": "chunk_119",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 21,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "eg.\"harry\" is returned here). \nMore methods are available on docs.python.org \nSETS IN PYTHON. \nSet is a collection of non-repetitive elements. \ns = set()           # no repetition allowed! \ns.add(1) \ns.add(2)           # or set ={1,2}",
         "char_count": 234
@@ -963,6 +1083,7 @@
         "id": "chunk_120",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 22,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "21 \n \nIf you are a programming beginner without much knowledge of mathematical \noperations on sets, you can simply look at sets in python as data types containing \nunique values. \nPROPERTIES OF SETS \n1. Sets are unordered => Element’s order doesn’t matter \n2. Sets are unindexed => Cannot access elements by index \n3. There is no way to change items in sets. \n4. Sets cannot contain duplicate values. \nOPERATIONS ON SETS \nConsider the following set: \ns = {1,8,2,3} \n• len(s): Returns 4, the length of the set  \n• s.remove(8): Updates the set s and removes 8 from s. \n• s.pop(): Removes an arbitrary element from the set and return the element \nremoved. \n• s.clear():empties the set s. \n• s.union({8,11}): Returns a new set with all items from both sets. {1,8,2,3,11}. \n• s.intersection({8,11}): Return a set which contains only item in both sets  {8}.",
         "char_count": 851
@@ -971,6 +1092,7 @@
         "id": "chunk_121",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 23,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "22 \n \nCHAPTER 5 – PRACTICE SET \n1. Write a program to create a dictionary of Hindi words with values as their English \ntranslation. Provide user with an option to look it up! \n2. Write a program to input eight numbers from the user and display all the unique \nnumbers (once). \n3. Can we have a set with 18 (int) and '18' (str) as a value in it? \n4. What will be the length of following set s: \ns = set() \ns.add(20) \ns.add(20.0) \ns.add('20') # length of s after these operations? \n5. s = {} \nWhat is the type of 's'? \n6. Create an empty dictionary. Allow 4 friends to enter their favorite language as \nvalue and use key as their names. Assume that the names are unique. \n7. If the names of 2 friends are same; what will happen to the program in problem \n6? \n8. If languages of two friends are same; what will happen to the program in problem \n6? \n9. Can you change the values inside a list which is contained in set S?  \ns = {8, 7, 12, \"Harry\", [1,2]}",
         "char_count": 950
@@ -979,6 +1101,7 @@
         "id": "chunk_122",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 24,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "23 \n \nCHAPTER 6 – CONDITIONAL EXPRESSION \nSometimes we want to play PUBG on our phone if the day is Sunday. \nSometimes we order Ice Cream online if the day is sunny. \nSometimes we go hiking if our parents allow. \nAll these are decisions which depend on a condition being met. \nIn python programming too, we must be able to execute instructions on a condition(s) \nbeing met. \nThis is what conditionals are for! \nIF ELSE AND ELIF IN PYTHON \nIf else and elif statements are a multiway decision taken by our program due to certain \nconditions in our code. \nSyntax: \nif (condition1): # if condition1 is True \n    print (\"yes\") \n        \nelif(condition2): # if condition2 is True  \n    print(\"no\") \n \nelse:             # otherwise \n    print(\"maybe\")                            \n \nCODE EXAMPLE. \na=22 \nif(a>9): \n    print(\"greater\") \nelse: \n    print(\"lesser\") \n \nQuick Quiz: Write a program to print yes when the age entered by the user is greater \nthan or equal to 18.",
         "char_count": 964
@@ -987,6 +1110,7 @@
         "id": "chunk_123",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 25,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "24 \n \nRELATIONAL OPERATORS \nRelational Operators are used to evaluate conditions inside the if statements. Some \nexamples of relational operators are: \n==: equals. \n> =: greater than/ equal to. \n< =: lesser than/ equal to. \nLOGICAL OPERATORS \nIn python logical operators operate on conditional statements. For Example: \n• and – true if both operands are true else false. \n• or – true if at least one operand is true or else false. \n• not – inverts true to false & false to true. \nELIF CLAUSE \nelif in python means [else if]. An if statements can be chained together with a lot of \nthese elif statements followed by an else statement. \nif (condition1): \n    #code \nelif (condition2):   # this ladder will stop once a condition in an if or \nelif is met. \n    #code \nelif(condition3): \n    #code  \nelse: \n    #code \n \nIMPORTANT NOTES: \n1. There can be any number of elif statements. \n2. Last else is executed only if all the conditions inside elifs fail.",
         "char_count": 951
@@ -995,6 +1119,7 @@
         "id": "chunk_124",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 26,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "25 \n \nCHAPTER 6 – PRACTICE SET \n1. Write a program to find the greatest of four numbers entered by the user. \n2. Write a program to find out whether a student has passed or failed if it requires a \ntotal of 40% and at least 33% in each subject to pass. Assume 3 subjects and \ntake marks as an input from the user. \n3. A spam comment is defined as a text containing following keywords: \n“Make a lot of money”, “buy now”, “subscribe this”, “click this”. Write a program \nto detect these spams. \n4. Write a program to find whether a given username contains less than 10 \ncharacters or not. \n5. Write a program which finds out whether a given name is present in a list or not. \n6. Write a program to calculate the grade of a student from his marks from the \nfollowing scheme: \n90 – 100 => Ex \n80 – 90 => A \n70 – 80 => B \n60 – 70  =>C \n50 – 60 => D \n<50        => F \n7. Write a program to find out whether a given post is talking about “Harry” or not.",
         "char_count": 946
@@ -1003,6 +1128,7 @@
         "id": "chunk_125",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 27,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "26 \n \nCHAPTER 7 – LOOPS IN PYTHON \nSometimes we want to repeat a set of statements in our program. For instance:  Print 1 \nto 1000. \nLoops make it easy for a programmer to tell the computer which set of instructions to \nrepeat and how! \nTYPES OF LOOPS IN PYTHON \nPrimarily there are two types of loops in python. \n• while loops \n• for loops \nWe will look into these one by one. \nWHILE LOOP \nSyntax: \nwhile (condition): # The block keeps executing until the condition is true \n    #Body of the loop \nIn while loops, the condition is checked first. If it evaluates to true, the body of the loop \nis executed otherwise not! \nIf the loop is entered, the process of [condition check & execution] is continued until \nthe condition becomes False. \nQuick Quiz: Write a program to print 1 to 50 using a while loop. \nExample: \ni = 0 \nwhile i < 5: # print \"Harry\" – 5 times! \n    print(\"Harry\")     \n    i = i + 1 \n \nNote:  If the condition never become false, the loop keeps getting executed.",
         "char_count": 982
@@ -1011,6 +1137,7 @@
         "id": "chunk_126",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 27,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "Example: \ni = 0 \nwhile i < 5: # print \"Harry\" – 5 times! \n    print(\"Harry\")     \n    i = i + 1 \n \nNote:  If the condition never become false, the loop keeps getting executed. \nQuick Quiz:  Write a program to print the content of a list using while loops.",
         "char_count": 255
@@ -1019,6 +1146,7 @@
         "id": "chunk_127",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 28,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "27 \n \nFOR LOOP \nA for loop is used to iterate through a sequence like list, tuple, or string [iterables] \nSyntax: \nl = [1, 7, 8] \nfor item in l: \n    print(item) # prints 1, 7 and 8 \nRANGE FUNCTION IN PYTHON \nThe range() function in python is used to generate a sequence of number. \nWe can also specify the start, stop and step-size as follows: \nrange(start, stop, step_size) \n# step_size is usually not used with range() \nAN EXAMPLE DEMONSTRATING RANGE () FUNCTION. \n for i in range(0,7): # range(7) can also be used. \n    print(i) # prints 0 to 6 \nFOR LOOP WITH ELSE \nAn optional else can be used with a for loop if the code is to be executed when the \nloops exhausts. \nExample: \nl= [1,7,8] \nfor item in l: \n    print(item) \nelse: \n    print(\"done\") # this is printed when the loop exhausts! \nOutput: \n1 \n7 \n8 \ndone \n \n \nTHE BREAK STATEMENT \n‘break’ is used to come out of the loop when encountered. It instructs the program to – \nexit the loop now.",
         "char_count": 951
@@ -1027,6 +1155,7 @@
         "id": "chunk_128",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 29,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "28 \n \nExample: \nfor i in range (0,80): \n    print(i)     # this will print 0,1,2 and 3 \n    if i==3 \n        break \nTHE CONTINUE STATEMENT \n‘continue’ is used to stop the current iteration of the loop and continue with the next \none. It instructs the Program to “skip this iteration”. \nExample: \nfor i in range(4): \n    print(\"printing\") \n    if i == 2:   # if i is 2, the iteration is skipped  \n        continue \n    print(i) \n \nPASS STATEMENT \npass is a null statement in python. \nIt instructs to “do nothing”. \nExample:  \nl = [1,7,8] \nfor item in l: \n    pass          # without pass, the program will throw an error",
         "char_count": 619
@@ -1035,6 +1164,7 @@
         "id": "chunk_129",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 30,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "29 \n \nCHAPTER 7 – PRACTICE SET \n1. Write a program to print multiplication table of a given number using for loop. \n2. Write a program to greet all the person names stored in a list ‘l’ and which starts \nwith S. \nl = [\"Harry\", \"Soham\", \"Sachin\", \"Rahul\"] \n3. Attempt problem 1 using while loop. \n4. Write a program to find whether a given number is prime or not. \n5. Write a program to find the sum of first n natural numbers using while loop. \n6. Write a program to calculate the factorial of a given number using for loop. \n7. Write a program to print the following star pattern. \n   * \n *** \n*****  for n = 3 \n8. Write a program to print the following star pattern: \n* \n** \n***      for n = 3 \n9. Write a program to print the following star pattern. \n* * * \n*    *    for n = 3 \n* * *  \n10. Write a program to print multiplication table of n using for loops in reversed \norder.",
         "char_count": 880
@@ -1043,6 +1173,7 @@
         "id": "chunk_130",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 31,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "30 \n \nCHAPTER 8 – FUNCTIONS & RECURSIONS \nA function is a group of statements performing a specific task. \nWhen a program gets bigger in size and its complexity grows, it gets difficult for a \nprogram to keep track on which piece of code is doing what! \nA function can be reused by the programmer in a given program any number of \nEXAMPLE AND SYNTAX OF A FUNCTION \nThe syntax of a function looks as follows: \ndef func1(): \n    print('hello') \nThis function can be called any number of times, anywhere in the program. \nFUNCTION CALL \nWhenever we want to call a function, we put the name of the function followed by \nparentheses as follows: \nfunc1() # This is called function call. \nFUNCTION DEFINITION \nThe part containing the exact set of instructions which are executed during the function \ncall. \nQuick Quiz:  Write a program to greet a user with “Good day” using functions. \nTYPES OF FUNCTIONS IN PYTHON \nThere are two types of functions in python:",
         "char_count": 951
@@ -1051,6 +1182,7 @@
         "id": "chunk_131",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 31,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "call. \nQuick Quiz:  Write a program to greet a user with “Good day” using functions. \nTYPES OF FUNCTIONS IN PYTHON \nThere are two types of functions in python: \n• Built in functions (Already present in python) \n• User defined functions (Defined by the user) \nExamples of built in functions includes len(), print(), range() etc. \nThe func1() function we defined is an example of user defined function. \nFUNCTIONS WITH ARGUMENTS \nA function can accept some value it can work with. We can put these values in the \nparentheses. \nA function can also return value as shown below:",
         "char_count": 573
@@ -1059,6 +1191,7 @@
         "id": "chunk_132",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 32,
+        "topic": "python_general",
         "chunk_index": 0,
         "content": "31 \n \ndef greet(name): \n    gr = \"hello\"+ name  \n    return gr  \n                    \na = greet (\"harry\") \n# a will now contain \"hello harry\"  \n \nDEFAULT PARAMETER VALUE \nWe can have a value as default as default argument in a function. \nIf we specify name = “stranger” in the line containing def, this value is used when no \nargument is passed. \nExample: \ndef greet(name = \"stranger\"): \n    # function body \ngreet() # name will be \"stranger\" in function body (default) \ngreet(\"harry\") # name will be \"harry\" in function body (passed) \n \nRECURSION \nRecursion is a function which calls itself. \nIt is used to directly use a mathematical formula as function.  \nExample:  \nfactorial(n) = n x factorial (n-1) \nThis function can be defined as follows: \ndef factorial(n) \n    if i == 0 or i==1: # base condition which doesn’t call the function \nany further \n    return 1 \nelse: \n    return n*factorial(n-1) # function calling itself",
         "char_count": 926
@@ -1067,6 +1200,7 @@
         "id": "chunk_133",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 33,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "32 \n \nThis works as follows: \n                                    \n \n                     \nThe programmer needs to be extremely careful while working with recursion to ensure \nthat the function doesn’t infinitely keep calling itself. Recursion is sometimes the most \ndirect way to code an algorithm.",
         "char_count": 299
@@ -1075,6 +1209,7 @@
         "id": "chunk_134",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 34,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "33 \n \nCHAPTER 8 – PRACTICE SET \n1. Write a program using functions to find greatest of three numbers. \n2. Write a python program using function to convert Celsius to Fahrenheit. \n3. How do you prevent a python print() function to print a new line at the end. \n4. Write a recursive function to calculate the sum of first n natural numbers. \n5. Write a python function to print first n lines of the following pattern: \n*** \n**               - for n = 3 \n* \n \n6. Write a python function which converts inches to cms. \n7. Write a python function to remove a given word from a list ad strip it at the same \ntime. \n8. Write a python function to print multiplication table of a given number.",
         "char_count": 684
@@ -1083,6 +1218,7 @@
         "id": "chunk_135",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 35,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "34 \n \nPROJECT 1: SNAKE, WATER, GUN GAME \nWe all have played snake, water gun game in our childhood. If you haven’t, google the \nrules of this game and write a python program capable of playing this game with the \nuser.",
         "char_count": 218
@@ -1091,6 +1227,7 @@
         "id": "chunk_136",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 36,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "35 \n \nCHAPTER 9 – FILE I/O \nThe random-access memory is volatile, and all its contents are lost once a program \nterminates. In order to persist the data forever, we use files. \nA file is data stored in a storage device. A python program can talk to the file by reading \ncontent from it and writing content to it. \n \nTYPE OF FILES. \nThere are 2 types of files: \n1. Text files (.txt, .c, etc) \n2. Binary files (.jpg, .dat, etc) \nPython has a lot of functions for reading, updating, and deleting files. \nOPENING A FILE \nPython has an open() function for opening files. It takes 2 parameters:  filename and \nmode. \n# open(\"filename\", \"mode of opening(read mode by default)\") \nopen(\"this.txt\", \"r\") \n \nREADING A FILE IN PYTHON \n# Open the file in read mode \nf = open(\"this.txt\", \"r\") \n# Read its contents \ntext = f.read() \n# Print its contents \nprint(text)",
         "char_count": 851
@@ -1099,6 +1236,7 @@
         "id": "chunk_137",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 37,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "36 \n \n# Close the file \nf.close() \n \nOTHER METHODS TO READ THE FILE. \nWe can also use f.readline() function to read one full line at a time. \nf.readline() # Read one line from the file. \nMODES OF OPENING A FILE \nr – open for reading \nw - open for writing  \na - open for appending \n+  - open for updating. \n‘rb’ will open for read in binary mode. \n‘rt’ will open for read in text mode. \nWRITE FILES IN PYTHON \nIn order to write to a file, we first open it in write or append mode after which, we use \nthe python’s f.write() method to write to the file! \n# Open the file in write mode \nf = open(\"this.txt\", \"w\") \n# Write a string to the file \nf.write(\"this is nice\") \n# Close the file \nf.close() \n \nWITH STATEMENT \nThe best way to open and close the file automatically is the with statement. \n# Open the file in read mode using 'with', which automatically closes the \nfile \nwith open(\"this.txt\", \"r\") as f: \n    # Read the contents of the file \n    text = f.read() \n \n# Print the contents \nprint(text)",
         "char_count": 999
@@ -1107,6 +1245,7 @@
         "id": "chunk_138",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 38,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "37 \n \nCHAPTER 9 – PRACTICE SET \n1. Write a program to read the text from a given file ‘poems.txt’ and find out \nwhether it contains the word ‘twinkle’. \n2. The game() function in a program lets a user play a game and returns the score \nas an integer. You need to read a file ‘Hi-score.txt’ which is either blank or \ncontains the previous Hi-score. You need to write a program to update the Hi-\nscore whenever the game() function breaks the Hi-score. \n3. Write a program to generate multiplication tables from 2 to 20 and write it to the \ndifferent files. Place these files in a folder for a 13 – year old. \n4. A file contains a word “Donkey” multiple times. You need to write a program \nwhich replace this word with ##### by updating the same file.  \n5. Repeat program 4 for a list of such words to be censored. \n6. Write a program to mine a log file and find out whether it contains ‘python’. \n7. Write a program to find out the line number where python is present from ques 6.",
         "char_count": 978
@@ -1115,6 +1254,7 @@
         "id": "chunk_139",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 38,
+        "topic": "sql_general",
         "chunk_index": 1,
         "content": "6. Write a program to mine a log file and find out whether it contains ‘python’. \n7. Write a program to find out the line number where python is present from ques 6. \n8. Write a program to make a copy of a text file “this. txt” \n9. Write a program to find out whether a file is identical & matches the content of \nanother file. \n10. Write a program to wipe out the content of a file using python. \n11. Write a python program to rename a file to “renamed_by_ python.txt.",
         "char_count": 469
@@ -1123,6 +1263,7 @@
         "id": "chunk_140",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 39,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "38 \n \nCHAPTER 10 - OBJECT ORIENTED PROGRAMMING \nSolving a problem by creating object is one of the most popular approaches in \nprogramming. This is called object-oriented programming. \nThis concept focuses on using reusable code (DRY Principle).  \nCLASS \nA class is a blueprint for creating object. \n \nSyntax: \nclass Employee: # Class name is written in pascal case \n    # Methods & Variables  \n \nOBJECT \nAn object is an instantiation of a class. When class is defined, a template (info) is \ndefined. Memory is allocated only after object instantiation. \nObjects of a given class can invoke the methods available to it without revealing the \nimplementation details to the user. – Abstractions & Encapsulation! \nMODELLING A PROBLEM IN OOPS \nWe identify the following in our problem. \n• Noun → Class → Employee \n• Adjective → Attributes → name, age, salary \n• Verbs → Methods → getSalary(), increment() \nCLASS ATTRIBUTES \nAn attribute that belongs to the class rather than a particular object.",
         "char_count": 991
@@ -1131,6 +1272,7 @@
         "id": "chunk_141",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 39,
+        "topic": "python_oop",
         "chunk_index": 1,
         "content": "• Adjective → Attributes → name, age, salary \n• Verbs → Methods → getSalary(), increment() \nCLASS ATTRIBUTES \nAn attribute that belongs to the class rather than a particular object. \nExample:",
         "char_count": 191
@@ -1139,6 +1281,7 @@
         "id": "chunk_142",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 40,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "39 \n \n \n \nclass Employee: \n    company = \"Google\" # Specific to Each Class \nharry = Employee() # Object Instatiation \nharry.company \nEmployee.company = \"YouTube\" # Changing Class Attribute \nINSTANCE ATTRIBUTES \nAn attribute that belongs to the Instance (object). Assuming the class from the previous \nexample: \nharry.name = \"harry\" \nharry.salary = \"30k\"  # Adding instance attribute   \n \nNote: Instance attributes, take preference over class attributes during assignment & \nretrieval. \nWhen looking up for harry.attribute it checks for the following: \n1) Is attribute present in object? \n2) Is attribute present in class? \nSELF PARAMETER  \nself refers to the instance of the class. It is automatically passed with a function call \nfrom an object. \nharry.getSalary() # here self is harry  \n# equivalent to Employee.getSalary(harry) \nThe function getSalary() is defined as: \nclass Employee: \n    company = \"Google\" \n    def getSalary(self): \n        print(\"Salary is not there\") \nSTATIC METHOD",
         "char_count": 991
@@ -1147,6 +1290,7 @@
         "id": "chunk_143",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 40,
+        "topic": "python_decorators",
         "chunk_index": 1,
         "content": "The function getSalary() is defined as: \nclass Employee: \n    company = \"Google\" \n    def getSalary(self): \n        print(\"Salary is not there\") \nSTATIC METHOD \nSometimes we need a function that does not use the self-parameter. We can define a \nstatic method like this: \n@staticmethod   # decorator to mark greet as a static method  \ndef greet(): \n    print(\"Hello user\")",
         "char_count": 371
@@ -1155,6 +1299,7 @@
         "id": "chunk_144",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 41,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "40 \n \n__INIT__() CONSTRUCTOR \n__init__() is a special method which is first run as soon as the object is created. \n__init__() method is also known as constructor. \nIt takes ‘self’ argument and can also take further arguments. \nFor Example: \nclass Employee: \n    def __init__(self, name): \n        self.name=name \n    def getSalary(self): \n        ... \n \nharry = Employee(\"Harry\")",
         "char_count": 379
@@ -1163,6 +1308,7 @@
         "id": "chunk_145",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 42,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "41 \n \nCHAPTER 10 – PRACTICE SET \n1. Create a class “Programmer” for storing information of few programmers \nworking at Microsoft. \n2. Write a class “Calculator” capable of finding square, cube and square root of a \nnumber. \n3. Create a class with a class attribute a; create an object from it and set ‘a’ \ndirectly using ‘object.a = 0’. Does this change the class attribute? \n4. Add a static method in problem 2, to greet the user with hello. \n5. Write a Class ‘Train’ which has methods to book a ticket, get status (no of seats) \nand get fare information of train running under Indian Railways. \n6. Can you change the self-parameter inside a class to something else (say \n“harry”). Try changing self to “slf” or “harry” and see the effects.",
         "char_count": 741
@@ -1171,6 +1317,7 @@
         "id": "chunk_146",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 43,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "42 \n \nCHAPTER 11 - INHERITANCE & MORE ON OOPS \nInheritance is a way of creating a new class from an existing class. \nSyntax: \nclass Employee:  # Base class  \n    # Code \n \nclass Programmer(Employee): # Derived or child class \n    # Code \nWe can use the method and attributes of ‘Employee’ in ‘Programmer’ object. \nAlso, we can overwrite or add new attributes and methods in ‘Programmer’ class. \nTYPES OF INHERITANCE \n• Single inheritance \n• Multiple inheritance \n• Multilevel inheritance \nSINGLE INHERITANCE \nSingle inheritance occurs when child class inherits only a single parent class.",
         "char_count": 588
@@ -1179,6 +1326,7 @@
         "id": "chunk_147",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 44,
+        "topic": "python_oop",
         "chunk_index": 0,
         "content": "43 \n \nMULTIPLE INHERITANCE \nMultiple Inheritance occurs when the child class inherits from more than one parent \nclasses.\n \n \nMULTILEVEL INHERITANCE \nWhen a child class becomes a parent for another child class. \n                                                                       \n \nSUPER() METHOD  \nsuper() method is used to access the methods of a super class in the derived class. \nsuper().__init__() \n# __init__() Calls constructor of the base class",
         "char_count": 456
@@ -1187,6 +1335,7 @@
         "id": "chunk_148",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 45,
+        "topic": "python_decorators",
         "chunk_index": 0,
         "content": "44 \n \nCLASS METHOD \nA class method is a method which is bound to the class and not the object of the class. \n@classmethod decorator is used to create a class method. \nSyntax:  \n @classmethod \n    def(cls,p1,p2): \n \n@PROPERTY DECORATORS \nConsider the following class: \nclass Employee: \n    @property \n    def name(self): \n        return self.ename \nIf e = Employee() is an object of class employee, we can print (e.name) to print the \nename by internally calling name() function. \n@.GETTERS AND @.SETTERS \nThe method name with ‘@property’ decorator is called getter method.  \nWe can define a function + @ name.setter  decorator like below: \n@name.setter \ndef name (self,value): \n    self.ename = value \nOPERATOR OVERLOADING IN PYTHON  \nOperators in Python can be overloaded using dunder methods. \nThese methods are called when a given operator is used on the objects. \nOperators in Python can be overloaded using the following methods: \np1+p2 # p1.__add__(p2) \np1-p2 # p1.__sub__(p2)",
         "char_count": 982
@@ -1195,6 +1344,7 @@
         "id": "chunk_149",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 45,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "These methods are called when a given operator is used on the objects. \nOperators in Python can be overloaded using the following methods: \np1+p2 # p1.__add__(p2) \np1-p2 # p1.__sub__(p2) \np1*p2 # p1.__mul__(p2) \np1/p2 # p1.__truediv__(p2) \np1//p2 # p1.__floordiv__(p2) \nOther dunder/magic methods in Python: \nstr__() # used to set what gets displayed upon calling str(obj)",
         "char_count": 372
@@ -1203,6 +1353,7 @@
         "id": "chunk_150",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 46,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "45 \n \n__len__() # used to set what gets displayed upon calling.__len__() or \nlen(obj)",
         "char_count": 85
@@ -1211,6 +1362,7 @@
         "id": "chunk_151",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 47,
+        "topic": "python_decorators",
         "chunk_index": 0,
         "content": "46 \n \nCHAPTER 11- PRACTICE SET \n1. Create a class (2-D vector) and use it to create another class representing a 3-D \nvector. \n2. Create a class ‘Pets’ from a class ‘Animals’ and further create a class ‘Dog’ from \n‘Pets’. Add a method ‘bark’ to class ‘Dog’. \n3. Create a class ‘Employee’ and add salary and increment properties to it. \nWrite a method ‘salaryAfterIncrement’ method with a @property decorator with a setter \nwhich changes the value of increment based on the salary. \n4. Write a class ‘Complex’ to represent complex numbers, along with overloaded \noperators ‘+’ and ‘*’ which adds and multiplies them. \n5. Write a class vector representing a vector of n dimensions. Overload the + and * \noperator which calculates the sum and the dot(.) product of them. \n6. Write __str__() method to print the vector as follows: \n                                 7i + 8j +10k  \nAssume vector of dimension 3 for this problem.",
         "char_count": 922
@@ -1219,6 +1371,7 @@
         "id": "chunk_152",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 47,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "6. Write __str__() method to print the vector as follows: \n                                 7i + 8j +10k  \nAssume vector of dimension 3 for this problem. \n7. Override the __len__() method on vector of problem 5 to display the dimension of the \nvector.",
         "char_count": 251
@@ -1227,6 +1380,7 @@
         "id": "chunk_153",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 48,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "47 \n \nPROJECT 2 – THE PERFECT GUESS \nWe are going to write a program that generates a random number and asks the user to \nguess it. \nIf the player’s guess is higher than the actual number, the program displays “Lower \nnumber please”. Similarly, if the user’s guess is too low, the program prints “higher \nnumber please” When the user guesses the correct number, the program displays the \nnumber of guesses the player used to arrive at the number. \nHint: Use the random module.",
         "char_count": 476
@@ -1235,6 +1389,7 @@
         "id": "chunk_154",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 49,
+        "topic": "python_general",
         "chunk_index": 0,
         "content": "48 \n \nCHAPTER 12 – ADVANCED PYTHON 1 \nNEWLY ADDED FEATURES IN PYTHON \nFollowing are some of the newly added features in Python programming language \nWALRUS OPERATOR \nThe walrus operator (:=), introduced in Python 3.8, allows you to assign values to \nvariables as part of an expression. This operator, named for its resemblance to the eyes \nand tusks of a walrus, is officially called the \"assignment expression.\" \n \n# Using walrus operator \nif (n := len([1, 2, 3, 4, 5])) > 3: \n    print(f\"List is too long ({n} elements, expected <= 3)\") \n \n# Output: List is too long (5 elements, expected <= 3) \nIn this example, n is assigned the value of len([1, 2, 3, 4, 5]) and then used in \nthe comparison within the if statement. \nTYPES DEFINITIONS IN PYTHON \nType hints are added using the colon (:) syntax for variables and the -> syntax for \nfunction return types. \n \n# Variable type hint \nage: int = 25 \n \n# Function type hints \ndef greeting(name: str) -> str: \n    return f\"Hello, {name}!\" \n \n# Usage",
         "char_count": 996
@@ -1243,6 +1398,7 @@
         "id": "chunk_155",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 49,
+        "topic": "python_general",
         "chunk_index": 1,
         "content": "function return types. \n \n# Variable type hint \nage: int = 25 \n \n# Function type hints \ndef greeting(name: str) -> str: \n    return f\"Hello, {name}!\" \n \n# Usage \nprint(greeting(\"Alice\"))  # Output: Hello, Alice! \n \nADVANCED TYPE HINTS \nPython's typing module provides more advanced type hints, such as List, Tuple, Dict, \nand Union. \nYou can import List, Tuple and Dict types from the typing module like this: \nfrom typing import List, Tuple, Dict, Union",
         "char_count": 454
@@ -1251,6 +1407,7 @@
         "id": "chunk_156",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 50,
+        "topic": "python_general",
         "chunk_index": 0,
         "content": "49 \n \nThe syntax of types looks something like this: \n \nfrom typing import List, Tuple, Dict, Union \n \n# List of integers \nnumbers: List[int] = [1, 2, 3, 4, 5] \n \n# Tuple of a string and an integer \nperson: Tuple[str, int] = (\"Alice\", 30) \n \n# Dictionary with string keys and integer values \nscores: Dict[str, int] = {\"Alice\": 90, \"Bob\": 85} \n \n# Union type for variables that can hold multiple types \nidentifier: Union[int, str] = \"ID123\" \nidentifier = 12345  # Also valid \nThese annotations help in making the code self-documenting and allow developers to \nunderstand the data structures used at a glance. \nMATCH CASE \nPython 3.10 introduced the match statement, which is similar to the switch statement \nfound in other programming languages.   \nThe basic syntax of the match statement involves matching a variable against several \ncases using the case keyword. \ndef http_status(status): \n    match status: \n        case 200: \n            return \"OK\" \n        case 404:",
         "char_count": 971
@@ -1259,6 +1416,7 @@
         "id": "chunk_157",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 50,
+        "topic": "sql_general",
         "chunk_index": 1,
         "content": "cases using the case keyword. \ndef http_status(status): \n    match status: \n        case 200: \n            return \"OK\" \n        case 404: \n            return \"Not Found\" \n        case 500: \n            return \"Internal Server Error\" \n        case _: \n            return \"Unknown status\" \n \n# Usage \nprint(http_status(200))  # Output: OK \nprint(http_status(404))  # Output: Not Found \nprint(http_status(500))  # Output: Internal Server Error \nprint(http_status(403))  # Output: Unknown status \n \nDICTIONARY MERGE & UPDATE OPERATORS \nNew operators | and |= allow for merging and updating dictionaries.",
         "char_count": 599
@@ -1267,6 +1425,7 @@
         "id": "chunk_158",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 51,
+        "topic": "python_general",
         "chunk_index": 0,
         "content": "50 \n \ndict1 = {'a': 1, 'b': 2} \ndict2 = {'b': 3, 'c': 4} \nmerged = dict1 | dict2 \nprint(merged)  # Output: {'a': 1, 'b': 3, 'c': 4} \nYou can now use multiple context managers in a single with statement more cleanly \nusing the parenthesised context manager \nwith ( \n    open('file1.txt') as f1, \n    open('file2.txt') as f2 \n): \n    # Process files \n \n \nEXCEPTION HANDLING IN PYTHON \nThere are many built-in exceptions which are raised in python when something goes \nwrong. \nException in python can be handled using a try statement. The code that handles the \nexception is written in the except clause. \ntry: \n   # Code which might throw exception  \nexcept Exception as e:  \n    print(e) \nWhen the exception is handled, the code flow continues without program interruption. \nWe can also specify the exception to catch like below: \ntry: \n    # Code \nexcept ZeroDivisionError: \n    # Code \nexcept TypeError: \n    # Code \nexcept: \n    # Code       # All other exceptions are handled here.",
         "char_count": 984
@@ -1275,6 +1434,7 @@
         "id": "chunk_159",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 51,
+        "topic": "python_general",
         "chunk_index": 1,
         "content": "try: \n    # Code \nexcept ZeroDivisionError: \n    # Code \nexcept TypeError: \n    # Code \nexcept: \n    # Code       # All other exceptions are handled here. \nRAISING EXCEPTIONS \nWe can raise custom exceptions using the ‘raise’ keyword in python. \nTRY WITH ELSE CLAUSE  \nSometimes we want to run a piece of code when try was successful.",
         "char_count": 333
@@ -1283,6 +1443,7 @@
         "id": "chunk_160",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 52,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "51 \n \ntry: \n    # Somecode \nexcept: \n    # Somecode \nelse: \n    # Code         # This is executed only if the try was successful \n \nTRY WITH FINALLY \nPython offers a ‘finally’ clause which ensures execution of a piece of code inspective of \nthe exception. \n \ntry: \n    # Some Code \nexcept: \n    # Some Code \nfinally: \n    # Some Code           # Executed regardless of error! \nIF __NAME__== ‘__MAIN__’ IN PYTHON  \n‘__name__’ evaluates to the name of the module in python from where the program is \nran. \nIf the module is being run directly from the command line, the ‘ __name__’ is set to \nstring “__main__”. Thus, this behaviour is used to check whether the module is run \ndirectly or imported to another file. \nTHE GLOBAL KEYWORD \n‘global’ keyword is used to modify the variable outside of the current scope. \nENUMERATE FUNCTION IN PYTHON \nThe ‘enumerate’ function adds counter to an iterable and returns it \nfor i,item in list1: \n    print(i,item)  # Prints the items of list 1 with index",
         "char_count": 991
@@ -1291,6 +1452,7 @@
         "id": "chunk_161",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 52,
+        "topic": "python_general",
         "chunk_index": 1,
         "content": "ENUMERATE FUNCTION IN PYTHON \nThe ‘enumerate’ function adds counter to an iterable and returns it \nfor i,item in list1: \n    print(i,item)  # Prints the items of list 1 with index \nLIST COMPREHENSIONS \nList Comprehension is an elegant way to create lists based on existing lists. \nlist1 = [1,7,12,11,22,] \nlist2 = [i for item in list 1 if item > 8]",
         "char_count": 348
@@ -1299,6 +1461,7 @@
         "id": "chunk_162",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 53,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "52 \n \nCHAPTER 12 – PRACTICE SET \n1. Write a program to open three files 1.txt, 2.txt and 3.txt if any these files are not \npresent, a message without exiting the program must be printed prompting the same. \n2. Write a program to print third, fifth and seventh element from a list using enumerate \nfunction. \n3. Write a list comprehension to print a list which contains the multiplication table of a \nuser entered number. \n4. Write a program to display a/b where a and b are integers. If b=0, display infinite by \nhandling the ‘ZeroDivisionError’. \n5. Store the multiplication tables generated in problem 3 in a file named Tables.txt.",
         "char_count": 633
@@ -1307,6 +1470,7 @@
         "id": "chunk_163",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 54,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "53 \n \nCHAPTER 13 – ADVANCED PYTHON 2 \nVIRTUAL ENVIRIONMENT \nAn environment which is same as the system interpreter but is isolated from the other \nPython environments on the system. \nINSTALLATION \nTo use virtual environments, we write: \npip install virtualenv  # Install the package \nWe create a new environment using: \nvirtualenv myprojectenv # Creates a new venv \nThe next step after creating the virtual environment is to activate it. \nWe can now use this virtual environment as a separate Python installation. \nPIP FREEZE COMMAND  \n‘pip freeze’ returns all the package installed in a given python environment along with \nthe versions. \npip freeze > requirements .txt \nThe above command creates a file named ‘requirements.txt’ in the same directory \ncontaining the output of ‘pip freeze’. \nWe can distribute this file to other users, and they can recreate the same environment \nusing: \npip install –r requirements.txt \nLAMBDA FUNCTIONS",
         "char_count": 938
@@ -1315,6 +1479,7 @@
         "id": "chunk_164",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 54,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "containing the output of ‘pip freeze’. \nWe can distribute this file to other users, and they can recreate the same environment \nusing: \npip install –r requirements.txt \nLAMBDA FUNCTIONS    \nFunction created using an expression using ‘lambda’ keyword. \nSyntax: \nlambda arguments:expressions \n# can be used as a normal function \nExample: \nsquare = lambda x:x*x \nsquare(6)  # returns 36 \nsum = lambda a,b,c:a+b+c",
         "char_count": 409
@@ -1323,6 +1488,7 @@
         "id": "chunk_165",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 55,
+        "topic": "sql_joins",
         "chunk_index": 0,
         "content": "54 \n \nsum(1,2,3) # returns 6 \nJOIN METHOD (STRINGS) \nCreates a string from iterable objects. \nl = [\"apple\", \"mango\", \"banana\"] \nresult = \", and, \".join(l) \nprint(result) \nThe above line will return “apple,and,mango,and,banana”. \nFORMAT METHOD (STRINGS) \nFormats the values inside the string into a desired output. \ntemplate.format(p1,p2...) \nSyntax: \n\"{} is a good {}\".format(\"harry\", \"boy\")   #1. \n\"{} is a good {o}\".format(\"harry\", \"boy\")  #2. \n \n# output for 1: \n# harry is a good boy  \n \n# output for 2: \n# boy is a good harry  \n \nMAP, FILTER & REDUCE \nMap applies a function to all the items in an input_list. \nSyntax. \nmap(function, input_list) \n              # the function can be lambda function \nFilter creates a list of items for which the function returns true. \nlist(filter(function)) \n              # the function can be lambda function \nReduce applies a rolling computation to sequential pair of elements. \nfrom functools import reduce \nval=reduce (function, list1)",
         "char_count": 979
@@ -1331,6 +1497,7 @@
         "id": "chunk_166",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 55,
+        "topic": "python_general",
         "chunk_index": 1,
         "content": "# the function can be lambda function \nReduce applies a rolling computation to sequential pair of elements. \nfrom functools import reduce \nval=reduce (function, list1)        \n              # the function can be lambda function",
         "char_count": 227
@@ -1339,6 +1506,7 @@
         "id": "chunk_167",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 56,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "55 \n \nIf the function computes sum of two numbers and the list is [1,2,3,4]",
         "char_count": 75
@@ -1347,6 +1515,7 @@
         "id": "chunk_168",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 57,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "56 \n \nCHAPTER 13- PRACTICE SET \n1. Create two virtual environments, install few packages in the first one. How do you \ncreate a similar environment in the second one? \n2. Write a program to input name, marks and phone number of a student and format it \nusing the format function like below: \n“The name of the student is Harry, his marks are 72 and phone number is 99999888” \n3. A list contains the multiplication table of 7. write a program to convert it to vertical \nstring of same numbers. \n                                                     \n  \n4. Write a program to filter a list of numbers which are divisible by 5. \n5. Write a program to find the maximum of the numbers in a list using the reduce \nfunction. \n6. Run pip freeze for the system interpreter. Take the contents and create a similar \nvirtualenv. \n7. Explore the ‘Flask’ module and create a web server using Flask & Python.",
         "char_count": 891
@@ -1355,6 +1524,7 @@
         "id": "chunk_169",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 58,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "57 \n \nMEGA PROJECT 1: JARVIS - VOICE-ACTIVATED VIRTUAL ASSISTANT \nJarvis is a voice-activated virtual assistant designed to perform tasks such as web \nbrowsing, playing music, fetching news, and responding to user queries using OpenAI's \nGPT-3.5-turbo model. \nFEATURES \n• Voice Recognition \n• Utilizes the speech_recognition library to listen for and recognize voice commands. \n• Activates upon detecting the wake word \"Jarvis.\" \n• Text-to-Speech \n• Converts text to speech using pyttsx3 for local conversion. \n• Uses gTTS (Google Text-to-Speech) and pygame for playback. \n• Web Browsing. \n• Opens websites like Google, Facebook, YouTube, and LinkedIn based on voice \ncommands. \n• Music Playback \n• Interfaces with a musicLibrary module to play songs via web links. \n• News Fetching \n• Fetches and reads the latest news headlines using NewsAPI. \n• OpenAI Integration \n• Handles complex queries and generates responses using OpenAI's GPT-3.5-turbo.",
         "char_count": 947
@@ -1363,6 +1533,7 @@
         "id": "chunk_170",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 58,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "• News Fetching \n• Fetches and reads the latest news headlines using NewsAPI. \n• OpenAI Integration \n• Handles complex queries and generates responses using OpenAI's GPT-3.5-turbo. \n• Acts as a general virtual assistant similar to Alexa or Google Assistant. \n• Activates upon detecting the wake word \"Jarvis.\" \n• Text-to-Speech \nWORKFLOW \n1. Initialization \n2. Greets the user with \"Initializing Jarvis....\" \n3. Wake Word Detection \n4. Listens for the wake word \"Jarvis.\" \n5. Acknowledges activation by saying \"Ya.\" \n6. Command Processing. \n7. Processes commands to determine actions such as opening a website, playing \nmusic, fetching news, or generating a response via OpenAI. \n8. Speech Output. \n9. Provides responses using speak function with either pyttsx3 or gTTS. \n10. Greets the user with \"Initializing Jarvis....\" \n11. Wake Word Detection \n12. Acknowledges activation by saying \"Ya.\"",
         "char_count": 892
@@ -1371,6 +1542,7 @@
         "id": "chunk_171",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 59,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "58 \n \n13. Processes commands to determine actions such as opening a website, playing \nmusic, fetching news, or generating a response via OpenAI. \nLIBRARIES USED \n• speech_recognition \n• webbrowser \n• pyttsx3 \n• musicLibrary \n• requests \n• openai \n• gTTS \n• pygame \n• os",
         "char_count": 269
@@ -1379,6 +1551,7 @@
         "id": "chunk_172",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 60,
+        "topic": "sql_general",
         "chunk_index": 0,
         "content": "59 \n \nMEGA PROJECT 2: AUTO-REPLY AI CHATBOT \nDESCRIPTION \nThis project automates the process of interacting with a chat application, specifically \ndesigned to analyze chat history and generate humorous responses using OpenAI's \nGPT-3.5-turbo model. The virtual assistant, named Naruto, is a character that roasts \npeople in a funny way, based on the chat history. \nFEATURES \n14. Automated Chat Interaction \n15. Uses pyautogui to perform mouse and keyboard operations, interacting with the \nchat application without manual intervention. \n16. Chat History Analysis \n17. Copies chat history from the chat application and analyzes it to determine if the last \nmessage was sent by a specific user (e.g., \"Rohan Das\"). \n18. Humorous Response Generation \n19. Integrates with OpenAI's GPT-3.5-turbo model to generate funny, roast-style \nresponses based on the analyzed chat history. \n20. Clipboard Operations \n21. Utilizes pyperclip to copy and paste text, facilitating the retrieval and insertion of",
         "char_count": 992
@@ -1387,6 +1560,7 @@
         "id": "chunk_173",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 60,
+        "topic": "sql_queries",
         "chunk_index": 1,
         "content": "responses based on the analyzed chat history. \n20. Clipboard Operations \n21. Utilizes pyperclip to copy and paste text, facilitating the retrieval and insertion of \nchat messages. \n22. Uses pyautogui to perform mouse and keyboard operations, interacting with the \nchat application without manual intervention. \n23. Copies chat history from the chat application and analyzes it to determine if the last \nmessage was sent by a specific user (e.g., \"Rohan Das\"). \n24. Humorous Response Generation \n25. Integrates with OpenAI's GPT-3.5-turbo model to generate funny, roast-style \nresponses based on the analyzed chat history. \nWORKFLOW \n• Initialization and Setup \n• Click on the Chrome icon to open the chat application. \n• Wait for a brief period to ensure the application is open and ready for interaction. \n• Chat History Retrieval \n• Periodically select and copy chat history by dragging the mouse over the chat \narea and using the copy shortcut. \n• Retrieve the copied text from the clipboard.",
         "char_count": 995
@@ -1395,6 +1569,7 @@
         "id": "chunk_174",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 60,
+        "topic": "sql_queries",
         "chunk_index": 2,
         "content": "• Chat History Retrieval \n• Periodically select and copy chat history by dragging the mouse over the chat \narea and using the copy shortcut. \n• Retrieve the copied text from the clipboard. \n• Message Analysis",
         "char_count": 208
@@ -1403,6 +1578,7 @@
         "id": "chunk_175",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 61,
+        "topic": "general_tech",
         "chunk_index": 0,
         "content": "60 \n \n• Analyze the copied chat history to check if the last message is from a specific \nuser (e.g., \"Rohan Das\"). \n• If the last message is from the target user, send the chat history to OpenAI's \nGPT-3.5-turbo to generate a humorous response. \n• Copy the generated response to the clipboard. \n• Send Response \n• Click on the chat input area and paste the generated response. \n• Press 'Enter' to send the response. \n• Wait for a brief period to ensure the application is open and ready for interaction. \n• Chat History Retrieval \n• Retrieve the copied text from the clipboard. \n• Message Analysis \n• Analyze the copied chat history to check if the last message is from a specific \nuser (e.g., \"Rohan Das\"). \n• Generate Response \n• Copy the generated response to the clipboard. \n• Send Response \nLIBRARIES USED \n1. pyautogui: For automating mouse and keyboard interactions. \n2. time: For adding delays between operations. \n3. pyperclip: For clipboard operations.",
         "char_count": 962
@@ -1411,6 +1587,7 @@
         "id": "chunk_176",
         "source": "The Ultimate Python Handbook.pdf",
         "page": 61,
+        "topic": "general_tech",
         "chunk_index": 1,
         "content": "• Send Response \nLIBRARIES USED \n1. pyautogui: For automating mouse and keyboard interactions. \n2. time: For adding delays between operations. \n3. pyperclip: For clipboard operations. \n4. openai: For interacting with OpenAI's GPT-3.5-turbo model.",
         "char_count": 246

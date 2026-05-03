@@ -11,17 +11,37 @@ from pathlib import Path
 # Add backend to path so we can import config
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
+from config import settings
+
 import fitz  # PyMuPDF
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# Configuration
-PDF_DIR = Path("../data/pdfs")
+# Configuration (Aligned with production settings)
+PDF_DIR = settings.pdf_directory
 EXPORT_DIR = Path("../exports")
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 200
+CHUNK_SIZE = settings.chunk_size
+CHUNK_OVERLAP = settings.chunk_overlap
+
+def detect_topic(text: str) -> str:
+    """Detect the primary topic of a chunk for metadata filtering."""
+    text = text.lower()
+    sql_keywords = ['join', 'select', 'where', 'group by', 'insert', 'update', 'delete', 'table', 'database']
+    python_keywords = ['def ', 'class ', 'import ', 'decorators', 'list comprehension', 'try:', 'except:', 'async', 'await']
+    
+    if any(k in text for k in sql_keywords):
+        if 'join' in text: return "sql_joins"
+        if 'select' in text: return "sql_queries"
+        return "sql_general"
+    
+    if any(k in text for k in python_keywords):
+        if 'decorator' in text: return "python_decorators"
+        if 'class' in text: return "python_oop"
+        return "python_general"
+        
+    return "general_tech"
 
 def load_and_chunk():
-    """Extracts text from PDFs and splits into chunks."""
+    """Extracts text from PDFs and splits into chunks with topic tagging."""
     if not PDF_DIR.exists():
         print(f"Error: Directory '{PDF_DIR}' not found.")
         return []
@@ -55,6 +75,7 @@ def load_and_chunk():
                             "id": f"chunk_{chunk_counter}",
                             "source": pdf_path.name,
                             "page": page_num + 1,
+                            "topic": detect_topic(chunk_text),  # TUNED FOR RAG
                             "chunk_index": idx,
                             "content": chunk_text,
                             "char_count": len(chunk_text)
