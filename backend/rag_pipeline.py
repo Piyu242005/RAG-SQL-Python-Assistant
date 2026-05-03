@@ -133,17 +133,26 @@ Rules:
         except Exception as e:
             print(f"[!] Redis Cache: Not available ({e}). Falling back to memory-only.")
 
+        async def summarize_history(session_id: str, history: RedisChatMessageHistory):
+            """Summarizes old conversation history to stay within context limits."""
+            if len(history.messages) > 10:
+                print(f"[*] Summarizing history for session {session_id}...")
+                prompt = f"Summarize the following conversation history briefly: {history.messages}"
+                summary = await self.llm.ainvoke(prompt)
+                history.clear()
+                history.add_user_message("Previous Conversation Summary:")
+                history.add_ai_message(summary.content if hasattr(summary, 'content') else str(summary))
+                print(f"[OK] History compressed.")
+
         def get_session_history(session_id: str):
             history = RedisChatMessageHistory(
                 session_id=f"chat_history:{session_id}",
                 url=settings.redis_url
             )
             
-            # Sliding Window Memory: Keep only last 10 messages (5 turns)
+            # Use background task to summarize if needed
             if len(history.messages) > 10:
-                # Trim the history (simple clear for now, could be more surgical)
-                history.clear()
-                print(f"[!] Conversation history trimmed for session {session_id}")
+                asyncio.create_task(summarize_history(session_id, history))
                 
             return history
 
