@@ -1,7 +1,9 @@
+<!-- HEADER -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0077b6,100:00b4d8&height=200&section=header&text=Piyu%20RAG%20v2.0&fontSize=40&fontAlignY=35&fontColor=ffffff&desc=SQL%20%26%20Python%20Expert%20%7C%20Local%20%26%20Private%20AI&descAlignY=55&descAlign=50" />
+</p>
 
-<div align="center">
 
-<img src="https://img.shields.io/badge/%E2%9C%A8-Piyu_RAG_v2.0-6366f1?style=for-the-badge&labelColor=0B0D11" alt="logo" height="40" />
 
 # Piyu RAG · SQL & Python AI Assistant
 
