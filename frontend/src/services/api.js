@@ -79,7 +79,7 @@ export const streamChatQuery = async (query, conversationId = null, docType = nu
         try {
           const data = JSON.parse(line.slice(6)); // remove 'data: ' prefix
           if (data.error) throw new Error(data.error);
-          if (data.token && onChunk) onChunk({ token: data.token });
+          if (Object.prototype.hasOwnProperty.call(data, 'token') && onChunk) onChunk({ token: data.token });
           else if (data.sources && onChunk) onChunk({ sources: data.sources });
         } catch (parseErr) {
           // Only re-throw real errors, not JSON parse failures on partial chunks
