@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { streamChatQuery } from '../services/api';
+import { getReadinessStatus, streamChatQuery } from '../services/api';
 import toast from 'react-hot-toast';
 
 // ── localStorage helpers ──────────────────────────────────
@@ -77,6 +77,16 @@ export const useChat = () => {
   const sendMessage = async (query, docType = null) => {
     if (!query.trim() || isLoading) return;
 
+    const readiness = await getReadinessStatus();
+    if (!readiness?.ready) {
+      const reason = Array.isArray(readiness?.reasons) && readiness.reasons.length
+        ? readiness.reasons.join(', ')
+        : 'System dependencies not ready';
+      toast.error(`System not ready: ${reason}`);
+      setError(`System not ready: ${reason}`);
+      return;
+    }
+
     let convId = activeIdRef.current;
 
     // Create conversation if none exists
@@ -113,8 +123,7 @@ export const useChat = () => {
 
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
-        console.log("Stream chunk:", chunk);
-        if (chunk.token && chunk.token.trim() !== "") {
+        if (typeof chunk.token === 'string') {
           setMessages(prev => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;

@@ -1,6 +1,7 @@
 """Main FastAPI application."""
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 import os
+import requests
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from models import HealthResponse, InitializeResponse, DocumentStats
@@ -193,6 +194,59 @@ async def health_check() -> HealthResponse:
         configured_model=status['configured_model'],
         available_models=status['available_models']
     )
+
+
+
+def _check_ollama_running() -> bool:
+    try:
+        response = requests.get(f"{settings.ollama_base_url}/api/tags", timeout=2)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+def _check_model_available() -> bool:
+    try:
+        response = requests.get(f"{settings.ollama_base_url}/api/tags", timeout=2)
+        data = response.json()
+        models = data.get("models", []) if isinstance(data, dict) else []
+        configured_model = settings.ollama_model
+        for model in models:
+            name = model.get("name", "")
+            if configured_model in name or name.startswith(configured_model):
+                return True
+        return False
+    except Exception:
+        return False
+
+
+@app.get("/api/ready")
+async def readiness_check():
+    """Readiness endpoint: true only when RAG dependencies are usable."""
+    vector_manager = VectorStoreManager()
+    stats = vector_manager.get_stats()
+    vector_count = stats.get("total_documents", 0)
+
+    ollama_running = _check_ollama_running()
+    model_available = _check_model_available()
+
+    reasons = []
+    if not ollama_running:
+        reasons.append("OLLAMA_UNREACHABLE")
+    if not model_available:
+        reasons.append("MODEL_NOT_LOADED")
+    if vector_count <= 0:
+        reasons.append("VECTORSTORE_EMPTY")
+
+    ready = ollama_running and model_available and vector_count > 0
+
+    return {
+        "ready": ready,
+        "ollama_running": ollama_running,
+        "model_available": model_available,
+        "vectorstore_docs": vector_count,
+        "reasons": reasons,
+    }
 
 @app.post("/api/initialize", response_model=InitializeResponse)
 async def initialize_system() -> InitializeResponse:

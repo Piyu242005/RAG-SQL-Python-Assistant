@@ -6,7 +6,6 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const API_KEY = import.meta.env.VITE_API_KEY || "";
-console.log("API KEY:", import.meta.env.VITE_API_KEY);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -79,7 +78,7 @@ export const streamChatQuery = async (query, conversationId = null, docType = nu
         try {
           const data = JSON.parse(line.slice(6)); // remove 'data: ' prefix
           if (data.error) throw new Error(data.error);
-          if (data.token && onChunk) onChunk({ token: data.token });
+          if (Object.prototype.hasOwnProperty.call(data, 'token') && onChunk) onChunk({ token: data.token });
           else if (data.sources && onChunk) onChunk({ sources: data.sources });
         } catch (parseErr) {
           // Only re-throw real errors, not JSON parse failures on partial chunks
@@ -102,6 +101,18 @@ export const getHealthStatus = async () => {
     return response.data;
   } catch (error) {
     throw new Error('Failed to get health status');
+  }
+};
+
+/**
+ * Get document statistics.
+ */
+export const getReadinessStatus = async () => {
+  try {
+    const response = await apiClient.get('/api/ready');
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to get readiness status');
   }
 };
 
