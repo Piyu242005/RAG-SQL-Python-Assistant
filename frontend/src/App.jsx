@@ -6,10 +6,11 @@ import Sidebar from './components/Sidebar';
 import ChatContainer from './components/ChatContainer';
 import ToastProvider from './components/ToastProvider';
 import { useChat } from './hooks/useChat';
-import { getHealthStatus } from './services/api';
+import { getHealthStatus, getReadinessStatus } from './services/api';
 
 function AppContent() {
   const [healthStatus, setHealthStatus] = useState(null);
+  const [readinessStatus, setReadinessStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [docFilter, setDocFilter] = useState(null);
@@ -24,8 +25,9 @@ function AppContent() {
 
     const checkHealth = async () => {
       try {
-        const data = await getHealthStatus();
-        setHealthStatus(data);
+        const [health, readiness] = await Promise.all([getHealthStatus(), getReadinessStatus()]);
+        setHealthStatus(health);
+        setReadinessStatus(readiness);
         setIsLoading(false);
       } catch {
         attempts++;
@@ -39,6 +41,7 @@ function AppContent() {
             model_available: false,
             vectorstore_initialized: false,
           });
+          setReadinessStatus({ ready: false, reasons: ['BACKEND_UNREACHABLE'] });
           setIsLoading(false);
         }
       }
@@ -80,6 +83,7 @@ function AppContent() {
         
         <ChatContainer
           healthStatus={healthStatus}
+          readinessStatus={readinessStatus}
           docFilter={docFilter}
           onDocFilterChange={setDocFilter}
           chat={chat}

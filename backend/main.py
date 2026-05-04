@@ -1,10 +1,11 @@
 """Main FastAPI application."""
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 import os
-import requests
+import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from models import HealthResponse, InitializeResponse, DocumentStats
+from typing import Tuple, List
 from llm_config import OllamaManager
 from vector_store import VectorStoreManager
 from document_processor import DocumentProcessor
@@ -197,27 +198,17 @@ async def health_check() -> HealthResponse:
 
 
 
-def _check_ollama_running() -> bool:
+async def _fetch_ollama_tags() -> tuple[bool, list]:
     try:
-        response = requests.get(f"{settings.ollama_base_url}/api/tags", timeout=2)
-        return response.status_code == 200
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.get(f"{settings.ollama_base_url}/api/tags")
+        if response.status_code != 200:
+            return False, []
+        payload = response.json()
+        models = payload.get("models", []) if isinstance(payload, dict) else []
+        return True, models
     except Exception:
-        return False
-
-
-def _check_model_available() -> bool:
-    try:
-        response = requests.get(f"{settings.ollama_base_url}/api/tags", timeout=2)
-        data = response.json()
-        models = data.get("models", []) if isinstance(data, dict) else []
-        configured_model = settings.ollama_model
-        for model in models:
-            name = model.get("name", "")
-            if configured_model in name or name.startswith(configured_model):
-                return True
-        return False
-    except Exception:
-        return False
+        return False, []
 
 
 @app.get("/api/ready")
@@ -227,18 +218,25 @@ async def readiness_check():
     stats = vector_manager.get_stats()
     vector_count = stats.get("total_documents", 0)
 
-    ollama_running = _check_ollama_running()
-    model_available = _check_model_available()
+    ollama_running, models = await _fetch_ollama_tags()
+    configured_model = settings.ollama_model
+    model_available = any(
+        configured_model in model.get("name", "") or model.get("name", "").startswith(configured_model)
+        for model in models
+        if isinstance(model, dict)
+    )
 
     reasons = []
     if not ollama_running:
         reasons.append("OLLAMA_UNREACHABLE")
-    if not model_available:
+    if ollama_running and not model_available:
         reasons.append("MODEL_NOT_LOADED")
-    if vector_count <= 0:
+    if "error" in stats:
+        reasons.append("VECTORSTORE_ERROR")
+    elif vector_count <= 0:
         reasons.append("VECTORSTORE_EMPTY")
 
-    ready = ollama_running and model_available and vector_count > 0
+    ready = ollama_running and model_available and vector_count > 0 and "error" not in stats
 
     return {
         "ready": ready,
@@ -246,6 +244,7 @@ async def readiness_check():
         "model_available": model_available,
         "vectorstore_docs": vector_count,
         "reasons": reasons,
+        "vectorstore_error": stats.get("error"),
     }
 
 @app.post("/api/initialize", response_model=InitializeResponse)
