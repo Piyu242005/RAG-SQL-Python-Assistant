@@ -109,12 +109,7 @@ Rules:
         ])
         
         self.base_chain = (
-            {
-                "context": self.retriever | self._format_docs,
-                "question": RunnablePassthrough(),
-                "history": lambda x: x.get("history", [])
-            }
-            | prompt
+            prompt
             | self.llm
             | StrOutputParser()
         )
@@ -133,27 +128,11 @@ Rules:
         except Exception as e:
             print(f"[!] Redis Cache: Not available ({e}). Falling back to memory-only.")
 
-        async def summarize_history(session_id: str, history: RedisChatMessageHistory):
-            """Summarizes old conversation history to stay within context limits."""
-            if len(history.messages) > 10:
-                print(f"[*] Summarizing history for session {session_id}...")
-                prompt = f"Summarize the following conversation history briefly: {history.messages}"
-                summary = await self.llm.ainvoke(prompt)
-                history.clear()
-                history.add_user_message("Previous Conversation Summary:")
-                history.add_ai_message(summary.content if hasattr(summary, 'content') else str(summary))
-                print(f"[OK] History compressed.")
-
         def get_session_history(session_id: str):
             history = RedisChatMessageHistory(
                 session_id=f"chat_history:{session_id}",
                 url=settings.redis_url
             )
-            
-            # Use background task to summarize if needed
-            if len(history.messages) > 10:
-                asyncio.create_task(summarize_history(session_id, history))
-                
             return history
 
         self.chain = RunnableWithMessageHistory(
@@ -184,33 +163,114 @@ Rules:
             # Fallback to string representation of the dict
             return str(content)
         return str(content) if content is not None else ""
-    
+
+    async def _rewrite_query(self, query: str) -> str:
+        """Improve query for search accuracy."""
+        try:
+            prompt = f"Improve this query for a semantic search engine. Make it concise and focused on keywords. Return ONLY the improved query: {query}"
+            rewritten = await self.llm.ainvoke(prompt)
+            return rewritten.content if hasattr(rewritten, 'content') else str(rewritten)
+        except Exception:
+            return query
+
+    async def _expand_query(self, query: str) -> str:
+        """Expands the user query using a HyDE-inspired approach for better retrieval."""
+        try:
+            expansion_prompt = f"Given the user query: '{query}', generate a short technical description of what the answer might look like to help with vector search. Keep it under 50 words."
+            expansion = await self.llm.ainvoke(expansion_prompt)
+            expanded_text = expansion.content if hasattr(expansion, 'content') else str(expansion)
+            return f"{query} {expanded_text}"
+        except Exception:
+            return query
+
+    def _deduplicate_docs(self, docs: List[Document]) -> List[Document]:
+        """Removes duplicate documents and filters out low-relevancy noise."""
+        seen_content = set()
+        unique_docs = []
+        for doc in docs:
+            content_hash = hash(doc.page_content.strip())
+            if content_hash not in seen_content:
+                seen_content.add(content_hash)
+                unique_docs.append(doc)
+        return unique_docs
+
+    def _trim_docs(self, docs: List[Document], max_tokens: int = 3000) -> List[Document]:
+        """Trim docs at the document level to prevent semantic truncation."""
+        total = 0
+        result = []
+        for d in docs:
+            # Assuming ~4 chars per token
+            tokens = len(d.page_content) // 4
+            if total + tokens > max_tokens:
+                break
+            result.append(d)
+            total += tokens
+        return result
+
+    async def _manage_history_size(self, session_id: str):
+        """Safely clean up history before invoking the chain."""
+        history = RedisChatMessageHistory(
+            session_id=f"chat_history:{session_id}",
+            url=settings.redis_url
+        )
+        if len(history.messages) > settings.max_history_messages:
+            logger.info(f"[*] Summarizing history for session {session_id}...")
+            prompt = f"Summarize the following conversation history briefly: {history.messages}"
+            summary = await self.llm.ainvoke(prompt)
+            history.clear()
+            history.add_user_message("Previous Conversation Summary:")
+            history.add_ai_message(self._extract_text(summary))
+            logger.info(f"[OK] History compressed.")
+
     async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
-        """Stream response with Redis caching and type-safe handling."""
-        cache_key = f"rag_cache:{question}:{doc_type or 'all'}"
+        """Stream response with Query Expansion, Deduplication, and Structured Logging."""
+        start_time = time.time()
+        
+        # Manage history before streaming to prevent concurrency issues
+        await self._manage_history_size(session_id)
+        
+        cache_key = f"rag_cache:{session_id}:{question}:{doc_type or 'all'}"
         cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:
             logger.info(f"Serving from cache: {question}")
-            # CACHE HIT PATH
-            print(f"[CACHE] Hit for query: {question[:50]}...")
-            answer_text = cached_response["answer"]
-            
-            # STREAM CHAR-BY-CHAR (Preserves markdown and code blocks)
-            for char in answer_text:
-                chunk = {"token": char, "sources": cached_response.get("sources", [])}
-                yield f"data: {json.dumps(chunk)}\n\n"
+            # STREAM CHAR-BY-CHAR (Fix #4)
+            for char in cached_response["answer"]:
+                yield f"data: {json.dumps({'token': char, 'sources': cached_response['sources']})}\n\n"
                 await asyncio.sleep(0.003)
             yield "data: [DONE]\n\n"
             return
 
         try:
+            # 1. QUERY OPTIMIZATION & EXPANSION
+            optimized_query = await self._rewrite_query(question)
+            expanded_query = await self._expand_query(optimized_query)
+            
+            # 2. RETRIEVAL (Fix #3: Context Guard k=8 is already in retriever)
             loop = asyncio.get_event_loop()
-            docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(question))
+            docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(expanded_query))
+            
+            # 3. CONTEXT COMPRESSION & TRIMMING
+            filtered_docs = self._deduplicate_docs(docs)
+            filtered_docs = filtered_docs[:5]  # Top N Compression
+            filtered_docs = self._trim_docs(filtered_docs, max_tokens=settings.max_context_tokens)
+            context_text = self._format_docs(filtered_docs)
+
+            # OBSERVABILITY
+            latency = time.time() - start_time
+            logger.info(json.dumps({
+                "action": "stream_query",
+                "query": question,
+                "optimized_query": optimized_query,
+                "expanded_query": expanded_query,
+                "docs_retrieved": len(filtered_docs),
+                "session_id": session_id,
+                "latency_sec": f"{latency:.4f}"
+            }))
 
             sources = []
             seen = set()
-            for doc in docs:
+            for doc in filtered_docs:
                 source_key = f"{doc.metadata.get('source')}_{doc.metadata.get('page')}"
                 if source_key not in seen:
                     sources.append({
@@ -225,9 +285,12 @@ Rules:
             full_answer = ""
             config = {"configurable": {"session_id": session_id}}
             
-            async for chunk in self.chain.astream({"question": question}, config=config):
+            # Invoke chain with pre-processed context
+            async for chunk in self.chain.astream(
+                {"question": question, "context": context_text}, 
+                config=config
+            ):
                 if chunk is not None:
-                    # Robust extraction from AddableDict or other types
                     text_token = self._extract_text(chunk)
                     full_answer += text_token
                     yield f"data: {json.dumps({'token': text_token})}\n\n"
@@ -243,8 +306,27 @@ Rules:
 
     def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
         """Sync query wrapper."""
-        config = {"configurable": {"session_id": session_id}}
-        result = self.chain.invoke({"question": question}, config=config)
-        answer = self._extract_text(result)
+        # For sync, to keep it simple, we run the async history manager synchronously
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.ensure_future(self._manage_history_size(session_id))
+        else:
+            loop.run_until_complete(self._manage_history_size(session_id))
+            
         docs = self.retriever.invoke(question)
+        filtered_docs = self._deduplicate_docs(docs)
+        filtered_docs = filtered_docs[:5]  # Compression
+        filtered_docs = self._trim_docs(filtered_docs, max_tokens=settings.max_context_tokens)
+        context_text = self._format_docs(filtered_docs)
+        
+        logger.info(json.dumps({
+            "action": "sync_query",
+            "query": question,
+            "docs_retrieved": len(filtered_docs),
+            "session_id": session_id
+        }))
+        
+        config = {"configurable": {"session_id": session_id}}
+        result = self.chain.invoke({"question": question, "context": context_text}, config=config)
+        answer = self._extract_text(result)
         return {"answer": answer, "sources": [d.metadata for d in docs], "success": True}

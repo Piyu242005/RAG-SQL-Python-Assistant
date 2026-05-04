@@ -104,7 +104,15 @@ class VectorStoreManager:
         
         print(f"Adding {len(documents)} documents to vector store...")
         self.vectorstore.add_documents(documents)
-        print("[OK] Documents added successfully")
+        
+        # Invalidate BM25 cache
+        bm25_cache_path = Path(self.persist_directory) / "bm25_retriever.pkl"
+        if bm25_cache_path.exists():
+            bm25_cache_path.unlink()
+        if hasattr(self, '_bm25_retriever'):
+            self._bm25_retriever = None
+            
+        print("[OK] Documents added successfully and BM25 cache invalidated")
     
     def similarity_search(
         self, 

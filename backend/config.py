@@ -30,8 +30,12 @@ class Settings(BaseSettings):
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     
     # Document Processing
-    chunk_size: int = int(os.getenv("CHUNK_SIZE", "800"))
+    chunk_size: int = int(os.getenv("CHUNK_SIZE", "600"))
     chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "200"))
+    
+    # RAG Context limits
+    max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "3000"))
+    max_history_messages: int = int(os.getenv("MAX_HISTORY_MESSAGES", "6"))
     
     # API Configuration
     api_host: str = os.getenv("API_HOST", "0.0.0.0")
