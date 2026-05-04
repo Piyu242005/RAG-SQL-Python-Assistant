@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import ChatContainer from './components/ChatContainer';
 import ToastProvider from './components/ToastProvider';
 import { useChat } from './hooks/useChat';
+import { getHealthStatus } from './services/api';
 
 function AppContent() {
   const [healthStatus, setHealthStatus] = useState(null);
@@ -23,9 +24,7 @@ function AppContent() {
 
     const checkHealth = async () => {
       try {
-        const response = await fetch('/api/health');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+        const data = await getHealthStatus();
         setHealthStatus(data);
         setIsLoading(false);
       } catch {

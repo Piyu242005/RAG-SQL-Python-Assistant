@@ -265,20 +265,25 @@ class VectorStoreManager:
         Returns:
             Dictionary with store statistics
         """
-        if self.vectorstore is None:
-            self.initialize_vectorstore()
-        
         try:
+            if self.vectorstore is None:
+                self.initialize_vectorstore()
+
             collection = self.vectorstore._collection
             count = collection.count()
-            
+
             return {
                 "total_documents": count,
                 "persist_directory": self.persist_directory,
                 "embedding_model": self.embedding_model_name
             }
         except Exception as e:
-            return {"error": str(e)}
+            return {
+                "error": str(e),
+                "total_documents": 0,
+                "persist_directory": self.persist_directory,
+                "embedding_model": self.embedding_model_name
+            }
     
     def reset_vectorstore(self) -> None:
         """Delete and reset the vector store."""
