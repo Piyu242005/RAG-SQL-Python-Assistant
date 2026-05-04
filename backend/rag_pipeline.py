@@ -129,11 +129,15 @@ Rules:
             print(f"[!] Redis Cache: Not available ({e}). Falling back to memory-only.")
 
         def get_session_history(session_id: str):
-            history = RedisChatMessageHistory(
-                session_id=f"chat_history:{session_id}",
-                url=settings.redis_url
-            )
-            return history
+            if self.redis_available:
+                return RedisChatMessageHistory(
+                    session_id=f"chat_history:{session_id}",
+                    url=settings.redis_url
+                )
+            else:
+                if session_id not in self.in_memory_history:
+                    self.in_memory_history[session_id] = ChatMessageHistory()
+                return self.in_memory_history[session_id]
 
         self.chain = RunnableWithMessageHistory(
             self.base_chain,
@@ -209,11 +213,14 @@ Rules:
 
     async def _manage_history_size(self, session_id: str):
         """Safely clean up history before invoking the chain."""
-        history = RedisChatMessageHistory(
-            session_id=f"chat_history:{session_id}",
-            url=settings.redis_url
-        )
-        if len(history.messages) > settings.max_history_messages:
+        history = self.in_memory_history.get(session_id)
+        if self.redis_available:
+            history = RedisChatMessageHistory(
+                session_id=f"chat_history:{session_id}",
+                url=settings.redis_url
+            )
+            
+        if history and len(history.messages) > settings.max_history_messages:
             logger.info(f"[*] Summarizing history for session {session_id}...")
             prompt = f"Summarize the following conversation history briefly: {history.messages}"
             summary = await self.llm.ainvoke(prompt)

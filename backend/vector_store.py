@@ -219,7 +219,8 @@ class VectorStoreManager:
         else:
             bm25_retriever = self._rebuild_bm25(k, bm25_cache_path)
 
-        bm25_retriever.k = k
+        if hasattr(bm25_retriever, 'k'):
+            bm25_retriever.k = k
         vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
         
         ensemble_retriever = EnsembleRetriever(
