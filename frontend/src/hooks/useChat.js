@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 // ── localStorage helpers ──────────────────────────────────
 const STORAGE_KEYS = {
   CONVERSATIONS: 'rag_conversations',
-  MESSAGES: 'rag_messages_',       // suffixed with conversation id
+  MESSAGES: 'rag_messages_',
   ACTIVE_ID: 'rag_active_conversation',
 };
 
@@ -21,40 +21,37 @@ const loadFromStorage = (key, fallback) => {
 const saveToStorage = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage full or unavailable
-  }
+  } catch {}
 };
 
 const removeFromStorage = (key) => {
   try {
     localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
+  } catch {}
 };
 
-/**
- * Custom hook for managing chat state, conversations, and interactions.
- */
 export const useChat = () => {
   const [conversations, setConversations] = useState(() =>
     loadFromStorage(STORAGE_KEYS.CONVERSATIONS, [])
   );
+
   const [activeConversationId, setActiveConversationId] = useState(() =>
     loadFromStorage(STORAGE_KEYS.ACTIVE_ID, null)
   );
+
   const [messages, setMessages] = useState(() => {
     const savedId = loadFromStorage(STORAGE_KEYS.ACTIVE_ID, null);
     return savedId
       ? loadFromStorage(STORAGE_KEYS.MESSAGES + savedId, [])
       : [];
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState(null);
 
   const activeIdRef = useRef(activeConversationId);
+
   useEffect(() => {
     activeIdRef.current = activeConversationId;
   }, [activeConversationId]);
@@ -78,9 +75,11 @@ export const useChat = () => {
     if (!query.trim() || isLoading || isStreaming) return;
 
     if (!readinessStatus?.ready) {
-      const reason = Array.isArray(readinessStatus?.reasons) && readinessStatus.reasons.length
-        ? readinessStatus.reasons.join(', ' )
-        : 'System dependencies not ready';
+      const reason =
+        Array.isArray(readinessStatus?.reasons) && readinessStatus.reasons.length
+          ? readinessStatus.reasons.join(', ')
+          : 'System dependencies not ready';
+
       toast.error(`System not ready: ${reason}`);
       setError(`System not ready: ${reason}`);
       return;
@@ -88,11 +87,11 @@ export const useChat = () => {
 
     let convId = activeIdRef.current;
 
-    // Create conversation if none exists
     if (!convId) {
       convId = Date.now().toString();
       const title = query.slice(0, 35) + (query.length > 35 ? '...' : '');
       const newConv = { id: convId, title, createdAt: new Date().toISOString() };
+
       setConversations((prev) => [newConv, ...prev]);
       setActiveConversationId(convId);
       activeIdRef.current = convId;
@@ -106,10 +105,11 @@ export const useChat = () => {
     };
 
     const aiMessageId = Date.now() + 1;
+
     const initialAiMessage = {
       id: aiMessageId,
       type: 'assistant',
-      content: '▋', // Force immediate non-empty to skip skeleton
+      content: '▋',
       sources: [],
       timestamp: new Date().toISOString(),
       success: true,
@@ -122,8 +122,9 @@ export const useChat = () => {
 
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
-        if (typeof chunk.token === 'string') {
-          setMessages(prev => {
+        // ✅ FIXED: Accept ALL tokens (including spaces/newlines)
+        if (Object.prototype.hasOwnProperty.call(chunk, 'token')) {
+          setMessages((prev) => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;
 
@@ -131,7 +132,6 @@ export const useChat = () => {
               const last = { ...updated[lastIndex] };
 
               if (last.type === 'assistant' || last.role === 'assistant') {
-                // If it was just the cursor, replace it
                 if (last.content === '▋') last.content = '';
                 last.content += chunk.token;
                 updated[lastIndex] = last;
@@ -141,7 +141,7 @@ export const useChat = () => {
             return updated;
           });
         } else if (chunk.sources) {
-          setMessages(prev => {
+          setMessages((prev) => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;
 
@@ -159,26 +159,30 @@ export const useChat = () => {
         }
       });
 
-      // Update conversation title if it's the first message
-      setConversations(prev => prev.map(c => {
-        if (c.id === convId && c.title.includes('...')) {
-          return { ...c, title: query.slice(0, 40) };
-        }
-        return c;
-      }));
-
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === convId && c.title.includes('...')) {
+            return { ...c, title: query.slice(0, 40) };
+          }
+          return c;
+        })
+      );
     } catch (err) {
       setError(err.message);
       toast.error(err.message || 'Streaming failed');
 
       setMessages((prev) => {
-        const filtered = prev.filter(m => m.id !== aiMessageId || m.content.length > 0);
+        const filtered = prev.filter(
+          (m) => m.id !== aiMessageId || m.content.length > 0
+        );
+
         const errorMessage = {
           id: Date.now() + 5,
           type: 'error',
           content: err.message || 'Failed to connect to AI service.',
           timestamp: new Date().toISOString(),
         };
+
         return [...filtered, errorMessage];
       });
     } finally {
@@ -191,6 +195,7 @@ export const useChat = () => {
     const id = activeIdRef.current;
     setMessages([]);
     setError(null);
+
     if (id) {
       removeFromStorage(STORAGE_KEYS.MESSAGES + id);
     }
@@ -206,7 +211,12 @@ export const useChat = () => {
   const selectConversation = useCallback((id) => {
     setActiveConversationId(id);
     activeIdRef.current = id;
-    const savedMessages = loadFromStorage(STORAGE_KEYS.MESSAGES + id, []);
+
+    const savedMessages = loadFromStorage(
+      STORAGE_KEYS.MESSAGES + id,
+      []
+    );
+
     setMessages(savedMessages);
     setError(null);
   }, []);
@@ -214,6 +224,7 @@ export const useChat = () => {
   const deleteConversation = useCallback((id) => {
     setConversations((prev) => prev.filter((c) => c.id !== id));
     removeFromStorage(STORAGE_KEYS.MESSAGES + id);
+
     if (activeIdRef.current === id) {
       setActiveConversationId(null);
       activeIdRef.current = null;
