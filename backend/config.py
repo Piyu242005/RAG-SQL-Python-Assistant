@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     
     # CORS
     cors_origins: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+    debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

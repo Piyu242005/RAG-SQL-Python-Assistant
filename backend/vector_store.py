@@ -1,13 +1,12 @@
 """Vector store management using ChromaDB."""
-import os
 from typing import List, Optional
 from pathlib import Path
 import chromadb
-from chromadb.config import Settings as ChromaSettings
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_community.retrievers import BM25Retriever
+import logging
 
 try:
     from langchain.retrievers import EnsembleRetriever
@@ -19,6 +18,7 @@ except ImportError:
 
 from config import settings
 
+logger = logging.getLogger("vector-store")
 
 class VectorStoreManager:
     """Manage ChromaDB vector store for document embeddings."""
@@ -142,7 +142,8 @@ class VectorStoreManager:
                 with open(cache_path, "rb") as f:
                     bm25 = pickle.load(f)
                 self._bm25_retriever = bm25
-            except:
+            except Exception as e:
+                logger.warning(f"BM25 cache corrupt, rebuilding: {e}")
                 bm25 = self._rebuild_bm25(k, cache_path)
 
         else:
@@ -181,47 +182,47 @@ class VectorStoreManager:
 
         self._bm25_retriever = bm25
         return bm25
-# ───────────────────────────────────────────────
-# Stats (FIXED)
-# ───────────────────────────────────────────────
-def get_stats(self) -> dict:
-    """Safe stats (no embedding dependency)."""
-    try:
-        db_path = Path(self.persist_directory)
 
-        if not db_path.exists() or not (db_path / "chroma.sqlite3").exists():
+    # ───────────────────────────────────────────────
+    # Stats
+    # ───────────────────────────────────────────────
+    def get_stats(self) -> dict:
+        """Safe stats (no embedding dependency)."""
+        try:
+            db_path = Path(self.persist_directory)
+
+            if not db_path.exists() or not (db_path / "chroma.sqlite3").exists():
+                return {
+                    "total_documents": 0,
+                    "persist_directory": self.persist_directory,
+                    "embedding_model": self.embedding_model_name,
+                }
+
+            client = chromadb.PersistentClient(path=str(db_path))
+            collection = client.get_or_create_collection(name="rag_documents")
+
             return {
+                "total_documents": collection.count(),
+                "persist_directory": self.persist_directory,
+                "embedding_model": self.embedding_model_name,
+            }
+
+        except Exception as e:
+            return {
+                "error": str(e),
                 "total_documents": 0,
                 "persist_directory": self.persist_directory,
                 "embedding_model": self.embedding_model_name,
             }
 
-        client = chromadb.PersistentClient(path=str(db_path))
-        collection = client.get_or_create_collection(name="rag_documents")
+    # ───────────────────────────────────────────────
+    # Reset
+    # ───────────────────────────────────────────────
+    def reset_vectorstore(self):
+        """Delete and reset the vector store."""
+        import shutil
 
-        return {
-            "total_documents": collection.count(),
-            "persist_directory": self.persist_directory,
-            "embedding_model": self.embedding_model_name,
-        }
+        if Path(self.persist_directory).exists():
+            shutil.rmtree(self.persist_directory)
 
-    except Exception as e:
-        return {
-            "error": str(e),
-            "total_documents": 0,
-            "persist_directory": self.persist_directory,
-            "embedding_model": self.embedding_model_name,
-        }
-
-
-# ───────────────────────────────────────────────
-# Reset
-# ───────────────────────────────────────────────
-def reset_vectorstore(self):
-    """Delete and reset the vector store."""
-    import shutil
-
-    if Path(self.persist_directory).exists():
-        shutil.rmtree(self.persist_directory)
-
-    self.vectorstore = None
+        self.vectorstore = None
