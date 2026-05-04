@@ -1,9 +1,11 @@
 """Main FastAPI application."""
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 import os
+import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from models import HealthResponse, InitializeResponse, DocumentStats
+from typing import Tuple, List
 from llm_config import OllamaManager
 from vector_store import VectorStoreManager
 from document_processor import DocumentProcessor
@@ -47,17 +49,15 @@ async def lifespan(app: FastAPI):
     else:
         print("[OK] Ollama setup validated")
     
-    # Check vector store
+    # Check vector store without forcing retriever/bootstrap
     vector_manager = VectorStoreManager()
-    if vector_manager._vectorstore_exists():
-        count = vector_manager.get_retriever().vectorstore._collection.count()
-        if count == 0:
-            print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
-        else:
-            print(f"[OK] Vector store found ({count} documents)")
+    stats = vector_manager.get_stats()
+    if "error" in stats:
+        print(f"[!] WARNING: Vector store check failed: {stats['error']}")
+    elif stats.get("total_documents", 0) == 0:
+        print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
     else:
-        print("[!] WARNING: Vector store not initialized!")
-        print("   Please run: python initialize_db.py")
+        print(f"[OK] Vector store found ({stats['total_documents']} documents)")
     
     print("=" * 60)
     print(f"[*] API running on http://{settings.api_host}:{settings.api_port}")
@@ -95,7 +95,11 @@ async def api_key_auth(request: Request, call_next):
     # Only protect /api/chat and /api/initialize, etc.
     # Root and Health can be public
     if request.url.path.startswith("/api") and not request.url.path.endswith("/health"):
-        # Check API Key
+        if not settings.api_key:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Server misconfigured: API_KEY is not set"}
+            )
         key = request.headers.get("x-api-key")
         if key != settings.api_key:
             return JSONResponse(
@@ -193,6 +197,57 @@ async def health_check() -> HealthResponse:
         configured_model=status['configured_model'],
         available_models=status['available_models']
     )
+
+
+
+async def _fetch_ollama_tags() -> tuple[bool, list]:
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.get(f"{settings.ollama_base_url}/api/tags")
+        if response.status_code != 200:
+            return False, []
+        payload = response.json()
+        models = payload.get("models", []) if isinstance(payload, dict) else []
+        return True, models
+    except Exception:
+        return False, []
+
+
+@app.get("/api/ready")
+async def readiness_check():
+    """Readiness endpoint: true only when RAG dependencies are usable."""
+    vector_manager = VectorStoreManager()
+    stats = vector_manager.get_stats()
+    vector_count = stats.get("total_documents", 0)
+
+    ollama_running, models = await _fetch_ollama_tags()
+    configured_model = settings.ollama_model
+    model_available = any(
+        configured_model in model.get("name", "") or model.get("name", "").startswith(configured_model)
+        for model in models
+        if isinstance(model, dict)
+    )
+
+    reasons = []
+    if not ollama_running:
+        reasons.append("OLLAMA_UNREACHABLE")
+    if ollama_running and not model_available:
+        reasons.append("MODEL_NOT_LOADED")
+    if "error" in stats:
+        reasons.append("VECTORSTORE_ERROR")
+    elif vector_count <= 0:
+        reasons.append("VECTORSTORE_EMPTY")
+
+    ready = ollama_running and model_available and vector_count > 0 and "error" not in stats
+
+    return {
+        "ready": ready,
+        "ollama_running": ollama_running,
+        "model_available": model_available,
+        "vectorstore_docs": vector_count,
+        "reasons": reasons,
+        "vectorstore_error": stats.get("error"),
+    }
 
 @app.post("/api/initialize", response_model=InitializeResponse)
 async def initialize_system() -> InitializeResponse:

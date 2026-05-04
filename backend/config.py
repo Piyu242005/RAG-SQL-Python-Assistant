@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -42,10 +43,17 @@ class Settings(BaseSettings):
     api_port: int = int(os.getenv("API_PORT", "8000"))
     
     # Security
-    api_key: str = os.getenv("API_KEY", "your_secret_key_123")
+    api_key: str = os.getenv("API_KEY", "")
     
     # CORS
-    cors_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    cors_origins: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def normalize_cors_origins(cls, value):
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
+        return value
     
     class Config:
         env_file = ".env"
