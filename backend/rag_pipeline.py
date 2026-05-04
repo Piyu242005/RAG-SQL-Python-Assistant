@@ -133,7 +133,8 @@ Rules:
             if self.redis_available:
                 return RedisChatMessageHistory(
                     session_id=f"chat_history:{session_id}",
-                    url=settings.redis_url
+                    url=settings.redis_url,
+                    ttl=86400
                 )
             else:
                 if session_id not in self.in_memory_history:
@@ -218,7 +219,8 @@ Rules:
         if self.redis_available:
             history = RedisChatMessageHistory(
                 session_id=f"chat_history:{session_id}",
-                url=settings.redis_url
+                url=settings.redis_url,
+                ttl=86400
             )
             
         if history and len(history.messages) > settings.max_history_messages:
@@ -251,8 +253,10 @@ Rules:
 
         try:
             # 1. QUERY OPTIMIZATION & EXPANSION
-            optimized_query = await self._rewrite_query(question)
-            expanded_query = await self._expand_query(optimized_query)
+            optimized_query, expanded_query = await asyncio.gather(
+                self._rewrite_query(question),
+                self._expand_query(question)
+            )
             
             # 2. RETRIEVAL (Fix #3: Context Guard k=8 is already in retriever)
             loop = asyncio.get_event_loop()
@@ -332,12 +336,10 @@ Rules:
 
     def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
         """Sync query wrapper."""
-        # For sync, to keep it simple, we run the async history manager synchronously
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.ensure_future(self._manage_history_size(session_id))
-        else:
-            loop.run_until_complete(self._manage_history_size(session_id))
+        # Keep sync path fully synchronous and cap history without async summarization
+        history = self.in_memory_history.get(session_id)
+        if history and len(history.messages) > settings.max_history_messages:
+            history.messages = history.messages[-settings.max_history_messages:]
             
         docs = self.retriever.invoke(question)
         filtered_docs = self._deduplicate_docs(docs)
