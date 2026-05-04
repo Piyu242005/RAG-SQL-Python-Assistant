@@ -50,7 +50,11 @@ async def lifespan(app: FastAPI):
     # Check vector store
     vector_manager = VectorStoreManager()
     if vector_manager._vectorstore_exists():
-        print("[OK] Vector store found")
+        count = vector_manager.get_retriever().vectorstore._collection.count()
+        if count == 0:
+            print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
+        else:
+            print(f"[OK] Vector store found ({count} documents)")
     else:
         print("[!] WARNING: Vector store not initialized!")
         print("   Please run: python initialize_db.py")
@@ -108,6 +112,30 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global error: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+@app.post("/api/reindex")
+async def reindex():
+    from initialize_db import main as init_db
+    import sys
+    
+    # Save original arguments
+    original_argv = sys.argv.copy()
+    
+    try:
+        # Override sys.argv to trigger the rebuild logic when calling main()
+        sys.argv = ['initialize_db.py', '--rebuild']
+        init_db()
+        return {"status": "reindexed"}
+    except Exception as e:
+        logger.error(f"Failed to reindex: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Restore arguments exactly as they were
+        sys.argv = original_argv
+
+# Root endpoint
         content={"error": f"Internal Server Error: {str(exc)}"}
     )
 

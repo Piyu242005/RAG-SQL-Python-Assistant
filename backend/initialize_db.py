@@ -213,6 +213,11 @@ def main():
         help="Force re-indexing even if the database already exists.",
     )
     parser.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Alias for --force. Force re-indexing even if the database already exists.",
+    )
+    parser.add_argument(
         "--semantic",
         action="store_true",
         help="Use computationally expensive semantic chunking instead of recursive splitting.",
@@ -248,7 +253,7 @@ def main():
     persist_dir = settings.chroma_persist_directory
     print(f"\n[2/5] Checking existing database...")
 
-    if _db_exists(persist_dir) and not args.force:
+    if _db_exists(persist_dir) and not (args.force or args.rebuild):
         # Load embeddings just to read stats
         emb = create_embeddings(settings.embedding_model)
         count = _get_existing_stats(persist_dir, emb)
@@ -262,10 +267,10 @@ def main():
             print("=" * 60)
             return
 
-    if args.force and _db_exists(persist_dir):
+    if (args.force or args.rebuild) and _db_exists(persist_dir):
         import shutil
-        print(f"   [!] --force flag set. Removing existing database...")
-        shutil.rmtree(persist_dir)
+        print(f"   [!] Rebuild flag set. Removing existing database...")
+        shutil.rmtree(persist_dir, ignore_errors=True)
         print(f"   [OK] Deleted: {persist_dir}")
 
     # -- Step 3/5: Process PDFs -------------------------------
@@ -276,12 +281,19 @@ def main():
     else:
         print(f"\n[3/5] Running Optimized Fast Chunking...")
 
-    # Use processor to handle all logic
-    documents = processor.process_all_pdfs()
+    # Auto-create vectorstore persist database path explicitly to avoid issues
+    import os
+    os.makedirs(str(persist_dir), exist_ok=True)
+
+    # Use processor to handle all logic with hard failure logging
+    try:
+        documents = processor.process_all_pdfs()
+    except Exception as e:
+        print("❌ PDF processing failed:", e)
+        raise
 
     if not documents:
-        print("[X] No documents processed. Check your PDF directory.")
-        return
+        raise ValueError("No documents found. Check pdfs folder.")
 
     # -- Step 4/5: Embed & store ------------------------------
     print(f"\n[4/5] Loading embedding model...")

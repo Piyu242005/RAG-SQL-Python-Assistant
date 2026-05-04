@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     
     # Paths
-    base_dir: Path = Path(__file__).parent.parent
+    base_dir: Path = Path(__file__).resolve().parent.parent
     pdf_directory: Path = base_dir / "data" / "pdfs"
     media_directory: Path = base_dir / "data" / "media"
     

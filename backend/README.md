@@ -17,14 +17,14 @@ A powerful full-stack AI application that ingests local PDF documentation, proce
 * **Streaming Responses:** Smooth, ChatGPT-style Server-Sent Events (SSE) token streaming.
 * **Memory & Caching:** Redis-backed conversational memory and LLM result caching.
 * **Self-Healing Architecture:** Auto-guards against context overflow and automatically intercepts empty vector store states.
-* **Local & Private:** Zero data leaves your machine. Powered by Ollama (`llama3.2`) and local sentence-transformers.
+* **Local & Private:** Zero data leaves your machine. Powered by Ollama (llama3.2) and local sentence-transformers.
 
 ---
 
 ## 🏗️ Architecture Overview
 
 The system is decoupled into a high-performance **FastAPI** backend and a snappy **React + Tailwind** frontend:
-1. **Ingestion Pipeline:** PyMuPDF extracts text -> chunked via `RecursiveCharacterTextSplitter` -> Embedded via `MiniLM` -> Stored in `ChromaDB`.
+1. **Ingestion Pipeline:** PyMuPDF extracts text -> chunked via RecursiveCharacterTextSplitter -> Embedded via MiniLM -> Stored in ChromaDB.
 2. **Query Pipeline:** User Input -> HyDE Query Expansion -> Hybrid Search (Top 20) -> Reranker (Top 5) -> Context Trimming -> LLM Generation.
 3. **Presentation:** React handles the SSE stream, formatting markdown and code blocks in real-time.
 
@@ -32,7 +32,7 @@ The system is decoupled into a high-performance **FastAPI** backend and a snappy
 
 ## 📸 Screenshots
 *(Placeholder: Add an image of your clean chat interface here)*  
-`![Chat Interface](docs/assets/chat-demo.png)`
+![Chat Interface](docs/assets/chat-demo.png)
 
 ---
 
@@ -41,13 +41,13 @@ The system is decoupled into a high-performance **FastAPI** backend and a snappy
 ### 1. Requirements
 - Python 3.10+
 - Node.js 18+
-- [Ollama](https://ollama.ai) (with `llama3.2` pulled)
-- Redis server running on port `6379`
+- [Ollama](https://ollama.ai) (with llama3.2 pulled)
+- Redis server running on port 6379
 
 ### 2. Setup
 Detailed instructions can be found in our [Setup Guide](docs/SETUP_GUIDE.md).
 
-```bash
+`ash
 # Terminal 1: Initialize Database & Start Backend
 cd backend
 pip install -r requirements.txt
@@ -58,7 +58,7 @@ python main.py
 cd frontend
 npm install
 npm run dev
-```
+`
 
 ---
 

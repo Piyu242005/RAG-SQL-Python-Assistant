@@ -1,116 +1,75 @@
-# 📡 API Reference v1.0
+# � API Reference
 
-> **Standard REST API for interacting with the Piyu AI Assistant. All endpoints return JSON unless otherwise specified.**
+The backend operates on `http://localhost:8000`. All protected endpoints require the header `x-api-key`.
 
----
-
-## 🔑 Authentication
-
-All `/api` endpoints (except `/api/health`) require an API Key passed in the headers.
-
-| Header | Value |
-|:---|:---|
-| `x-api-key` | Your configured secret key (Default: `your_secret_key_123`) |
+## Authentication
+**Header:** `x-api-key: your_secret_key_123`
 
 ---
 
-## 💬 Chat Endpoints
-
-### 1. Streaming Chat (Recommended)
-`POST /api/chat/stream`
-
-Streams the LLM response token-by-token using Server-Sent Events (SSE).
-
-**Request Body:**
-```json
-{
-  "query": "How do I use SQL JOINs?",
-  "conversation_id": "optional_session_uuid",
-  "doc_type": "mysql" 
-}
-```
-*`doc_type` can be `mysql`, `python`, or `null`.*
-
-**Response Stream:**
-1. `{"sources": [...]}`: Initial metadata containing document references.
-2. `{"token": "..."}`: Individual text tokens.
-3. `[DONE]`: Signal that the stream has finished.
-
----
-
-### 2. Standard Chat
+### 1. Standard Chat (Synchronous)
 `POST /api/chat`
 
-Returns the full answer in a single JSON response.
-
-**Request Body:** Same as streaming.
+**Request:**
+```json
+{
+  "query": "How do I create a database in MySQL?",
+  "doc_type": "mysql",
+  "conversation_id": "session_123"
+}
+```
 
 **Response:**
 ```json
 {
-  "answer": "...",
-  "sources": [...],
+  "answer": "To create a database in MySQL, use the `CREATE DATABASE` statement...",
+  "sources": [{"source": "MySQL Handbook.pdf", "page": 12}],
   "success": true
 }
 ```
 
 ---
 
-## 🛠️ System Endpoints
+### 2. Stream Chat (Asynchronous SSE)
+`POST /api/chat/stream`
 
-### 3. Health Check
+Streams the LLM response in real-time. Yields chunked tokens and a final `[DONE]` marker.
+
+**Request:** Same payload as synchronous chat.
+**Response (Event Stream):**
+```text
+data: {"sources": [{"source": "MySQL Handbook.pdf"}]}
+data: {"token": "To"}
+data: {"token": " create"}
+data: [DONE]
+```
+
+---
+
+### 3. Re-index Vector Database
+`POST /api/reindex`
+
+Force a teardown and complete re-embedding sequence of all PDFs in the data folder.
+
+**Response:**
+```json
+{
+  "status": "reindexed"
+}
+```
+
+---
+
+### 4. Health Check
 `GET /api/health`
 
-**Security:** Public
+Public endpoint to verify system stability.
 
 **Response:**
 ```json
 {
-  "status": "healthy",
   "ollama_running": true,
-  "model_available": true,
   "vectorstore_initialized": true,
-  "configured_model": "llama3.2"
+  "redis_connected": true
 }
 ```
-
----
-
-### 4. System Initialization
-`POST /api/initialize`
-
-Triggers the ingestion pipeline to process all PDFs and rebuild the vector database.
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "System initialized successfully",
-  "documents_processed": 178
-}
-```
-
----
-
-## 📂 Document Endpoints
-
-### 5. Document Statistics
-`GET /api/documents`
-
-**Response:**
-```json
-{
-  "total_documents": 178,
-  "persist_directory": "./chroma_db",
-  "embedding_model": "..."
-}
-```
-
-### 6. Upload PDF
-`POST /api/upload`
-
-Uploads and immediately indexes a new PDF.
-
-**Form Data:**
-- `file`: The PDF file.
-- `doc_type`: Category for the file (default: `custom`).

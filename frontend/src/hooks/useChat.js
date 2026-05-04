@@ -111,23 +111,26 @@ export const useChat = () => {
     setIsStreaming(true);
     setError(null);
 
-    let accumulatedContent = '';
-
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
         if (chunk.token) {
-          accumulatedContent += chunk.token;
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiMessageId ? { ...m, content: accumulatedContent } : m
-            )
-          );
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.type === 'assistant') {
+              last.content += chunk.token;
+            }
+            return updated;
+          });
         } else if (chunk.sources) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiMessageId ? { ...m, sources: chunk.sources } : m
-            )
-          );
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.type === 'assistant') {
+              last.sources = chunk.sources;
+            }
+            return updated;
+          });
         }
       });
 

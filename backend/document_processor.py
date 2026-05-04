@@ -131,6 +131,24 @@ class DocumentProcessor:
         
         return documents
 
+    def process_all_pdfs(self) -> List[Document]:
+        """Process all PDFs in the configured data directory."""
+        all_documents = []
+        pdf_dir = settings.pdf_directory
+        
+        if not pdf_dir.exists():
+            print(f"[X] Directory not found: {pdf_dir}")
+            return all_documents
+            
+        print(f"\n[*] Scanning for PDFs in {pdf_dir}...")
+        for pdf_path in pdf_dir.glob("*.pdf"):
+            doc_type = self._detect_topic(pdf_path.name, source=pdf_path.name)
+            docs = self.process_pdf(pdf_path, doc_type)
+            all_documents.extend(docs)
+            
+        print(f"\n[OK] Successfully processed {len(all_documents)} total chunks from all PDFs.")
+        return all_documents
+
 
 # Example usage
 if __name__ == "__main__":
