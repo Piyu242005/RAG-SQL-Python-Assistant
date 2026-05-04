@@ -49,17 +49,15 @@ async def lifespan(app: FastAPI):
     else:
         print("[OK] Ollama setup validated")
     
-    # Check vector store
+    # Check vector store without forcing retriever/bootstrap
     vector_manager = VectorStoreManager()
-    if vector_manager._vectorstore_exists():
-        count = vector_manager.get_retriever().vectorstore._collection.count()
-        if count == 0:
-            print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
-        else:
-            print(f"[OK] Vector store found ({count} documents)")
+    stats = vector_manager.get_stats()
+    if "error" in stats:
+        print(f"[!] WARNING: Vector store check failed: {stats['error']}")
+    elif stats.get("total_documents", 0) == 0:
+        print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
     else:
-        print("[!] WARNING: Vector store not initialized!")
-        print("   Please run: python initialize_db.py")
+        print(f"[OK] Vector store found ({stats['total_documents']} documents)")
     
     print("=" * 60)
     print(f"[*] API running on http://{settings.api_host}:{settings.api_port}")
@@ -97,7 +95,11 @@ async def api_key_auth(request: Request, call_next):
     # Only protect /api/chat and /api/initialize, etc.
     # Root and Health can be public
     if request.url.path.startswith("/api") and not request.url.path.endswith("/health"):
-        # Check API Key
+        if not settings.api_key:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Server misconfigured: API_KEY is not set"}
+            )
         key = request.headers.get("x-api-key")
         if key != settings.api_key:
             return JSONResponse(

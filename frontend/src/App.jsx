@@ -62,12 +62,18 @@ function AppContent() {
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#F3F4F6] dark:bg-[#0B0D11]">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center shadow-glow-primary mb-5">
             <Sparkles className="w-6 h-6 text-white animate-pulse" />
           </div>
           <Loader2 className="w-5 h-5 text-primary-400 animate-spin mx-auto mb-3" />
-          <p className="text-dark-300 text-sm font-medium">Initializing Piyu RAG...</p>
+          <p className="text-dark-300 text-sm font-medium">
+            Initializing Piyu RAG...
+          </p>
         </motion.div>
       </div>
     );

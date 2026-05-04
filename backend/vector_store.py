@@ -181,46 +181,47 @@ class VectorStoreManager:
 
         self._bm25_retriever = bm25
         return bm25
+# ───────────────────────────────────────────────
+# Stats (FIXED)
+# ───────────────────────────────────────────────
+def get_stats(self) -> dict:
+    """Safe stats (no embedding dependency)."""
+    try:
+        db_path = Path(self.persist_directory)
 
-    # ───────────────────────────────────────────────
-    # Stats (FIXED)
-    # ───────────────────────────────────────────────
-    def get_stats(self) -> dict:
-        """Safe stats (no embedding dependency)."""
-        try:
-            db_path = Path(self.persist_directory)
-
-            if not db_path.exists() or not (db_path / "chroma.sqlite3").exists():
-                return {
-                    "total_documents": 0,
-                    "persist_directory": self.persist_directory,
-                    "embedding_model": self.embedding_model_name,
-                }
-
-            client = chromadb.PersistentClient(path=str(db_path))
-            collection = client.get_or_create_collection(name="rag_documents")
-
+        if not db_path.exists() or not (db_path / "chroma.sqlite3").exists():
             return {
-                "total_documents": collection.count(),
-                "persist_directory": self.persist_directory,
-                "embedding_model": self.embedding_model_name,
-            }
-
-        except Exception as e:
-            return {
-                "error": str(e),
                 "total_documents": 0,
                 "persist_directory": self.persist_directory,
                 "embedding_model": self.embedding_model_name,
             }
 
-    # ───────────────────────────────────────────────
-    # Reset
-    # ───────────────────────────────────────────────
-    def reset_vectorstore(self):
-        import shutil
+        client = chromadb.PersistentClient(path=str(db_path))
+        collection = client.get_or_create_collection(name="rag_documents")
 
-        if Path(self.persist_directory).exists():
-            shutil.rmtree(self.persist_directory)
+        return {
+            "total_documents": collection.count(),
+            "persist_directory": self.persist_directory,
+            "embedding_model": self.embedding_model_name,
+        }
 
-        self.vectorstore = None
+    except Exception as e:
+        return {
+            "error": str(e),
+            "total_documents": 0,
+            "persist_directory": self.persist_directory,
+            "embedding_model": self.embedding_model_name,
+        }
+
+
+# ───────────────────────────────────────────────
+# Reset
+# ───────────────────────────────────────────────
+def reset_vectorstore(self):
+    """Delete and reset the vector store."""
+    import shutil
+
+    if Path(self.persist_directory).exists():
+        shutil.rmtree(self.persist_directory)
+
+    self.vectorstore = None
