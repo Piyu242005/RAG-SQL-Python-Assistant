@@ -6,7 +6,6 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const API_KEY = import.meta.env.VITE_API_KEY || "";
-console.log("API KEY:", import.meta.env.VITE_API_KEY);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -102,6 +101,18 @@ export const getHealthStatus = async () => {
     return response.data;
   } catch (error) {
     throw new Error('Failed to get health status');
+  }
+};
+
+/**
+ * Get document statistics.
+ */
+export const getReadinessStatus = async () => {
+  try {
+    const response = await apiClient.get('/api/ready');
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to get readiness status');
   }
 };
 

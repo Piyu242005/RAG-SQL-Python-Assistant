@@ -74,8 +74,17 @@ export const useChat = () => {
     }
   }, [messages]);
 
-  const sendMessage = async (query, docType = null) => {
-    if (!query.trim() || isLoading) return;
+  const sendMessage = async (query, docType = null, readinessStatus = null) => {
+    if (!query.trim() || isLoading || isStreaming) return;
+
+    if (!readinessStatus?.ready) {
+      const reason = Array.isArray(readinessStatus?.reasons) && readinessStatus.reasons.length
+        ? readinessStatus.reasons.join(', ' )
+        : 'System dependencies not ready';
+      toast.error(`System not ready: ${reason}`);
+      setError(`System not ready: ${reason}`);
+      return;
+    }
 
     let convId = activeIdRef.current;
 
@@ -113,8 +122,8 @@ export const useChat = () => {
 
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
-        console.log("Stream chunk:", chunk);
-        if (typeof chunk.token === 'string') {
+        //if (typeof chunk.token === 'string')
+          if (Object.prototype.hasOwnProperty.call(chunk, 'token')) {
           setMessages(prev => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;

@@ -1,4 +1,5 @@
 """Ollama LLM configuration and utilities."""
+import os
 import ollama
 from typing import Optional
 from config import settings
@@ -11,6 +12,8 @@ class OllamaManager:
         self.base_url = settings.ollama_base_url
         self.model = settings.ollama_model
         self.client = None
+        # Ensure ollama python client targets configured host
+        os.environ['OLLAMA_HOST'] = self.base_url
     
     def check_ollama_running(self) -> bool:
         """Check if Ollama service is running.
