@@ -31,8 +31,10 @@ The system is decoupled into a high-performance **FastAPI** backend and a snappy
 ---
 
 ## 📸 Screenshots
-*(Placeholder: Add an image of your clean chat interface here)*  
-`![Chat Interface](docs/assets/chat-demo.png)`
+
+![Welcome Screen](exports/welcome_screen.png)
+
+![Chat Response](exports/chat_response.png)
 
 ---
 

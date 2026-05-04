@@ -100,7 +100,7 @@ export const useChat = () => {
     const initialAiMessage = {
       id: aiMessageId,
       type: 'assistant',
-      content: '',
+      content: '▋', // Force immediate non-empty to skip skeleton
       sources: [],
       timestamp: new Date().toISOString(),
       success: true,
@@ -113,22 +113,39 @@ export const useChat = () => {
 
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
-        if (chunk.token) {
-          setMessages((prev) => {
+        console.log("Stream chunk:", chunk);
+        if (chunk.token && chunk.token.trim() !== "") {
+          setMessages(prev => {
             const updated = [...prev];
-            const last = updated[updated.length - 1];
-            if (last && last.type === 'assistant') {
-              last.content += chunk.token;
+            const lastIndex = updated.length - 1;
+
+            if (lastIndex >= 0) {
+              const last = { ...updated[lastIndex] };
+
+              if (last.type === 'assistant' || last.role === 'assistant') {
+                // If it was just the cursor, replace it
+                if (last.content === '▋') last.content = '';
+                last.content += chunk.token;
+                updated[lastIndex] = last;
+              }
             }
+
             return updated;
           });
         } else if (chunk.sources) {
-          setMessages((prev) => {
+          setMessages(prev => {
             const updated = [...prev];
-            const last = updated[updated.length - 1];
-            if (last && last.type === 'assistant') {
-              last.sources = chunk.sources;
+            const lastIndex = updated.length - 1;
+
+            if (lastIndex >= 0) {
+              const last = { ...updated[lastIndex] };
+
+              if (last.type === 'assistant' || last.role === 'assistant') {
+                last.sources = chunk.sources;
+                updated[lastIndex] = last;
+              }
             }
+
             return updated;
           });
         }

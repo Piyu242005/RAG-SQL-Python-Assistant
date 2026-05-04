@@ -136,8 +136,6 @@ async def reindex():
         sys.argv = original_argv
 
 # Root endpoint
-        content={"error": f"Internal Server Error: {str(exc)}"}
-    )
 
 # Middleware for request logging
 @app.middleware("http")
