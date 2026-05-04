@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import json
+import time
 from typing import List, Dict, Optional, Any
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -263,6 +264,14 @@ Rules:
             filtered_docs = self._trim_docs(filtered_docs, max_tokens=settings.max_context_tokens)
             context_text = self._format_docs(filtered_docs)
 
+            logger.info(json.dumps({
+                "action": "retrieval_summary",
+                "original_docs_count": len(docs),
+                "docs_after_dedup_trim": len(filtered_docs),
+                "context_length_chars": len(context_text),
+                "session_id": session_id
+            }))
+
             # OBSERVABILITY
             latency = time.time() - start_time
             logger.info(json.dumps({
@@ -291,6 +300,14 @@ Rules:
 
             full_answer = ""
             config = {"configurable": {"session_id": session_id}}
+
+            if settings.debug and question.strip().lower() == "__force_test_response__":
+                full_answer = "Test response working"
+                logger.info("Force-test mode hit: returning static response")
+                yield f"data: {json.dumps({'token': full_answer})}\n\n"
+                redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=300)
+                yield "data: [DONE]\n\n"
+                return
             
             # Invoke chain with pre-processed context
             async for chunk in self.chain.astream(
@@ -301,6 +318,8 @@ Rules:
                     text_token = self._extract_text(chunk)
                     full_answer += text_token
                     yield f"data: {json.dumps({'token': text_token})}\n\n"
+
+            logger.info(json.dumps({"action": "llm_output_summary", "output_length_chars": len(full_answer), "session_id": session_id}))
 
             # Cache the clean string
             redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=3600)
