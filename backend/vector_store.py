@@ -260,25 +260,32 @@ class VectorStoreManager:
             return self.get_retriever(k=k)
     
     def get_stats(self) -> dict:
-        """Get statistics about the vector store.
-        
-        Returns:
-            Dictionary with store statistics
-        """
-        if self.vectorstore is None:
-            self.initialize_vectorstore()
-        
+        """Get statistics about the vector store without requiring embedding bootstrap."""
         try:
-            collection = self.vectorstore._collection
+            db_path = Path(self.persist_directory)
+            if not db_path.exists() or not (db_path / "chroma.sqlite3").exists():
+                return {
+                    "total_documents": 0,
+                    "persist_directory": self.persist_directory,
+                    "embedding_model": self.embedding_model_name,
+                }
+
+            client = chromadb.PersistentClient(path=str(db_path))
+            collection = client.get_or_create_collection(name="rag_documents")
             count = collection.count()
-            
+
             return {
                 "total_documents": count,
                 "persist_directory": self.persist_directory,
-                "embedding_model": self.embedding_model_name
+                "embedding_model": self.embedding_model_name,
             }
         except Exception as e:
-            return {"error": str(e)}
+            return {
+                "error": str(e),
+                "total_documents": 0,
+                "persist_directory": self.persist_directory,
+                "embedding_model": self.embedding_model_name,
+            }
     
     def reset_vectorstore(self) -> None:
         """Delete and reset the vector store."""

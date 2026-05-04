@@ -8,7 +8,7 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import TypingIndicator from './TypingIndicator';
 
-const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => {
+const ChatContainer = ({ healthStatus, readinessStatus, docFilter, onDocFilterChange, chat }) => {
   const { messages, isLoading, sendMessage, clearMessages } = chat;
   const messagesEndRef = useRef(null);
 
@@ -16,7 +16,7 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const isSystemReady = healthStatus?.ollama_running && healthStatus?.vectorstore_initialized;
+  const isSystemReady = Boolean(readinessStatus?.ready);
 
   const exampleQuestions = [
     { icon: Database, text: 'What are SQL JOINs and when to use each type?', color: 'from-blue-500 to-cyan-500', tag: 'SQL' },
@@ -27,8 +27,8 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
 
   const statusChecks = [
     { label: 'Ollama LLM', ok: healthStatus?.ollama_running, detail: healthStatus?.ollama_running ? 'Connected' : 'Not running — run ollama serve' },
-    { label: 'Vector Database', ok: healthStatus?.vectorstore_initialized, detail: healthStatus?.vectorstore_initialized ? 'Initialized' : 'Run initialize_db.py' },
-    { label: 'Documents Indexed', ok: healthStatus?.vectorstore_initialized, detail: healthStatus?.vectorstore_initialized ? 'MySQL + Python handbooks' : 'Pending' },
+    { label: 'Vector Database', ok: !readinessStatus?.reasons?.includes('VECTORSTORE_ERROR'), detail: readinessStatus?.reasons?.includes('VECTORSTORE_ERROR') ? 'Vector store error' : 'Accessible' },
+    { label: 'Documents Indexed', ok: (readinessStatus?.vectorstore_docs || 0) > 0, detail: (readinessStatus?.vectorstore_docs || 0) > 0 ? `${readinessStatus.vectorstore_docs} chunks` : 'Pending' },
   ];
 
   return (
@@ -105,7 +105,7 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
                 {exampleQuestions.map((q, i) => (
                   <button
                     key={i}
-                    onClick={() => sendMessage(q.text, docFilter)}
+                    onClick={() => sendMessage(q.text, docFilter, readinessStatus)}
                     className="group relative bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-5 rounded-2xl text-left hover:border-primary-500/50 dark:hover:border-primary-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/5"
                   >
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${q.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
@@ -168,7 +168,7 @@ const ChatContainer = ({ healthStatus, docFilter, onDocFilterChange, chat }) => 
       {/* Input Area */}
       <div className="sticky bottom-0 bg-gradient-to-t from-white dark:from-[#09090B] via-white/90 dark:via-[#09090B]/90 to-transparent pt-10 pb-6 px-6">
         <div className="max-w-3xl mx-auto w-full">
-          <ChatInput onSendMessage={sendMessage} isLoading={isLoading} disabled={!isSystemReady}
+          <ChatInput onSendMessage={(q, dt) => sendMessage(q, dt, readinessStatus)} isLoading={isLoading} disabled={!isSystemReady}
             docFilter={docFilter} onDocFilterChange={onDocFilterChange} />
           <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-4 font-medium uppercase tracking-widest">
             Powered by Ollama + ChromaDB + FlashRank
