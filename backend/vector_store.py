@@ -8,31 +8,33 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_community.retrievers import BM25Retriever
+
 try:
     from langchain.retrievers import EnsembleRetriever
 except ImportError:
     try:
         from langchain_classic.retrievers import EnsembleRetriever
     except ImportError:
-        # Fallback if both fail
         from langchain_community.retrievers.ensemble import EnsembleRetriever
+
 from config import settings
+
 
 class VectorStoreManager:
     """Manage ChromaDB vector store for document embeddings."""
-    
+
     def __init__(self):
-        """Initialize vector store manager."""
         self.persist_directory = settings.chroma_persist_directory
         self.embedding_model_name = settings.embedding_model
         self.embeddings = None
         self.vectorstore = None
-        
-        # Create persist directory if it doesn't exist
+
         Path(self.persist_directory).mkdir(parents=True, exist_ok=True)
-    
+
+    # ───────────────────────────────────────────────
+    # Embeddings
+    # ───────────────────────────────────────────────
     def _initialize_embeddings(self):
-        """Initialize HuggingFace embeddings."""
         if self.embeddings is None:
             print(f" Loading embedding model: {self.embedding_model_name}")
             self.embeddings = HuggingFaceEmbeddings(
@@ -41,19 +43,13 @@ class VectorStoreManager:
                 encode_kwargs={'normalize_embeddings': True}
             )
             print("[OK] Embedding model loaded")
-    
+
+    # ───────────────────────────────────────────────
+    # Vector Store Init
+    # ───────────────────────────────────────────────
     def initialize_vectorstore(self, documents: Optional[List[Document]] = None) -> Chroma:
-        """Initialize or load ChromaDB vector store.
-        
-        Args:
-            documents: Optional list of documents to add to new vector store
-            
-        Returns:
-            Chroma vectorstore instance
-        """
         self._initialize_embeddings()
-        
-        # Check if vectorstore already exists
+
         if self._vectorstore_exists() and documents is None:
             print(" Loading existing vector store...")
             self.vectorstore = Chroma(
@@ -61,208 +57,139 @@ class VectorStoreManager:
                 embedding_function=self.embeddings,
                 collection_name="rag_documents"
             )
-            print(f"[OK] Loaded vector store from {self.persist_directory}")
         else:
             if documents:
-                print(f" Creating new vector store with {len(documents)} documents...")
+                print(f" Creating vector store with {len(documents)} docs...")
                 self.vectorstore = Chroma.from_documents(
                     documents=documents,
                     embedding=self.embeddings,
                     persist_directory=self.persist_directory,
                     collection_name="rag_documents"
                 )
-                print(f"[OK] Vector store created and persisted to {self.persist_directory}")
             else:
-                # Create empty vectorstore
                 print(" Creating empty vector store...")
                 self.vectorstore = Chroma(
                     persist_directory=self.persist_directory,
                     embedding_function=self.embeddings,
                     collection_name="rag_documents"
                 )
-                print("[OK] Empty vector store created")
-        
+
         return self.vectorstore
-    
+
     def _vectorstore_exists(self) -> bool:
-        """Check if vector store already exists.
-        
-        Returns:
-            True if vectorstore exists, False otherwise
-        """
-        chroma_db_path = Path(self.persist_directory) / "chroma.sqlite3"
-        return chroma_db_path.exists()
-    
+        return (Path(self.persist_directory) / "chroma.sqlite3").exists()
+
+    # ───────────────────────────────────────────────
+    # Add Documents
+    # ───────────────────────────────────────────────
     def add_documents(self, documents: List[Document]) -> None:
-        """Add documents to existing vector store.
-        
-        Args:
-            documents: List of documents to add
-        """
         if self.vectorstore is None:
             self.initialize_vectorstore()
-        
-        print(f"Adding {len(documents)} documents to vector store...")
+
+        print(f" Adding {len(documents)} documents...")
         self.vectorstore.add_documents(documents)
-        
-        # Invalidate BM25 cache
+
+        # Clear BM25 cache
         bm25_cache_path = Path(self.persist_directory) / "bm25_retriever.pkl"
         if bm25_cache_path.exists():
             bm25_cache_path.unlink()
+
         if hasattr(self, '_bm25_retriever'):
             self._bm25_retriever = None
-            
-        print("[OK] Documents added successfully and BM25 cache invalidated")
-    
-    def similarity_search(
-        self, 
-        query: str, 
-        k: int = 4,
-        filter: Optional[dict] = None
-    ) -> List[Document]:
-        """Perform similarity search with metadata filtering and debug logging."""
+
+    # ───────────────────────────────────────────────
+    # Search
+    # ───────────────────────────────────────────────
+    def similarity_search(self, query: str, k: int = 4, filter: Optional[dict] = None):
         if self.vectorstore is None:
             self.initialize_vectorstore()
-        
-        print(f"\n[DEBUG] Querying Vector Store: '{query}'")
-        if filter:
-            print(f"[DEBUG] Applying Metadata Filter: {filter}")
-            
-        docs = self.vectorstore.similarity_search(
-            query=query,
-            k=k,
-            filter=filter
-        )
-        
-        print(f"[DEBUG] Retrieved {len(docs)} relevant chunks.")
-        for i, doc in enumerate(docs, 1):
-            source = doc.metadata.get('source', 'Unknown')
-            topic = doc.metadata.get('topic', 'N/A')
-            print(f"   [{i}] Source: {source} | Topic: {topic} | Score: [Vector Match]")
-            
-        return docs
-    
-    def similarity_search_with_score(
-        self,
-        query: str,
-        k: int = 4,
-        filter: Optional[dict] = None
-    ) -> List[tuple]:
-        """Perform similarity search with relevance scores.
-        
-        Args:
-            query: Search query
-            k: Number of results to return
-            filter: Optional metadata filter
-            
-        Returns:
-            List of tuples (document, score)
-        """
+
+        return self.vectorstore.similarity_search(query=query, k=k, filter=filter)
+
+    def similarity_search_with_score(self, query: str, k: int = 4, filter=None):
         if self.vectorstore is None:
             self.initialize_vectorstore()
-        
-        return self.vectorstore.similarity_search_with_score(
-            query=query,
-            k=k,
-            filter=filter
-        )
-    
-    def get_retriever(self, k: int = 4, search_type: str = "mmr"):
-        """Get a retriever for the vector store.
-        
-        Args:
-            k: Number of documents to retrieve
-            search_type: Type of search ('similarity' or 'mmr')
-            
-        Returns:
-            VectorStoreRetriever instance
-        """
+
+        return self.vectorstore.similarity_search_with_score(query, k=k, filter=filter)
+
+    # ───────────────────────────────────────────────
+    # Retriever
+    # ───────────────────────────────────────────────
+    def get_retriever(self, k=4, search_type="mmr"):
         if self.vectorstore is None:
             self.initialize_vectorstore()
-        
+
         return self.vectorstore.as_retriever(
             search_type=search_type,
             search_kwargs={"k": k}
         )
-    
-    def get_hybrid_retriever(self, k: int = 4, vector_weight: float = 0.7, bm25_weight: float = 0.3):
-        """Get a hybrid retriever (Vector + BM25).
-        
-        Args:
-            k: Number of documents to retrieve
-            vector_weight: Weight for vector search results (default 0.7)
-            bm25_weight: Weight for BM25 search results (default 0.3)
-            
-        Returns:
-            EnsembleRetriever instance
-        """
+
+    # ───────────────────────────────────────────────
+    # Hybrid Retriever
+    # ───────────────────────────────────────────────
+    def get_hybrid_retriever(self, k=4, vector_weight=0.7, bm25_weight=0.3):
         if self.vectorstore is None:
             self.initialize_vectorstore()
-            
-        # BM25 Persistence Logic
-        import pickle
-        bm25_cache_path = Path(self.persist_directory) / "bm25_retriever.pkl"
-        
-        # Check if we already have a cached BM25 retriever
-        if hasattr(self, '_bm25_retriever') and self._bm25_retriever:
-            print(" Using instance-cached BM25 index...")
-            bm25_retriever = self._bm25_retriever
-        elif bm25_cache_path.exists():
-            print(" Loading BM25 index from disk...")
-            try:
-                with open(bm25_cache_path, "rb") as f:
-                    bm25_retriever = pickle.load(f)
-                self._bm25_retriever = bm25_retriever
-            except Exception as e:
-                print(f" Warning: Failed to load BM25 cache ({e}). Rebuilding...")
-                bm25_retriever = self._rebuild_bm25(k, bm25_cache_path)
-        else:
-            bm25_retriever = self._rebuild_bm25(k, bm25_cache_path)
 
-        if hasattr(bm25_retriever, 'k'):
-            bm25_retriever.k = k
-        vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
-        
-        ensemble_retriever = EnsembleRetriever(
-            retrievers=[vector_retriever, bm25_retriever],
+        import pickle
+        cache_path = Path(self.persist_directory) / "bm25_retriever.pkl"
+
+        if hasattr(self, '_bm25_retriever') and self._bm25_retriever:
+            bm25 = self._bm25_retriever
+
+        elif cache_path.exists():
+            try:
+                with open(cache_path, "rb") as f:
+                    bm25 = pickle.load(f)
+                self._bm25_retriever = bm25
+            except:
+                bm25 = self._rebuild_bm25(k, cache_path)
+
+        else:
+            bm25 = self._rebuild_bm25(k, cache_path)
+
+        if hasattr(bm25, 'k'):
+            bm25.k = k
+
+        vector = self.vectorstore.as_retriever(search_kwargs={"k": k})
+
+        return EnsembleRetriever(
+            retrievers=[vector, bm25],
             weights=[vector_weight, bm25_weight]
         )
-        
-        print(f"[OK] Hybrid retriever initialized (Vector: {vector_weight}, BM25: {bm25_weight})")
-        return ensemble_retriever
 
-    def _rebuild_bm25(self, k, cache_path):
-        """Rebuilds the BM25 index from ChromaDB and persists it."""
-        print(" Building BM25 index from scratch...")
+    def _rebuild_bm25(self, k, path):
+        print(" Rebuilding BM25 index...")
         import pickle
-        try:
-            results = self.vectorstore.get()
-            documents = []
-            for i in range(len(results['ids'])):
-                documents.append(Document(
-                    page_content=results['documents'][i],
-                    metadata=results['metadatas'][i]
-                ))
-            
-            if not documents:
-                return self.get_retriever(k=k)
-                
-            bm25_retriever = BM25Retriever.from_documents(documents)
-            
-            # Persist to disk
-            with open(cache_path, "wb") as f:
-                pickle.dump(bm25_retriever, f)
-            
-            self._bm25_retriever = bm25_retriever
-            return bm25_retriever
-        except Exception as e:
-            print(f"[X] Error building BM25: {e}")
+
+        results = self.vectorstore.get()
+        docs = []
+
+        for i in range(len(results['ids'])):
+            docs.append(Document(
+                page_content=results['documents'][i],
+                metadata=results['metadatas'][i]
+            ))
+
+        if not docs:
             return self.get_retriever(k=k)
-    
+
+        bm25 = BM25Retriever.from_documents(docs)
+
+        with open(path, "wb") as f:
+            pickle.dump(bm25, f)
+
+        self._bm25_retriever = bm25
+        return bm25
+
+    # ───────────────────────────────────────────────
+    # Stats (FIXED)
+    # ───────────────────────────────────────────────
     def get_stats(self) -> dict:
-        """Get statistics about the vector store without requiring embedding bootstrap."""
+        """Safe stats (no embedding dependency)."""
         try:
             db_path = Path(self.persist_directory)
+
             if not db_path.exists() or not (db_path / "chroma.sqlite3").exists():
                 return {
                     "total_documents": 0,
@@ -272,13 +199,13 @@ class VectorStoreManager:
 
             client = chromadb.PersistentClient(path=str(db_path))
             collection = client.get_or_create_collection(name="rag_documents")
-            count = collection.count()
 
             return {
-                "total_documents": count,
+                "total_documents": collection.count(),
                 "persist_directory": self.persist_directory,
                 "embedding_model": self.embedding_model_name,
             }
+
         except Exception as e:
             return {
                 "error": str(e),
@@ -286,27 +213,14 @@ class VectorStoreManager:
                 "persist_directory": self.persist_directory,
                 "embedding_model": self.embedding_model_name,
             }
-    
-    def reset_vectorstore(self) -> None:
-        """Delete and reset the vector store."""
+
+    # ───────────────────────────────────────────────
+    # Reset
+    # ───────────────────────────────────────────────
+    def reset_vectorstore(self):
         import shutil
-        
+
         if Path(self.persist_directory).exists():
             shutil.rmtree(self.persist_directory)
-            print(f"[OK] Vector store deleted: {self.persist_directory}")
-        
+
         self.vectorstore = None
-        print("[OK] Vector store reset complete")
-
-
-# Example usage
-if __name__ == "__main__":
-    manager = VectorStoreManager()
-    
-    # Check if vectorstore exists
-    if manager._vectorstore_exists():
-        manager.initialize_vectorstore()
-        stats = manager.get_stats()
-        print(f"\nVector Store Stats: {stats}")
-    else:
-        print("No existing vector store found. Run initialize_db.py first.")

@@ -300,6 +300,14 @@ Rules:
 
             full_answer = ""
             config = {"configurable": {"session_id": session_id}}
+
+            if settings.debug and question.strip().lower() == "__force_test_response__":
+                full_answer = "Test response working"
+                logger.info("Force-test mode hit: returning static response")
+                yield f"data: {json.dumps({'token': full_answer})}\n\n"
+                redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=300)
+                yield "data: [DONE]\n\n"
+                return
             
             # Invoke chain with pre-processed context
             async for chunk in self.chain.astream(

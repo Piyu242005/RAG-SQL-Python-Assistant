@@ -122,7 +122,8 @@ export const useChat = () => {
 
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
-        if (typeof chunk.token === 'string') {
+        //if (typeof chunk.token === 'string')
+          if (Object.prototype.hasOwnProperty.call(chunk, 'token')) {
           setMessages(prev => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;
