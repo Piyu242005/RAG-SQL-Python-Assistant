@@ -70,7 +70,7 @@ if ! command -v ollama &> /dev/null; then
     echo ""
     echo "After installing Ollama:"
     echo "  1. Run: ollama serve"
-    echo "  2. Run: ollama pull llama2"
+    echo "  2. Run: ollama pull llama3.2"
     echo "  3. Run this script again"
     exit 1
 else
@@ -84,11 +84,11 @@ else
         echo "✓ Ollama is running"
         
         echo "Checking for llama2 model..."
-        if ! ollama list | grep -q "llama2"; then
+        if ! ollama list | grep -q "llama3.2"; then
             echo "Pulling llama2 model... (This may take several minutes)"
-            ollama pull llama2
+            ollama pull llama3.2
         else
-            echo "✓ llama2 model is available"
+            echo "✓ llama3.2 model is available"
         fi
     fi
 fi
@@ -107,10 +107,9 @@ if [ $? -ne 0 ]; then
     echo "⚠️  WARNING: Database initialization may have failed"
     echo "Please check the errors above and:"
     echo "  1. Ensure Ollama is running: ollama serve"
-    echo "  2. Ensure model is pulled: ollama pull llama2"
-    echo "  3. Ensure PDF files exist in the workspace root:"
-    echo "     - MySQL Handbook.pdf"
-    echo "     - The Ultimate Python Handbook.pdf"
+    echo "  2. Ensure model is pulled: ollama pull llama3.2"
+    echo "  3. Ensure PDF files exist in the 'data/pdfs' directory."
+    echo "     (Create the folder if it doesn't exist)"
     exit 1
 fi
 
