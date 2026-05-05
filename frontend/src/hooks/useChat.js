@@ -51,6 +51,7 @@ export const useChat = () => {
   const [error, setError] = useState(null);
 
   const activeIdRef = useRef(activeConversationId);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     activeIdRef.current = activeConversationId;
@@ -120,6 +121,12 @@ export const useChat = () => {
     setIsStreaming(true);
     setError(null);
 
+    // Abort previous stream if active
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     try {
       await streamChatQuery(query, convId, docType, (chunk) => {
         // ✅ FIXED: Accept ALL tokens (including spaces/newlines)
@@ -157,7 +164,7 @@ export const useChat = () => {
             return updated;
           });
         }
-      });
+      }, abortControllerRef.current.signal);
 
       setConversations((prev) =>
         prev.map((c) => {
@@ -168,6 +175,10 @@ export const useChat = () => {
         })
       );
     } catch (err) {
+      if (err.name === 'AbortError' || err.message === 'signal is aborted without reason') {
+        console.log('Stream aborted.');
+        return;
+      }
       setError(err.message);
       toast.error(err.message || 'Streaming failed');
 
@@ -188,10 +199,12 @@ export const useChat = () => {
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
+      abortControllerRef.current = null;
     }
   };
 
   const clearMessages = useCallback(() => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     const id = activeIdRef.current;
     setMessages([]);
     setError(null);
@@ -202,6 +215,7 @@ export const useChat = () => {
   }, []);
 
   const startNewChat = useCallback(() => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     setMessages([]);
     setActiveConversationId(null);
     activeIdRef.current = null;
@@ -209,6 +223,7 @@ export const useChat = () => {
   }, []);
 
   const selectConversation = useCallback((id) => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     setActiveConversationId(id);
     activeIdRef.current = id;
 
@@ -222,6 +237,7 @@ export const useChat = () => {
   }, []);
 
   const deleteConversation = useCallback((id) => {
+    if (activeIdRef.current === id && abortControllerRef.current) abortControllerRef.current.abort();
     setConversations((prev) => prev.filter((c) => c.id !== id));
     removeFromStorage(STORAGE_KEYS.MESSAGES + id);
 

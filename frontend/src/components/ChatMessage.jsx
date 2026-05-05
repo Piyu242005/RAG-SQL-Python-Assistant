@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, User, AlertCircle, FileText, ChevronDown, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import CodeBlock from './CodeBlock';
 
 const ChatMessage = ({ message }) => {
@@ -36,10 +37,7 @@ const ChatMessage = ({ message }) => {
   /* ─── AI MESSAGE ─── */
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={false}
       className="flex items-start gap-4 mb-10 w-full group"
     >
       {/* Avatar */}
@@ -79,6 +77,7 @@ const ChatMessage = ({ message }) => {
             <div className="markdown-content text-[16px] text-slate-700 dark:text-slate-200 leading-[1.8] font-normal">
               {message.content ? (
                 <ReactMarkdown
+                  rehypePlugins={[rehypeSanitize]}
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');
@@ -176,4 +175,4 @@ const ChatMessage = ({ message }) => {
   );
 };
 
-export default ChatMessage;
+export default React.memo(ChatMessage);

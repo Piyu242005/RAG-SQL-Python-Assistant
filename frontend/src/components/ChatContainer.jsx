@@ -9,12 +9,21 @@ import ChatInput from './ChatInput';
 import TypingIndicator from './TypingIndicator';
 
 const ChatContainer = ({ healthStatus, readinessStatus, docFilter, onDocFilterChange, chat }) => {
-  const { messages, isLoading, sendMessage, clearMessages } = chat;
+  const { messages, isLoading, isStreaming, sendMessage, clearMessages } = chat;
   const messagesEndRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+    if (messagesEndRef.current && containerRef.current) {
+      const container = containerRef.current;
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      // Only auto-scroll if we are already close to the bottom (e.g. within 100px)
+      // or if it's not streaming (e.g. final update or clear)
+      if (!isStreaming || distanceFromBottom < 100) {
+        messagesEndRef.current.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' });
+      }
+    }
+  }, [messages, isLoading, isStreaming]);
 
   const isSystemReady = Boolean(readinessStatus?.ready);
 
@@ -75,7 +84,7 @@ const ChatContainer = ({ healthStatus, readinessStatus, docFilter, onDocFilterCh
       </header>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide bg-transparent">
+      <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-hide bg-transparent">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center px-6">
             <div className="text-center max-w-2xl w-full py-12">

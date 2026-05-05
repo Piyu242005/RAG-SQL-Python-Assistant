@@ -35,7 +35,7 @@ export const sendChatQuery = async (query, docType = null) => {
 /**
  * Stream a chat query response from the RAG system.
  */
-export const streamChatQuery = async (query, conversationId = null, docType = null, onChunk) => {
+export const streamChatQuery = async (query, conversationId = null, docType = null, onChunk, signal = null) => {
   let response;
   try {
     response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
@@ -44,6 +44,7 @@ export const streamChatQuery = async (query, conversationId = null, docType = nu
         'Content-Type': 'application/json',
         'x-api-key': API_KEY
       },
+      signal,
       body: JSON.stringify({
         query,
         conversation_id: conversationId,
@@ -74,7 +75,7 @@ export const streamChatQuery = async (query, conversationId = null, docType = nu
       partialChunk = lines.pop(); // keep last incomplete line
 
       for (const line of lines) {
-        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
+        if (!line.startsWith('data: ') || line.trim() === 'data: [DONE]') continue;
         try {
           const data = JSON.parse(line.slice(6)); // remove 'data: ' prefix
           if (data.error) throw new Error(data.error);
