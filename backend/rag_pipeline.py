@@ -75,15 +75,20 @@ class RAGPipeline:
         self.retriever = self.base_retriever
     
     def _initialize_reranker(self):
-        """Initialize FlashRank reranker (Select top 5)."""
+        """Initialize FlashRank reranker.
+
+        top_n=10 gives the deduplication step enough candidates to work with;
+        the final [:5] slice in stream_query / query() enforces the hard cap
+        after duplicates have been removed.
+        """
         logger.info("Initializing FlashRank reranker...")
         try:
-            compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=5)
+            compressor = FlashrankRerank(model="ms-marco-MiniLM-L-12-v2", top_n=10)
             self.retriever = ContextualCompressionRetriever(
                 base_compressor=compressor, 
                 base_retriever=self.base_retriever
             )
-            logger.info("[OK] Reranker initialized (Top 5)")
+            logger.info("[OK] Reranker initialized (top_n=10, final slice=5 after dedup)")
         except Exception as e:
             logger.error(f"[X] Failed to initialize reranker: {str(e)}")
             self.retriever = self.base_retriever
@@ -166,15 +171,6 @@ Rules:
             return str(content)
         return str(content) if content is not None else ""
 
-    async def _rewrite_query(self, query: str) -> str:
-        """Improve query for search accuracy."""
-        try:
-            prompt = f"Improve this query for a semantic search engine. Make it concise and focused on keywords. Return ONLY the improved query: {query}"
-            rewritten = await self.llm.ainvoke(prompt)
-            return rewritten.content if hasattr(rewritten, 'content') else str(rewritten)
-        except Exception:
-            return query
-
     async def _expand_query(self, query: str) -> str:
         """Expands the user query using a HyDE-inspired approach for better retrieval."""
         try:
@@ -237,8 +233,9 @@ Rules:
         # Manage history before streaming to prevent concurrency issues
         await self._manage_history_size(session_id)
         
-        # FIX: Remove session_id from cache key — answers are doc-grounded, same across sessions
-        cache_key = f"rag_cache:{question}:{doc_type or 'all'}"
+        # doc_type is NOT passed as a retriever filter, so including it in the cache key
+        # would fragment hits for identical questions. Use question-only key for max hit rate.
+        cache_key = f"rag_cache:{question}"
         cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:
@@ -256,15 +253,12 @@ Rules:
             return
 
         try:
-            # 1. QUERY OPTIMIZATION (always) + EXPANSION (gated behind feature flag)
+            # 1. QUERY EXPANSION (gated behind feature flag)
+            # Single LLM call — _rewrite_query was redundant (its output was never used by the retriever).
             if settings.enable_query_expansion:
-                optimized_query, expanded_query = await asyncio.gather(
-                    self._rewrite_query(question),
-                    self._expand_query(question)
-                )
+                expanded_query = await self._expand_query(question)
                 logger.info(json.dumps({"action": "query_expansion", "original": question, "expanded": expanded_query}))
             else:
-                optimized_query = question
                 expanded_query = question
 
             # 2. RETRIEVAL — run sync retriever in thread to stay non-blocking
@@ -272,9 +266,10 @@ Rules:
             docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(expanded_query))
             
             # 3. CONTEXT COMPRESSION & TRIMMING
-            # FIX: Deduplication moved here (pre-trim), before top-N slice — more impactful location
-            filtered_docs = self._deduplicate_docs(docs)
-            filtered_docs = filtered_docs[:5]  # Top N Compression
+            # Order: dedup first (removes hash-identical chunks from the reranker's top-10)
+            # then enforce hard cap of 5, then token-trim to stay inside num_ctx.
+            filtered_docs = self._deduplicate_docs(docs)  # operate on all reranker candidates
+            filtered_docs = filtered_docs[:5]             # hard cap after dedup guarantees 5 unique chunks
             filtered_docs = self._trim_docs(filtered_docs, max_tokens=settings.max_context_tokens)
             context_text = self._format_docs(filtered_docs)
 
@@ -292,7 +287,6 @@ Rules:
             logger.info(json.dumps({
                 "action": "stream_query",
                 "query": question,
-                "optimized_query": optimized_query,
                 "expanded_query": expanded_query,
                 "docs_retrieved": len(filtered_docs),
                 "session_id": session_id,
