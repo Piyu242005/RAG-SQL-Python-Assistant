@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     use_onnx_reranker: bool = os.getenv("USE_ONNX_RERANKER", "false").lower() == "true"
     # Tracing backend selection (otlp_console, langsmith, langfuse)
     tracing_backend: str = os.getenv("TRACING_BACKEND", "otlp_console")
+    # Redis TTL for semantic cache (default 24h)
+    redis_cache_ttl_sec: int = int(os.getenv("REDIS_CACHE_TTL_SEC", "86400"))
     
     # RAG Context limits
     max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "3000"))

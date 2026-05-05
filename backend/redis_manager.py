@@ -31,13 +31,16 @@ class RedisManager:
         """Get the Redis client."""
         return self.client
 
-    def set_cache(self, key: str, value: Any, expire_seconds: int = 3600):
+    def set_cache(self, key: str, value: Any, expire_seconds: Optional[int] = None):
         """Set a value in cache with expiration."""
         if not self.client:
             return
+            
+        ttl = expire_seconds if expire_seconds is not None else settings.redis_cache_ttl_sec
+            
         try:
             serialized = json.dumps(value)
-            self.client.set(key, serialized, ex=expire_seconds)
+            self.client.set(key, serialized, ex=ttl)
         except Exception as e:
             logger.error(f"Redis set_cache error: {e}")
 

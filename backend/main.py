@@ -20,6 +20,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
 from fastapi.responses import JSONResponse
+import fitz  # PyMuPDF
 
 # Setup Logging
 log_handler = logging.StreamHandler()
@@ -331,7 +332,26 @@ async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> 
                 detail="Malformed file. The uploaded file is not a valid PDF."
             )
 
-        # 4. Save file safely
+        # 4. Deep Inspection (Encrypted / Page Count)
+        try:
+            with fitz.open(stream=contents, filetype="pdf") as doc:
+                if doc.is_encrypted:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Encrypted PDFs are not supported for indexing."
+                    )
+                if doc.page_count > 500:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"File too large. Maximum allowed is 500 pages (found {doc.page_count})."
+                    )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"PDF inspection failed: {e}")
+            raise HTTPException(status_code=400, detail="Invalid or corrupt PDF document.")
+
+        # 5. Save file safely
         safe_filename = os.path.basename(file.filename)
         file_path = settings.pdf_directory / safe_filename
         with open(file_path, "wb") as buffer:

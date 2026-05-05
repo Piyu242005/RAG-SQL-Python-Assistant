@@ -274,8 +274,14 @@ Rules:
             # This ensures that "Explain more" for different previous queries get different cache entries.
             history_context = ""
             if history and hasattr(history, "messages") and len(history.messages) >= 2:
-                recent_msgs = [m.content for m in history.messages[-2:]]
-                history_context = hashlib.md5(" ".join(recent_msgs).encode()).hexdigest()[:8]
+                # Normalize text to increase cache stability: lowercase, strip, collapse whitespace
+                normalized_msgs = []
+                for m in history.messages[-2:]:
+                    text = m.content.lower().strip()
+                    text = " ".join(text.split()) # collapse extra spaces
+                    normalized_msgs.append(text)
+                
+                history_context = hashlib.md5(" ".join(normalized_msgs).encode()).hexdigest()[:8]
                 
         except Exception as e:
             logger.warning(f"Failed to get cache/history context: {e}")
