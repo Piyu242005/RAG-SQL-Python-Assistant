@@ -13,8 +13,11 @@
 
 ## 🎥 Demo / Preview
 
-![Chat Demo](exports/chat_response.png)
-> *[Placeholder for GIF: High-speed streaming response with page-level citations]*
+| Welcome Screen | AI Response |
+| :---: | :---: |
+| ![Welcome Screen](exports/welcome_screen.png) | ![Chat Response](exports/chat_response.png) |
+
+> *Fast, locally-hosted RAG with streaming responses and page-level citations.*
 
 ---
 
