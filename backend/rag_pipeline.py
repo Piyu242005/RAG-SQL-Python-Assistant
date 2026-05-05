@@ -144,12 +144,9 @@ Rules:
         # Store for reuse in _manage_history_size and query()
         self._get_session_history = get_session_history
 
-        self.chain = RunnableWithMessageHistory(
-            self.base_chain,
-            get_session_history,
-            input_messages_key="question",
-            history_messages_key="history",
-        )
+        # Provide a dummy get_session_history if needed, or remove RunnableWithMessageHistory and use base_chain directly.
+        # We will use base_chain directly to control history manually.
+        self.chain = self.base_chain
         logger.info("[OK] RAG chain initialized")
     
     def _format_docs(self, docs: List[Document]) -> str:
@@ -216,7 +213,7 @@ Rules:
         Applies an 85% safety margin to stay well inside the LLM context window.
         """
         try:
-            from .tokenizer import count_tokens
+            from tokenizer import count_tokens
         except Exception as e:
             logger.warning(f"Tokenizer import failed ({e}); falling back to char heuristic")
             # fallback to previous character based estimate
@@ -289,27 +286,31 @@ Rules:
             history_context = "no_context"
             
         # Namespace cache by session_id and history_context to prevent cross-contamination
-        cache_key = f"rag_cache:{session_id}:{cache_version}:{history_context}:{question}"
+        # Hash the question to prevent cache pollution and cap key length
+        question_hash = hashlib.sha256(question.encode('utf-8')).hexdigest()
+        cache_key = f"rag_cache:{session_id}:{cache_version}:{history_context}:{question_hash}"
         
         with TraceSpan("cache_lookup", {"query": question, "version": cache_version, "session": session_id}):
             cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:
             logger.info(json.dumps({"action": "cache_hit", "query": question}))
-            # Fix C — guard history writes so a transient Redis error doesn't
-            # crash the generator before the first SSE byte is sent.
-            try:
-                history = self._get_session_history(session_id)
-                history.add_user_message(question)
-                history.add_ai_message(cached_response["answer"])
-            except Exception as hist_err:
-                logger.warning(f"History write skipped (cache hit): {hist_err}")
             # Send sources ONCE, then stream tokens
             yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
             for char in cached_response["answer"]:
                 yield f"data: {json.dumps({'token': char})}\n\n"
                 await asyncio.sleep(0.003)
             yield "data: [DONE]\n\n"
+            
+            # Fix C — guard history writes so a transient Redis error doesn't
+            # crash the generator and orphaned writes are avoiding by writing AFTER stream is done.
+            try:
+                history = self._get_session_history(session_id)
+                history.add_user_message(question)
+                history.add_ai_message(cached_response["answer"])
+            except Exception as hist_err:
+                logger.warning(f"History write skipped (cache hit): {hist_err}")
+                
             return
 
         try:
@@ -414,10 +415,14 @@ Rules:
                 yield "data: [DONE]\n\n"
                 return
             
-            # Invoke chain with pre-processed context
+            # Invoke chain with pre-processed context and manual history
+            config = {"configurable": {"session_id": session_id}}
+            session_history = self._get_session_history(session_id)
+            history_messages = session_history.messages if session_history else []
+            
             with TraceSpan("llm_generation", {"session_id": session_id}):
                 async for chunk in self.chain.astream(
-                    {"question": question, "context": context_text}, 
+                    {"question": question, "context": context_text, "history": history_messages}, 
                     config=config
                 ):
                     if chunk is not None:
@@ -426,6 +431,13 @@ Rules:
                         yield f"data: {json.dumps({'token': text_token})}\n\n"
 
             logger.info(json.dumps({"action": "llm_output_summary", "output_length_chars": len(full_answer), "session_id": session_id}))
+
+            # Manually update history ONLY on success (prevents orphaned user messages if aborted mid-stream)
+            try:
+                session_history.add_user_message(question)
+                session_history.add_ai_message(full_answer)
+            except Exception as hist_err:
+                logger.warning(f"History write skipped (cache miss): {hist_err}")
 
             # Cache the clean string
             redis_manager.set_cache(cache_key, {"answer": full_answer, "sources": sources}, expire_seconds=3600)
@@ -468,6 +480,15 @@ Rules:
         }))
 
         config = {"configurable": {"session_id": session_id}}
-        result = self.chain.invoke({"question": question, "context": context_text}, config=config)
+        result = self.chain.invoke({"question": question, "context": context_text, "history": history.messages if history else []}, config=config)
         answer = self._extract_text(result)
+        
+        # Manually update history ONLY on success
+        if history:
+            try:
+                history.add_user_message(question)
+                history.add_ai_message(answer)
+            except Exception as hist_err:
+                logger.warning(f"History write skipped in sync query: {hist_err}")
+
         return {"answer": answer, "sources": [d.metadata for d in docs], "success": True}

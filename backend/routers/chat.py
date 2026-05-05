@@ -38,7 +38,11 @@ async def chat(chat_data: ChatRequest, request: Request) -> ChatResponse:
     """
     try:
         pipeline = get_rag_pipeline()
-        session_id = chat_data.conversation_id or "default"
+        raw_session = chat_data.conversation_id or "default"
+        api_key = request.headers.get("x-api-key", "")
+        import hashlib
+        key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8] if api_key else "nokey"
+        session_id = f"{key_hash}_{raw_session}"
         
         # Query with optional filter
         if chat_data.doc_type:
@@ -81,7 +85,11 @@ async def chat_stream(chat_data: ChatRequest, request: Request):
         
         async def event_generator():
             # Use conversation_id as session_id for in-memory history
-            session_id = chat_data.conversation_id or "default"
+            raw_session = chat_data.conversation_id or "default"
+            api_key = request.headers.get("x-api-key", "")
+            import hashlib
+            key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8] if api_key else "nokey"
+            session_id = f"{key_hash}_{raw_session}"
             async for chunk in pipeline.stream_query(
                 chat_data.query, chat_data.doc_type, session_id=session_id
             ):

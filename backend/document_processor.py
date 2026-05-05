@@ -29,12 +29,16 @@ class DocumentProcessor:
                 breakpoint_threshold_type="percentile"
             )
         else:
-            # Fast and reliable (Optimized Recursive Splitter)
+            # Fast and code-aware (Optimized Recursive Splitter)
             self.text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=settings.chunk_size,
                 chunk_overlap=settings.chunk_overlap,
                 length_function=len,
-                separators=["\n\n", "\n", ". ", " ", ""],
+                separators=[
+                    "\nclass ", "\ndef ", "\nfunction ",  # Python classes and functions
+                    "\nSELECT ", "\nINSERT ", "\nUPDATE ", "\nDELETE ", "\nCREATE ", "\nALTER ", "\nDROP ",  # SQL statements
+                    "\n\n", "\n", ". ", " ", ""  # Fallback to standard text delimiters
+                ],
                 keep_separator=True
             )
     
