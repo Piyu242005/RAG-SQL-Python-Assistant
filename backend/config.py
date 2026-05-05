@@ -32,7 +32,10 @@ class Settings(BaseSettings):
     
     # Document Processing
     chunk_size: int = int(os.getenv("CHUNK_SIZE", "600"))
-    chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "200"))
+    chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "100"))
+
+    # Feature Flags
+    enable_query_expansion: bool = os.getenv("ENABLE_QUERY_EXPANSION", "false").lower() == "true"
     
     # RAG Context limits
     max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "3000"))

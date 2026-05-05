@@ -214,23 +214,26 @@ Rules:
         return result
 
     async def _manage_history_size(self, session_id: str):
-        """Safely clean up history before invoking the chain."""
-        history = self.in_memory_history.get(session_id)
+        """Trim history to the sliding-window cap — no LLM call needed."""
         if self.redis_available:
             history = RedisChatMessageHistory(
                 session_id=f"chat_history:{session_id}",
                 url=settings.redis_url,
                 ttl=86400
             )
-            
+        else:
+            history = self.in_memory_history.get(session_id)
+
         if history and len(history.messages) > settings.max_history_messages:
-            logger.info(f"[*] Summarizing history for session {session_id}...")
-            prompt = f"Summarize the following conversation history briefly: {history.messages}"
-            summary = await self.llm.ainvoke(prompt)
+            # Simple sliding window — no LLM summarization to avoid pre-stream latency
+            keep = history.messages[-settings.max_history_messages:]
             history.clear()
-            history.add_user_message("Previous Conversation Summary:")
-            history.add_ai_message(self._extract_text(summary))
-            logger.info(f"[OK] History compressed.")
+            for msg in keep:
+                if msg.type == "human":
+                    history.add_user_message(msg.content)
+                else:
+                    history.add_ai_message(msg.content)
+            logger.info(json.dumps({"action": "history_trimmed", "session_id": session_id, "kept": settings.max_history_messages}))
 
     async def stream_query(self, question: str, doc_type: Optional[str] = None, session_id: str = "default"):
         """Stream response with Query Expansion, Deduplication, and Structured Logging."""
@@ -239,30 +242,38 @@ Rules:
         # Manage history before streaming to prevent concurrency issues
         await self._manage_history_size(session_id)
         
-        cache_key = f"rag_cache:{session_id}:{question}:{doc_type or 'all'}"
+        # FIX: Remove session_id from cache key — answers are doc-grounded, same across sessions
+        cache_key = f"rag_cache:{question}:{doc_type or 'all'}"
         cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:
-            logger.info(f"Serving from cache: {question}")
-            # STREAM CHAR-BY-CHAR (Fix #4)
+            logger.info(json.dumps({"action": "cache_hit", "query": question}))
+            # FIX: Send sources ONCE, then stream tokens — not sources on every char
+            yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
             for char in cached_response["answer"]:
-                yield f"data: {json.dumps({'token': char, 'sources': cached_response['sources']})}\n\n"
+                yield f"data: {json.dumps({'token': char})}\n\n"
                 await asyncio.sleep(0.003)
             yield "data: [DONE]\n\n"
             return
 
         try:
-            # 1. QUERY OPTIMIZATION & EXPANSION
-            optimized_query, expanded_query = await asyncio.gather(
-                self._rewrite_query(question),
-                self._expand_query(question)
-            )
-            
-            # 2. RETRIEVAL (Fix #3: Context Guard k=8 is already in retriever)
+            # 1. QUERY OPTIMIZATION (always) + EXPANSION (gated behind feature flag)
+            if settings.enable_query_expansion:
+                optimized_query, expanded_query = await asyncio.gather(
+                    self._rewrite_query(question),
+                    self._expand_query(question)
+                )
+                logger.info(json.dumps({"action": "query_expansion", "original": question, "expanded": expanded_query}))
+            else:
+                optimized_query = question
+                expanded_query = question
+
+            # 2. RETRIEVAL — run sync retriever in thread to stay non-blocking
             loop = asyncio.get_event_loop()
             docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(expanded_query))
             
             # 3. CONTEXT COMPRESSION & TRIMMING
+            # FIX: Deduplication moved here (pre-trim), before top-N slice — more impactful location
             filtered_docs = self._deduplicate_docs(docs)
             filtered_docs = filtered_docs[:5]  # Top N Compression
             filtered_docs = self._trim_docs(filtered_docs, max_tokens=settings.max_context_tokens)
@@ -273,7 +284,8 @@ Rules:
                 "original_docs_count": len(docs),
                 "docs_after_dedup_trim": len(filtered_docs),
                 "context_length_chars": len(context_text),
-                "session_id": session_id
+                "session_id": session_id,
+                "query_expansion_enabled": settings.enable_query_expansion
             }))
 
             # OBSERVABILITY
@@ -285,7 +297,7 @@ Rules:
                 "expanded_query": expanded_query,
                 "docs_retrieved": len(filtered_docs),
                 "session_id": session_id,
-                "latency_sec": f"{latency:.4f}"
+                "latency_before_stream_sec": f"{latency:.4f}"
             }))
 
             sources = []
@@ -335,25 +347,26 @@ Rules:
             yield "data: [DONE]\n\n"
 
     def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
-        """Sync query wrapper."""
-        # Keep sync path fully synchronous and cap history without async summarization
+        """Sync query wrapper — non-async path, no LLM summarization."""
+        # Sliding-window history cap — no async summarization on sync path
         history = self.in_memory_history.get(session_id)
         if history and len(history.messages) > settings.max_history_messages:
             history.messages = history.messages[-settings.max_history_messages:]
-            
+
         docs = self.retriever.invoke(question)
+        # Deduplication before trim (consistent with async path)
         filtered_docs = self._deduplicate_docs(docs)
-        filtered_docs = filtered_docs[:5]  # Compression
+        filtered_docs = filtered_docs[:5]
         filtered_docs = self._trim_docs(filtered_docs, max_tokens=settings.max_context_tokens)
         context_text = self._format_docs(filtered_docs)
-        
+
         logger.info(json.dumps({
             "action": "sync_query",
             "query": question,
             "docs_retrieved": len(filtered_docs),
             "session_id": session_id
         }))
-        
+
         config = {"configurable": {"session_id": session_id}}
         result = self.chain.invoke({"question": question, "context": context_text}, config=config)
         answer = self._extract_text(result)

@@ -1,4 +1,6 @@
 """Main FastAPI application."""
+import asyncio
+import json
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 import os
 import httpx
@@ -121,23 +123,28 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.post("/api/reindex")
 async def reindex():
+    """Trigger a full vector DB rebuild in a background thread (non-blocking)."""
     from initialize_db import main as init_db
     import sys
-    
+
     # Save original arguments
     original_argv = sys.argv.copy()
-    
+    sys.argv = ['initialize_db.py', '--rebuild']
+
+    def _run_reindex():
+        try:
+            init_db()
+        finally:
+            sys.argv[:] = original_argv
+
     try:
-        # Override sys.argv to trigger the rebuild logic when calling main()
-        sys.argv = ['initialize_db.py', '--rebuild']
-        init_db()
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _run_reindex)
+        logger.info(json.dumps({"action": "reindex_complete"}))
         return {"status": "reindexed"}
     except Exception as e:
         logger.error(f"Failed to reindex: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Restore arguments exactly as they were
-        sys.argv = original_argv
 
 # Root endpoint
 
