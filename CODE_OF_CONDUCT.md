@@ -1,364 +1,78 @@
-# 📖 Project Guide — Piyu RAG · SQL & Python AI Assistant
+# Contributor Covenant Code of Conduct
 
-> **Complete instructions for running, configuring, evaluating, and contributing to this project.**
+## Our Pledge
 
----
+We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
 
-## 🌟 What Is This Project?
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
-**Piyu RAG v2.0** is a fully local, privacy-first AI assistant that answers questions about **MySQL** and **Python** by searching through PDF handbooks. It uses a production-grade **Retrieval-Augmented Generation (RAG)** pipeline:
+## Our Standards
 
-1. You ask a question
-2. It searches PDF handbooks using hybrid retrieval (BM25 + Vector)
-3. It reranks results using FlashRank cross-encoder
-4. It generates a precise, grounded answer with **exact page citations**
-5. Everything runs **100% on your local machine** — no cloud, no API keys
+Examples of behavior that contributes to a positive environment for our community include:
 
----
+*   Demonstrating empathy and kindness toward other people
+*   Being respectful of differing opinions, viewpoints, and experiences
+*   Giving and gracefully accepting constructive feedback
+*   Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience
+*   Focusing on what is best not just for us as individuals, but for the overall community
 
-## 🧰 System Requirements
+Examples of unacceptable behavior include:
 
-Before starting, make sure you have these installed:
+*   The use of sexualized language or imagery, and unwelcome sexual attention or advances
+*   Trolling, insulting or derogatory comments, and personal or political attacks
+*   Public or private harassment
+*   Publishing others' private information, such as a physical or email address, without their explicit permission
+*   Other conduct which could reasonably be considered inappropriate in a professional setting
 
-| Tool | Minimum Version | Download |
-|:---|:---:|:---|
-| 🐍 Python | 3.10+ | [python.org](https://www.python.org/downloads/) |
-| 📦 Node.js | 18+ | [nodejs.org](https://nodejs.org/) |
-| 🦙 Ollama | Latest | [ollama.com/download](https://ollama.com/download) |
-| 🐳 Docker *(optional)* | Latest | [docker.com](https://www.docker.com/products/docker-desktop/) |
+## Enforcement Responsibilities
 
-**Hardware Recommendations:**
-- RAM: 8 GB minimum (16 GB recommended)
-- Disk: ~4 GB free (model + embeddings)
-- CPU: Any modern multi-core processor
+Community leaders are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening, offensive, or harmful.
 
----
+Community leaders have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for moderation decisions when appropriate.
 
-## 🚀 Method 1 — One-Click Launch (Windows, Recommended)
+## Scope
 
-This is the **easiest method**. Everything is handled automatically.
+This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces. Examples of representing our community include using an official e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
 
-### Step 1: Double-click `START APP.bat` in the project root folder
+## Enforcement
 
-```
-📁 RAG-SQL-Python-Assistant\
-└── 📄 START APP.bat   ← Double-click this!
-```
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at **piyushramteke24@gmail.com**. All complaints will be reviewed and investigated promptly and fairly.
 
-### What happens automatically:
+All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
-| Stage | Action |
-|:---:|:---|
-| 1️⃣ | Checks if **Ollama** is running → starts it if not |
-| 2️⃣ | Checks if **llama3.2** model exists → pulls it (first-time, ~2GB) |
-| 3️⃣ | Checks if **ChromaDB** embeddings exist → runs `initialize_db.py` (~38s, first-time only) |
-| 4️⃣ | Starts **FastAPI backend** on `http://localhost:8000` |
-| 5️⃣ | Starts **Vite frontend** on `http://localhost:5173` |
-| 6️⃣ | Opens the **app in your browser** automatically |
+## Enforcement Guidelines
 
-> ✅ **Second run onward:** All checks pass instantly. Total startup takes ~15 seconds.
+Community leaders will follow these Community Impact Guidelines in determining the consequences for any action they deem in violation of this Code of Conduct:
 
----
+### 1. Correction
 
-## 🧑‍💻 Method 2 — Manual Setup (All Platforms)
+**Community Impact**: Use of inappropriate language or other behavior deemed unprofessional or unwelcome in the community.
 
-Use this if you're on macOS/Linux, or prefer full control.
+**Consequence**: A private, written warning from community leaders, providing clarity around the nature of the violation and an explanation of why the behavior was inappropriate. A public apology may be requested.
 
-### Step 1 — Clone the Repository
+### 2. Warning
 
-```bash
-git clone https://github.com/Piyu242005/RAG-SQL-Python-Assistant.git
-cd RAG-SQL-Python-Assistant
-```
+**Community Impact**: A violation through a single incident or series of actions.
 
-### Step 2 — Start Ollama
+**Consequence**: A warning with consequences for continued behavior. No interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, for a specified period of time. This includes avoiding interactions in community spaces as well as external channels like social media. Violating these terms may lead to a temporary or permanent ban.
 
-```bash
-# Start the Ollama server (keep this terminal open)
-ollama serve
+### 3. Temporary Ban
 
-# In a new terminal, download the language model
-ollama pull llama3.2        # ~2.0 GB — first-time download only
-```
+**Community Impact**: A serious violation of community standards, including sustained inappropriate behavior.
 
-> Verify Ollama is working: `curl http://localhost:11434/api/tags`
+**Consequence**: A temporary ban from any sort of interaction or public communication with the community for a specified period of time. No public or private interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, is allowed during this period. Violating these terms may lead to a permanent ban.
 
-### Step 3 — Set Up the Python Backend
+### 4. Permanent Ban
 
-```bash
-cd backend
+**Community Impact**: Demonstrating a pattern of violation of community standards, including sustained inappropriate behavior, harassment of an individual, or aggression toward or disparagement of classes of individuals.
 
-# Create and activate a virtual environment
-python -m venv venv
+**Consequence**: A permanent ban from any sort of public interaction within the community.
 
-# Activate (choose your OS):
-venv\Scripts\activate          # Windows
-source venv/bin/activate       # macOS / Linux
+## Attribution
 
-# Install all Python dependencies
-pip install -r requirements.txt
+This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1, available at [https://www.contributor-covenant.org/version/2.1/code_of_conduct.html][v2.1].
 
-# Create your local config file
-copy .env.example .env         # Windows
-cp .env.example .env           # macOS / Linux
-```
+Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/cose).
 
-### Step 4 — Build the Vector Database *(first-time only, ~38 seconds)*
-
-```bash
-# Make sure venv is still active inside backend/
-python initialize_db.py
-
-# What this does:
-# 1. Loads MySQL Handbook.pdf (71 pages → 71 chunks)
-# 2. Loads The Ultimate Python Handbook.pdf (60 pages → 107 chunks)
-# 3. Embeds 178 chunks using sentence-transformers/all-MiniLM-L6-v2
-# 4. Saves everything to ./chroma_db (persists on disk)
-```
-
-```bash
-# If you add new PDFs or want to rebuild from scratch:
-python initialize_db.py --force
-
-# For slower but higher-quality semantic chunking:
-python initialize_db.py --semantic
-```
-
-### Step 5 — Start the Backend
-
-```bash
-# Inside backend/ with venv active:
-python main.py
-
-# You should see:
-# ============================================================
-# [*] Starting RAG System API
-# [OK] Ollama setup validated
-# [OK] Vector store found
-# [*] API running on http://0.0.0.0:8000
-# ============================================================
-```
-
-> API Docs (Swagger UI): `http://localhost:8000/docs`
-
-### Step 6 — Set Up & Start the Frontend
-
-```bash
-# Open a new terminal:
-cd frontend
-npm install      # First-time only — installs React, Vite, Tailwind, etc.
-npm run dev
-
-# You should see:
-# VITE v5.x ready
-# ➜ Local:   http://localhost:5173/
-```
-
-> Open `http://localhost:5173` in your browser.
-
----
-
-## 🐳 Method 3 — Docker (One Command)
-
-```bash
-# From the project root directory:
-docker-compose up --build
-
-# App → http://localhost
-# API → http://localhost:8000
-# Docs → http://localhost:8000/docs
-```
-
-> ⚠️ **Note:** Docker build pulls the llama3.2 model and builds embeddings automatically. First build takes ~10–15 minutes.
-
----
-
-## ▶️ Running the App (Quick Reference)
-
-If you've already done setup, here are the minimal commands each session:
-
-```bash
-# Terminal 1 — Ollama (skip if already running)
-ollama serve
-
-# Terminal 2 — Backend
-cd backend && venv\Scripts\activate && python main.py
-
-# Terminal 3 — Frontend
-cd frontend && npm run dev
-```
-
-Then open: **http://localhost:5173**
-
----
-
-## 📊 Running Evaluations
-
-Measure retrieval accuracy and latency against a curated Q&A dataset:
-
-```bash
-cd backend
-python evals/runner.py
-```
-
-**Expected output:**
-```
-Recall@3:        100.0%
-Citation Acc:    100.0%
-Avg Latency:     1.24s
-```
-
----
-
-## ⚙️ Configuration Reference
-
-Edit `backend/.env` to customize behavior:
-
-```env
-# Language Model
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.2             # or: mistral, llama3.1, phi3
-
-# Embeddings (auto-downloaded from HuggingFace on first run)
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-
-# Vector Store
-CHROMA_PERSIST_DIRECTORY=./chroma_db
-
-# Chunking Strategy
-CHUNK_SIZE=800                     # Characters per chunk
-CHUNK_OVERLAP=150                  # Overlap between chunks
-
-# API
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# CORS (add any origin that needs to access the API)
-CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
-```
-
-**Frontend env** (optional, `frontend/.env.local`):
-```env
-VITE_API_URL=http://localhost:8000    # Change if backend is on another host
-```
-
----
-
-## 🐛 Troubleshooting
-
-### ❌ System Status shows "Not Running"
-
-The frontend checks `/api/health` on load and auto-retries 5× every 3 seconds.  
-Just wait — if you used `START APP.bat`, everything will come up automatically.
-
-If it stays red after 30 seconds:
-1. Check that `python main.py` is running in the backend terminal
-2. Check that `ollama serve` is running
-3. Visit `http://localhost:8000/api/health` in your browser to see the raw status
-
-### ❌ "Failed to fetch" error in chat
-
-- Backend is not running → start with `python main.py`
-- Ollama is not running → run `ollama serve`
-- ChromaDB not built → run `python initialize_db.py`
-
-### ❌ Model not found
-
-```bash
-ollama pull llama3.2
-# Alternative faster models:
-ollama pull mistral      # Faster, slightly lower quality
-ollama pull llama3.1     # More capable, slower
-```
-Update `OLLAMA_MODEL=mistral` in `backend/.env` if you switch.
-
-### ❌ pip install fails
-
-```bash
-# Ensure Python 3.10+ and pip are up to date:
-python --version          # Should be 3.10+
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### ⏳ Very slow responses
-
-- Reduce `top_n` in `rag_pipeline.py` (reranker): `top_n=5` → `top_n=3`
-- Use a smaller model: `mistral` is 2× faster than `llama3.2`
-- Reduce `k` from 20 to 10 in `_initialize_retriever()`
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-### Code Standards
-
-| Language | Standard |
-|:---|:---|
-| Python | PEP 8 + type hints + docstrings |
-| JavaScript/React | Functional components + React hooks |
-| Git commits | [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`) |
-
-### Contribution Workflow
-
-```bash
-# 1. Fork the repository on GitHub
-
-# 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/RAG-SQL-Python-Assistant.git
-
-# 3. Create a feature branch
-git checkout -b feat/my-feature
-
-# 4. Make your changes and test them
-#    - Test backend: python -m pytest (if tests exist)
-#    - Test embedding: python initialize_db.py --force
-#    - Test frontend: npm run dev
-
-# 5. Commit your changes
-git add .
-git commit -m "feat: add multi-document reasoning support"
-
-# 6. Push and open a Pull Request
-git push origin feat/my-feature
-# Then go to GitHub and click "Compare & Pull Request"
-```
-
-### Pull Request Checklist
-
-- [ ] Code follows the style guidelines above
-- [ ] Backend changes tested with `python main.py`
-- [ ] No hardcoded API keys or secrets
-- [ ] Docstrings added to new functions
-- [ ] README updated if adding new features
-
----
-
-## 🌐 Community Standards
-
-This project follows the standard open-source code of conduct:
-
-- **Be respectful** — Treat everyone with kindness and professionalism
-- **Be constructive** — Focus on improvement, not criticism
-- **Be inclusive** — Welcome contributors of all experience levels
-- **Be patient** — This is a side project; responses may not be instant
-
-Report issues or suggestions via [GitHub Issues](https://github.com/Piyu242005/RAG-SQL-Python-Assistant/issues).
-
----
-
-## 📄 License
-
-MIT License — free to use, modify, and distribute. See [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-
-**Built with 💜 by [Piyu](https://github.com/Piyu242005)**
-
-[⭐ Star on GitHub](https://github.com/Piyu242005/RAG-SQL-Python-Assistant) · [🐛 Report a Bug](https://github.com/Piyu242005/RAG-SQL-Python-Assistant/issues) · [💡 Request a Feature](https://github.com/Piyu242005/RAG-SQL-Python-Assistant/issues)
-
-</div>
+[homepage]: https://www.contributor-covenant.org
+[v2.1]: https://www.contributor-covenant.org/version/2.1/code_of_conduct.html
