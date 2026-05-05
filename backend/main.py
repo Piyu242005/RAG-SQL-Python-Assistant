@@ -122,24 +122,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 @app.post("/api/reindex")
-async def reindex():
+@limiter.limit("2/hour")
+async def reindex(request: Request):
     """Trigger a full vector DB rebuild in a background thread (non-blocking)."""
-    from initialize_db import main as init_db
-    import sys
-
-    # Save original arguments
-    original_argv = sys.argv.copy()
-    sys.argv = ['initialize_db.py', '--rebuild']
-
-    def _run_reindex():
-        try:
-            init_db()
-        finally:
-            sys.argv[:] = original_argv
+    from initialize_db import run_pipeline
 
     try:
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, _run_reindex)
+        await loop.run_in_executor(None, lambda: run_pipeline(force=True, use_semantic=False))
         logger.info(json.dumps({"action": "reindex_complete"}))
         return {"status": "reindexed"}
     except Exception as e:
@@ -298,26 +288,38 @@ async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> 
     """
     Upload a new PDF and index it into the vector store.
     """
+    MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB hard limit
+
     try:
-        # 1. Save file Safely
+        # 1. Read with size guard — reject before touching disk
+        contents = await file.read(MAX_UPLOAD_BYTES + 1)
+        if len(contents) > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum allowed size is 50 MB."
+            )
+
+        # 2. Save file safely
         safe_filename = os.path.basename(file.filename)
         file_path = settings.pdf_directory / safe_filename
         with open(file_path, "wb") as buffer:
-            buffer.write(await file.read())
-        
-        # 2. Process document
+            buffer.write(contents)
+
+        # 3. Process document
         processor = DocumentProcessor()
         documents = processor.process_pdf(file_path, doc_type)
-        
-        # 3. Add to vector store
+
+        # 4. Add to vector store
         vector_manager = VectorStoreManager()
         vector_manager.add_documents(documents)
-        
+
         return InitializeResponse(
             success=True,
             message=f"File '{file.filename}' uploaded and indexed successfully",
             documents_processed=len(documents)
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

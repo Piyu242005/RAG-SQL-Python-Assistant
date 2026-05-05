@@ -218,12 +218,67 @@ def _build_vector_store(
 
 
 # ──────────────────────────────────────────────────────────────
-#  MAIN ORCHESTRATOR
+#  PROGRAMMATIC ENTRY-POINT  (called by /api/reindex in main.py)
+# ──────────────────────────────────────────────────────────────
+
+def run_pipeline(force: bool = False, use_semantic: bool = False) -> None:
+    """Run the full initialization pipeline without touching sys.argv.
+
+    Args:
+        force:        Wipe the existing vector store before rebuilding.
+        use_semantic: Use SemanticChunker (slow, high quality).
+
+    Raises:
+        RuntimeError: Propagates any failure so callers can handle it.
+    """
+    total_start = time.time()
+
+    _banner("RAG System -- Database Initialization")
+    logger.info(
+        f"Config  ->  CHUNK_SIZE={settings.chunk_size}  "
+        f"CHUNK_OVERLAP={settings.chunk_overlap}"
+    )
+
+    _validate_ollama()
+
+    manager = VectorStoreManager()
+    db_sqlite = Path(manager.persist_directory) / "chroma.sqlite3"
+
+    if db_sqlite.exists() and not force:
+        stats = manager.get_stats()
+        existing_count = stats.get("total_documents", 0)
+        logger.info(f"[2/5] Existing database found with {existing_count} vector(s).")
+        logger.info("      Use force=True to wipe and rebuild from scratch.")
+        _banner("[OK] Database is already populated -- no action needed")
+        return
+
+    if force and db_sqlite.exists():
+        _reset_vector_store(manager)
+    else:
+        logger.info("[2/5] No existing database -- fresh build.")
+
+    documents = _process_pdfs(use_semantic=use_semantic)
+    total_vectors = _build_vector_store(manager, documents)
+
+    total_elapsed = time.time() - total_start
+    _banner(f"[OK] INITIALIZATION COMPLETE  ({total_elapsed:.1f}s)")
+    logger.info(f"  Documents processed : {len(set(d.metadata['source'] for d in documents))}")
+    logger.info(f"  Chunks created      : {len(documents)}")
+    logger.info(f"  Vectors stored      : {total_vectors}")
+    logger.info("")
+    logger.info("  Next steps:")
+    logger.info("    1. Start backend :  python main.py")
+    logger.info("    2. API docs      :  http://localhost:8000/docs")
+    logger.info("    3. Start frontend:  cd ../frontend && npm run dev")
+    _banner("=" * 56)
+
+
+# ──────────────────────────────────────────────────────────────
+#  CLI ENTRY-POINT  (delegates to run_pipeline)
 # ──────────────────────────────────────────────────────────────
 
 def main() -> None:
-    """Run the full PDF -> ChromaDB initialization pipeline."""
-
+    """CLI wrapper: parse arguments and delegate to run_pipeline()."""
     parser = argparse.ArgumentParser(
         description="Initialize the RAG vector database from PDF files.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -244,58 +299,7 @@ def main() -> None:
         help="Use SemanticChunker instead of RecursiveCharacterTextSplitter (slow).",
     )
     args = parser.parse_args()
-
-    force_rebuild = args.force or args.rebuild
-    total_start = time.time()
-
-    _banner("RAG System -- Database Initialization")
-    logger.info(
-        f"Config  ->  CHUNK_SIZE={settings.chunk_size}  "
-        f"CHUNK_OVERLAP={settings.chunk_overlap}"
-    )
-
-    # ── Step 1: Validate Ollama ──────────────────────────────
-    _validate_ollama()
-
-    # ── Step 2: Handle existing DB ───────────────────────────
-    manager = VectorStoreManager()
-    db_sqlite = Path(manager.persist_directory) / "chroma.sqlite3"
-
-    if db_sqlite.exists() and not force_rebuild:
-        # Peek at current count without re-embedding anything
-        stats = manager.get_stats()
-        existing_count = stats.get("total_documents", 0)
-        logger.info(
-            f"[2/5] Existing database found with {existing_count} vector(s)."
-        )
-        logger.info("      Use --force to wipe and rebuild from scratch.")
-        _banner("[OK] Database is already populated -- no action needed")
-        return
-
-    if force_rebuild and db_sqlite.exists():
-        _reset_vector_store(manager)
-    else:
-        logger.info("[2/5] No existing database -- fresh build.")
-
-    # ── Step 3: Process PDFs ─────────────────────────────────
-    documents = _process_pdfs(use_semantic=args.semantic)
-
-    # ── Steps 4 + 5: Embed & store ───────────────────────────
-    total_vectors = _build_vector_store(manager, documents)
-
-    # ── Done ─────────────────────────────────────────────────
-    total_elapsed = time.time() - total_start
-
-    _banner(f"[OK] INITIALIZATION COMPLETE  ({total_elapsed:.1f}s)")
-    logger.info(f"  Documents processed : {len(set(d.metadata['source'] for d in documents))}")
-    logger.info(f"  Chunks created      : {len(documents)}")
-    logger.info(f"  Vectors stored      : {total_vectors}")
-    logger.info("")
-    logger.info("  Next steps:")
-    logger.info("    1. Start backend :  python main.py")
-    logger.info("    2. API docs      :  http://localhost:8000/docs")
-    logger.info("    3. Start frontend:  cd ../frontend && npm run dev")
-    _banner("=" * 56)
+    run_pipeline(force=args.force or args.rebuild, use_semantic=args.semantic)
 
 
 if __name__ == "__main__":

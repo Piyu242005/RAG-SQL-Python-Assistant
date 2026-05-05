@@ -115,19 +115,12 @@ Rules:
             | StrOutputParser()
         )
         
-        # Redis Caching setup with graceful degradation
-        self.redis_client = None
-        self.redis_available = False
-        try:
-            import redis
-            self.redis_client = redis.from_url(settings.redis_url)
-            if self.redis_client.ping():
-                self.redis_available = True
-                print("[OK] Redis Cache: Active")
-            else:
-                print("[!] Redis Cache: Refused connection. Falling back to memory-only.")
-        except Exception as e:
-            print(f"[!] Redis Cache: Not available ({e}). Falling back to memory-only.")
+        # Redis availability: delegate entirely to shared redis_manager (no duplicate client)
+        self.redis_available = redis_manager.client is not None
+        if self.redis_available:
+            logger.info("[OK] Redis Cache: Active (shared redis_manager)")
+        else:
+            logger.warning("[!] Redis Cache: Not available. Falling back to memory-only.")
 
         def get_session_history(session_id: str):
             if self.redis_available:
@@ -140,6 +133,9 @@ Rules:
                 if session_id not in self.in_memory_history:
                     self.in_memory_history[session_id] = ChatMessageHistory()
                 return self.in_memory_history[session_id]
+
+        # Store for reuse in _manage_history_size and query()
+        self._get_session_history = get_session_history
 
         self.chain = RunnableWithMessageHistory(
             self.base_chain,
@@ -201,28 +197,27 @@ Rules:
         return unique_docs
 
     def _trim_docs(self, docs: List[Document], max_tokens: int = 3000) -> List[Document]:
-        """Trim docs at the document level to prevent semantic truncation."""
+        """Trim docs at the document level to prevent LLM context overflow.
+
+        Uses 3 chars/token (conservative for code-heavy SQL/Python content) and
+        an 0.85 safety margin to stay well inside num_ctx=4096.
+        """
+        max_safe = int(max_tokens * 0.85)
         total = 0
         result = []
         for d in docs:
-            # Assuming ~4 chars per token
-            tokens = len(d.page_content) // 4
-            if total + tokens > max_tokens:
+            # ~3 chars per token is more accurate for code/SQL content
+            tokens = len(d.page_content) // 3
+            if total + tokens > max_safe:
                 break
             result.append(d)
             total += tokens
         return result
 
     async def _manage_history_size(self, session_id: str):
-        """Trim history to the sliding-window cap — no LLM call needed."""
-        if self.redis_available:
-            history = RedisChatMessageHistory(
-                session_id=f"chat_history:{session_id}",
-                url=settings.redis_url,
-                ttl=86400
-            )
-        else:
-            history = self.in_memory_history.get(session_id)
+        """Trim history to the sliding-window cap via the shared get_session_history
+        factory — avoids constructing a second RedisChatMessageHistory object."""
+        history = self._get_session_history(session_id)
 
         if history and len(history.messages) > settings.max_history_messages:
             # Simple sliding window — no LLM summarization to avoid pre-stream latency
@@ -248,7 +243,11 @@ Rules:
         
         if cached_response:
             logger.info(json.dumps({"action": "cache_hit", "query": question}))
-            # FIX: Send sources ONCE, then stream tokens — not sources on every char
+            # Sync Q&A into session history so future turns retain context
+            history = self._get_session_history(session_id)
+            history.add_user_message(question)
+            history.add_ai_message(cached_response["answer"])
+            # Send sources ONCE, then stream tokens
             yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
             for char in cached_response["answer"]:
                 yield f"data: {json.dumps({'token': char})}\n\n"
@@ -347,11 +346,21 @@ Rules:
             yield "data: [DONE]\n\n"
 
     def query(self, question: str, session_id: str = "default") -> Dict[str, any]:
-        """Sync query wrapper — non-async path, no LLM summarization."""
-        # Sliding-window history cap — no async summarization on sync path
-        history = self.in_memory_history.get(session_id)
+        """Sync query wrapper — non-async path, no LLM summarization.
+
+        Applies the same sliding-window trim as the async path, respecting
+        Redis when available (via the shared _get_session_history factory).
+        """
+        # Trim history consistently for both Redis and in-memory backends
+        history = self._get_session_history(session_id)
         if history and len(history.messages) > settings.max_history_messages:
-            history.messages = history.messages[-settings.max_history_messages:]
+            keep = history.messages[-settings.max_history_messages:]
+            history.clear()
+            for msg in keep:
+                if msg.type == "human":
+                    history.add_user_message(msg.content)
+                else:
+                    history.add_ai_message(msg.content)
 
         docs = self.retriever.invoke(question)
         # Deduplication before trim (consistent with async path)
