@@ -74,7 +74,7 @@ if errorlevel 1 (
     echo.
     echo After installing Ollama:
     echo   1. Run: ollama serve
-    echo   2. Run: ollama pull llama2
+    echo   2. Run: ollama pull llama3.2
     echo   3. Run this script again
     pause
 ) else (
@@ -89,12 +89,12 @@ if errorlevel 1 (
         echo OK - Ollama is running
         
         echo Checking for llama2 model...
-        ollama list | findstr "llama2" >nul 2>&1
+        ollama list | findstr "llama3.2" >nul 2>&1
         if errorlevel 1 (
             echo Pulling llama2 model... (This may take several minutes)
-            ollama pull llama2
+            ollama pull llama3.2
         ) else (
-            echo OK - llama2 model is available
+            echo OK - llama3.2 model is available
         )
     )
 )
@@ -113,10 +113,9 @@ if errorlevel 1 (
     echo WARNING: Database initialization may have failed
     echo Please check the errors above and:
     echo   1. Ensure Ollama is running: ollama serve
-    echo   2. Ensure model is pulled: ollama pull llama2
-    echo   3. Ensure PDF files exist in the workspace root:
-    echo      - MySQL Handbook.pdf
-    echo      - The Ultimate Python Handbook.pdf
+    echo   2. Ensure model is pulled: ollama pull llama3.2
+    echo   3. Ensure PDF files exist in the 'data/pdfs' directory.
+    echo      (Create the folder if it doesn't exist)
     pause
 )
 

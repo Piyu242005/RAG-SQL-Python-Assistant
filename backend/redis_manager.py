@@ -53,6 +53,32 @@ class RedisManager:
             logger.error(f"Redis get_cache error: {e}")
         return None
 
+    def get_cache_version(self) -> int:
+        """Retrieve the current global cache version, creating it if missing."""
+        if not self.client:
+            return 0
+        try:
+            version = self.client.get("rag_cache_version")
+            if version is None:
+                self.client.set("rag_cache_version", 0)
+                return 0
+            return int(version)
+        except Exception as e:
+            logger.error(f"Redis get_cache_version error: {e}")
+            return 0
+
+    def increment_cache_version(self) -> int:
+        """Atomically increment the cache version and return the new value."""
+        if not self.client:
+            return 0
+        try:
+            new_version = self.client.incr("rag_cache_version")
+            logger.info(f"[OK] Cache version incremented to {new_version}")
+            return new_version
+        except Exception as e:
+            logger.error(f"Redis increment_cache_version error: {e}")
+            return self.get_cache_version()
+
 # Global instance
 redis_manager = RedisManager()
 

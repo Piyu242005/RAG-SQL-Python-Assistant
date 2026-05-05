@@ -37,3 +37,8 @@ langchain-experimental>=0.3.0
 pandas>=2.0.0
 matplotlib>=3.8.0
 scikit-learn>=1.3.0
+
+# Observability and Tracing
+opentelemetry-api>=1.24.0
+opentelemetry-sdk>=1.24.0
+opentelemetry-exporter-otlp-proto-http>=1.24.0

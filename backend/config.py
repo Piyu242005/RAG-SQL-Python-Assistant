@@ -40,6 +40,13 @@ class Settings(BaseSettings):
     # back to the original query.  Keep low (2-3 s) to avoid blocking TTFB.
     query_expansion_timeout_sec: float = float(os.getenv("QUERY_EXPANSION_TIMEOUT_SEC", "3.0"))
     
+    # Reranker settings
+    reranker_timeout_sec: float = float(os.getenv("RERANKER_TIMEOUT_SEC", "2.0"))
+    # Optional ONNX inference for lightweight reranker
+    use_onnx_reranker: bool = os.getenv("USE_ONNX_RERANKER", "false").lower() == "true"
+    # Tracing backend selection (otlp_console, langsmith, langfuse)
+    tracing_backend: str = os.getenv("TRACING_BACKEND", "otlp_console")
+    
     # RAG Context limits
     max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "3000"))
     max_history_messages: int = int(os.getenv("MAX_HISTORY_MESSAGES", "6"))

@@ -56,8 +56,6 @@ async def lifespan(app: FastAPI):
     stats = vector_manager.get_stats()
     if "error" in stats:
         print(f"[!] WARNING: Vector store check failed: {stats['error']}")
-    elif stats.get("total_documents", 0) == 0:
-        print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
     else:
         print(f"[OK] Vector store found ({stats['total_documents']} documents)")
         # Pre-warm BM25 now so the first real request never triggers a cold rebuild
@@ -68,6 +66,11 @@ async def lifespan(app: FastAPI):
             print("[OK] BM25 cache ready")
         else:
             print("[!] WARNING: BM25 warm-up failed — first request may be slow")
+        
+        # Check cache version
+        from redis_manager import redis_manager
+        version = redis_manager.get_cache_version()
+        print(f"[OK] Redis Cache Version: {version}")
     
     print("=" * 60)
     print(f"[*] API running on http://{settings.api_host}:{settings.api_port}")
@@ -138,8 +141,13 @@ async def reindex(request: Request):
     try:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, lambda: run_pipeline(force=True, use_semantic=False))
-        logger.info(json.dumps({"action": "reindex_complete"}))
-        return {"status": "reindexed"}
+        
+        # Increment cache version to invalidate old hits
+        from redis_manager import redis_manager
+        new_version = redis_manager.increment_cache_version()
+        
+        logger.info(json.dumps({"action": "reindex_complete", "new_version": new_version}))
+        return {"status": "reindexed", "version": new_version}
     except Exception as e:
         logger.error(f"Failed to reindex: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

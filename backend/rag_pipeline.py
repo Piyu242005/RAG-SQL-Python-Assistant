@@ -25,6 +25,7 @@ from vector_store import VectorStoreManager
 from llm_config import OllamaManager
 from redis_manager import redis_manager
 from config import settings
+from tracing import TraceSpan
 
 logger = logging.getLogger("rag-pipeline")
 
@@ -208,17 +209,32 @@ Rules:
         return unique_docs
 
     def _trim_docs(self, docs: List[Document], max_tokens: int = 3000) -> List[Document]:
-        """Trim docs at the document level to prevent LLM context overflow.
+        """Trim docs at the document level using actual token counts.
 
-        Uses 3 chars/token (conservative for code-heavy SQL/Python content) and
-        an 0.85 safety margin to stay well inside num_ctx=4096.
+        Uses the tokenizer for the configured Ollama model to compute token length.
+        Applies an 85% safety margin to stay well inside the LLM context window.
         """
+        try:
+            from .tokenizer import count_tokens
+        except Exception as e:
+            logger.warning(f"Tokenizer import failed ({e}); falling back to char heuristic")
+            # fallback to previous character based estimate
+            max_safe = int(max_tokens * 0.85)
+            total = 0
+            result = []
+            for d in docs:
+                tokens = len(d.page_content) // 3
+                if total + tokens > max_safe:
+                    break
+                result.append(d)
+                total += tokens
+            return result
+
         max_safe = int(max_tokens * 0.85)
         total = 0
         result = []
         for d in docs:
-            # ~3 chars per token is more accurate for code/SQL content
-            tokens = len(d.page_content) // 3
+            tokens = count_tokens(d.page_content)
             if total + tokens > max_safe:
                 break
             result.append(d)
@@ -247,11 +263,17 @@ Rules:
         
         # Manage history before streaming to prevent concurrency issues
         await self._manage_history_size(session_id)
+
+        # Cache version handling – ensures stale entries are invalidated after reindex
+        try:
+            cache_version = redis_manager.get_cache_version()
+        except Exception as e:
+            logger.warning(f"Failed to get cache version: {e}")
+            cache_version = 0
+        cache_key = f"rag_cache:{cache_version}:{question}"
         
-        # doc_type is NOT passed as a retriever filter, so including it in the cache key
-        # would fragment hits for identical questions. Use question-only key for max hit rate.
-        cache_key = f"rag_cache:{question}"
-        cached_response = redis_manager.get_cache(cache_key)
+        with TraceSpan("cache_lookup", {"query": question, "version": cache_version}):
+            cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:
             logger.info(json.dumps({"action": "cache_hit", "query": question}))
@@ -272,11 +294,6 @@ Rules:
             return
 
         try:
-            # 1. QUERY EXPANSION (gated behind feature flag)
-            # Fix B — fire expansion as a background Task so TTFB is never
-            # gated on the Ollama round-trip.  Retrieval starts immediately
-            # with the original query; we await the task with a short timeout
-            # and swap in the expanded text only if it arrives in time.
             expansion_task: Optional[asyncio.Task] = None
             if settings.enable_query_expansion:
                 expansion_task = asyncio.create_task(self._expand_query(question))
@@ -287,10 +304,11 @@ Rules:
             #    timeout for the background task before kicking off retrieval.
             if expansion_task is not None:
                 try:
-                    expanded_query = await asyncio.wait_for(
-                        asyncio.shield(expansion_task),
-                        timeout=settings.query_expansion_timeout_sec
-                    )
+                    with TraceSpan("query_expansion", {"query": question}):
+                        expanded_query = await asyncio.wait_for(
+                            asyncio.shield(expansion_task),
+                            timeout=settings.query_expansion_timeout_sec
+                        )
                     logger.info(json.dumps({
                         "action": "query_expansion",
                         "original": question,
@@ -309,7 +327,20 @@ Rules:
 
             # 3. RETRIEVAL — run sync retriever in thread to stay non-blocking
             loop = asyncio.get_event_loop()
-            docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(expanded_query))
+            try:
+                with TraceSpan("retrieval", {"query": expanded_query}):
+                    docs = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: self.retriever.invoke(expanded_query)),
+                        timeout=settings.reranker_timeout_sec
+                    )
+            except asyncio.TimeoutError:
+                # Reranker (compression) timed out – fallback to raw hybrid retriever
+                logger.warning(json.dumps({"action": "reranker_timeout", "query": question, "timeout_sec": settings.reranker_timeout_sec}))
+                with TraceSpan("retrieval_fallback", {"query": expanded_query}):
+                    docs = await loop.run_in_executor(None, lambda: self.base_retriever.invoke(expanded_query))
+            except Exception as e:
+                logger.error(f"Retrieval error: {e}")
+                raise
             
             # 4. CONTEXT COMPRESSION & TRIMMING
             # Order: dedup first (removes hash-identical chunks from the reranker's top-10)
@@ -365,14 +396,15 @@ Rules:
                 return
             
             # Invoke chain with pre-processed context
-            async for chunk in self.chain.astream(
-                {"question": question, "context": context_text}, 
-                config=config
-            ):
-                if chunk is not None:
-                    text_token = self._extract_text(chunk)
-                    full_answer += text_token
-                    yield f"data: {json.dumps({'token': text_token})}\n\n"
+            with TraceSpan("llm_generation", {"session_id": session_id}):
+                async for chunk in self.chain.astream(
+                    {"question": question, "context": context_text}, 
+                    config=config
+                ):
+                    if chunk is not None:
+                        text_token = self._extract_text(chunk)
+                        full_answer += text_token
+                        yield f"data: {json.dumps({'token': text_token})}\n\n"
 
             logger.info(json.dumps({"action": "llm_output_summary", "output_length_chars": len(full_answer), "session_id": session_id}))
 
