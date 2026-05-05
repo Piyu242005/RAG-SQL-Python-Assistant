@@ -171,13 +171,28 @@ Rules:
             return str(content)
         return str(content) if content is not None else ""
 
+    # Max combined chars for the expanded query fed to the retriever.
+    # Keeping this tight ensures the embedding stays focused; HyDE noise
+    # beyond this point typically hurts recall rather than helping it.
+    _MAX_EXPANSION_CHARS: int = 200
+
     async def _expand_query(self, query: str) -> str:
-        """Expands the user query using a HyDE-inspired approach for better retrieval."""
+        """Expands the user query using a HyDE-inspired approach for better retrieval.
+
+        The combined (original + synthesised) text is clamped to
+        _MAX_EXPANSION_CHARS so the retriever embedding stays focused.
+        """
         try:
-            expansion_prompt = f"Given the user query: '{query}', generate a short technical description of what the answer might look like to help with vector search. Keep it under 50 words."
+            expansion_prompt = (
+                f"Given the user query: '{query}', generate a short technical "
+                "description of what the answer might look like to help with "
+                "vector search. Keep it under 50 words."
+            )
             expansion = await self.llm.ainvoke(expansion_prompt)
             expanded_text = expansion.content if hasattr(expansion, 'content') else str(expansion)
-            return f"{query} {expanded_text}"
+            combined = f"{query} {expanded_text.strip()}"
+            # Fix A — cap length so retriever recall is not diluted by long generations
+            return combined[:self._MAX_EXPANSION_CHARS]
         except Exception:
             return query
 
@@ -240,10 +255,14 @@ Rules:
         
         if cached_response:
             logger.info(json.dumps({"action": "cache_hit", "query": question}))
-            # Sync Q&A into session history so future turns retain context
-            history = self._get_session_history(session_id)
-            history.add_user_message(question)
-            history.add_ai_message(cached_response["answer"])
+            # Fix C — guard history writes so a transient Redis error doesn't
+            # crash the generator before the first SSE byte is sent.
+            try:
+                history = self._get_session_history(session_id)
+                history.add_user_message(question)
+                history.add_ai_message(cached_response["answer"])
+            except Exception as hist_err:
+                logger.warning(f"History write skipped (cache hit): {hist_err}")
             # Send sources ONCE, then stream tokens
             yield f"data: {json.dumps({'sources': cached_response['sources']})}\n\n"
             for char in cached_response["answer"]:
@@ -254,18 +273,45 @@ Rules:
 
         try:
             # 1. QUERY EXPANSION (gated behind feature flag)
-            # Single LLM call — _rewrite_query was redundant (its output was never used by the retriever).
+            # Fix B — fire expansion as a background Task so TTFB is never
+            # gated on the Ollama round-trip.  Retrieval starts immediately
+            # with the original query; we await the task with a short timeout
+            # and swap in the expanded text only if it arrives in time.
+            expansion_task: Optional[asyncio.Task] = None
             if settings.enable_query_expansion:
-                expanded_query = await self._expand_query(question)
-                logger.info(json.dumps({"action": "query_expansion", "original": question, "expanded": expanded_query}))
-            else:
-                expanded_query = question
+                expansion_task = asyncio.create_task(self._expand_query(question))
 
-            # 2. RETRIEVAL — run sync retriever in thread to stay non-blocking
+            expanded_query = question  # default — overwritten below if task succeeds
+
+            # 2. QUERY EXPANSION RESOLUTION — wait up to the configured
+            #    timeout for the background task before kicking off retrieval.
+            if expansion_task is not None:
+                try:
+                    expanded_query = await asyncio.wait_for(
+                        asyncio.shield(expansion_task),
+                        timeout=settings.query_expansion_timeout_sec
+                    )
+                    logger.info(json.dumps({
+                        "action": "query_expansion",
+                        "original": question,
+                        "expanded": expanded_query
+                    }))
+                except asyncio.TimeoutError:
+                    # Expansion took too long — proceed with original query
+                    expansion_task.cancel()
+                    logger.warning(json.dumps({
+                        "action": "query_expansion_timeout",
+                        "query": question,
+                        "timeout_sec": settings.query_expansion_timeout_sec
+                    }))
+                except Exception as exp_err:
+                    logger.warning(f"Query expansion failed, using original: {exp_err}")
+
+            # 3. RETRIEVAL — run sync retriever in thread to stay non-blocking
             loop = asyncio.get_event_loop()
             docs = await loop.run_in_executor(None, lambda: self.retriever.invoke(expanded_query))
             
-            # 3. CONTEXT COMPRESSION & TRIMMING
+            # 4. CONTEXT COMPRESSION & TRIMMING
             # Order: dedup first (removes hash-identical chunks from the reranker's top-10)
             # then enforce hard cap of 5, then token-trim to stay inside num_ctx.
             filtered_docs = self._deduplicate_docs(docs)  # operate on all reranker candidates

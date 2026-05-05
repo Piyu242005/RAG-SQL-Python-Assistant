@@ -36,6 +36,9 @@ class Settings(BaseSettings):
 
     # Feature Flags
     enable_query_expansion: bool = os.getenv("ENABLE_QUERY_EXPANSION", "false").lower() == "true"
+    # Max seconds to wait for the background expansion LLM call before falling
+    # back to the original query.  Keep low (2-3 s) to avoid blocking TTFB.
+    query_expansion_timeout_sec: float = float(os.getenv("QUERY_EXPANSION_TIMEOUT_SEC", "3.0"))
     
     # RAG Context limits
     max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "3000"))

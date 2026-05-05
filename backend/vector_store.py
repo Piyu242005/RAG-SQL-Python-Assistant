@@ -184,6 +184,60 @@ class VectorStoreManager:
         return bm25
 
     # ───────────────────────────────────────────────
+    # BM25 Pre-warm
+    # ───────────────────────────────────────────────
+    def warm_bm25_cache(self, k: int = 8) -> bool:
+        """Validate and pre-warm the BM25 cache at startup.
+
+        Tries to load the pickle and runs a smoke-test query.  If anything
+        fails (corrupt file, wrong format, empty corpus) the index is rebuilt
+        from the current vector store and persisted.
+
+        Returns True when the cache is ready, False if BM25 couldn't be built
+        (e.g. empty vector store — caller should log a warning).
+        """
+        import pickle
+
+        if self.vectorstore is None:
+            self.initialize_vectorstore()
+
+        cache_path = Path(self.persist_directory) / "bm25_retriever.pkl"
+
+        # ── Try to validate the existing cached file ──────────────────────
+        if cache_path.exists():
+            try:
+                with open(cache_path, "rb") as f:
+                    bm25 = pickle.load(f)
+
+                # Smoke-test: must be a retriever with a real corpus
+                if not hasattr(bm25, "get_relevant_documents") and not hasattr(bm25, "invoke"):
+                    raise ValueError("Loaded object is not a retriever")
+
+                # Quick functional smoke-test
+                bm25.invoke("")
+                bm25.k = k
+                self._bm25_retriever = bm25
+                logger.info("[OK] BM25 cache pre-warmed from disk (validated)")
+                return True
+            except Exception as e:
+                logger.warning(f"BM25 cache invalid, rebuilding: {e}")
+                try:
+                    cache_path.unlink()
+                except OSError:
+                    pass
+
+        # ── Rebuild ───────────────────────────────────────────────────────
+        try:
+            bm25 = self._rebuild_bm25(k, cache_path)
+            if hasattr(bm25, 'k'):
+                bm25.k = k
+            logger.info("[OK] BM25 index rebuilt and cached at startup")
+            return True
+        except Exception as e:
+            logger.error(f"[X] BM25 warm-up failed: {e}")
+            return False
+
+    # ───────────────────────────────────────────────
     # Stats
     # ───────────────────────────────────────────────
     def get_stats(self) -> dict:

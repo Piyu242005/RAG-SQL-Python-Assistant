@@ -60,6 +60,14 @@ async def lifespan(app: FastAPI):
         print("⚠️ WARNING: Vector DB is empty. Run initialize_db.py")
     else:
         print(f"[OK] Vector store found ({stats['total_documents']} documents)")
+        # Pre-warm BM25 now so the first real request never triggers a cold rebuild
+        print("[*] Pre-warming BM25 cache...")
+        vector_manager.initialize_vectorstore()  # ensure vectorstore is loaded
+        ok = vector_manager.warm_bm25_cache(k=8)
+        if ok:
+            print("[OK] BM25 cache ready")
+        else:
+            print("[!] WARNING: BM25 warm-up failed — first request may be slow")
     
     print("=" * 60)
     print(f"[*] API running on http://{settings.api_host}:{settings.api_port}")
