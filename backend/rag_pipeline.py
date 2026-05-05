@@ -3,6 +3,7 @@ import asyncio
 import logging
 import json
 import time
+import hashlib
 from typing import List, Dict, Optional, Any
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -267,12 +268,24 @@ Rules:
         # Cache version handling – ensures stale entries are invalidated after reindex
         try:
             cache_version = redis_manager.get_cache_version()
+            history = self._get_session_history(session_id)
+            
+            # Hash the last 2 messages of history to provide context-awareness to the cache.
+            # This ensures that "Explain more" for different previous queries get different cache entries.
+            history_context = ""
+            if history and hasattr(history, "messages") and len(history.messages) >= 2:
+                recent_msgs = [m.content for m in history.messages[-2:]]
+                history_context = hashlib.md5(" ".join(recent_msgs).encode()).hexdigest()[:8]
+                
         except Exception as e:
-            logger.warning(f"Failed to get cache version: {e}")
+            logger.warning(f"Failed to get cache/history context: {e}")
             cache_version = 0
-        cache_key = f"rag_cache:{cache_version}:{question}"
+            history_context = "no_context"
+            
+        # Namespace cache by session_id and history_context to prevent cross-contamination
+        cache_key = f"rag_cache:{session_id}:{cache_version}:{history_context}:{question}"
         
-        with TraceSpan("cache_lookup", {"query": question, "version": cache_version}):
+        with TraceSpan("cache_lookup", {"query": question, "version": cache_version, "session": session_id}):
             cached_response = redis_manager.get_cache(cache_key)
         
         if cached_response:

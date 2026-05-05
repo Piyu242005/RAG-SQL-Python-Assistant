@@ -315,7 +315,23 @@ async def upload_pdf(file: UploadFile = File(...), doc_type: str = "custom") -> 
                 detail=f"File too large. Maximum allowed size is 50 MB."
             )
 
-        # 2. Save file safely
+        # 2. Strict MIME-type and extension validation
+        allowed_extensions = {".pdf"}
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in allowed_extensions or file.content_type != "application/pdf":
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file type. Only PDF files are supported."
+            )
+        
+        # 3. Simple magic number check (PDFs start with %PDF)
+        if not contents.startswith(b"%PDF"):
+            raise HTTPException(
+                status_code=400,
+                detail="Malformed file. The uploaded file is not a valid PDF."
+            )
+
+        # 4. Save file safely
         safe_filename = os.path.basename(file.filename)
         file_path = settings.pdf_directory / safe_filename
         with open(file_path, "wb") as buffer:
