@@ -5,207 +5,228 @@
 ================================================================
 
 Pipeline:
-  1. load_pdfs()              -- Extract text from PDFs using PyMuPDF
-  2. split_documents()        -- Semantic chunking (800 chars, 150 overlap)
-  3. create_embeddings()      -- Load sentence-transformers/all-MiniLM-L6-v2
-  4. initialize_vector_store() -- Persist into ChromaDB (skip if exists)
+  1. Validate Ollama                -- Ensure LLM backend is reachable
+  2. Reset vector store (optional)  -- Wipe stale data via VectorStoreManager
+  3. Load & chunk PDFs              -- DocumentProcessor with settings.chunk_size/overlap
+  4. Embed & persist                -- VectorStoreManager.initialize_vectorstore()
+  5. Verify & report                -- Log doc count, chunk count, vector count
 
 Usage:
   python initialize_db.py              # Normal run (skips if DB exists)
-  python initialize_db.py --force      # Force re-index from scratch
+  python initialize_db.py --force      # Wipe existing DB and re-index from scratch
+  python initialize_db.py --force --semantic  # Semantic chunking (slow, high quality)
 """
 
 import sys
 import time
+import logging
 import argparse
+import shutil
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List
 
-import fitz  # PyMuPDF
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 
 from config import settings
 from llm_config import OllamaManager
 from document_processor import DocumentProcessor
+from vector_store import VectorStoreManager
 
 
-# ------------------------------------------------------------------
-#  1. LOAD PDFs
-# ------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────
+#  Logging setup  (structured, production-safe)
+# ──────────────────────────────────────────────────────────────
 
-# Functions delegated to DocumentProcessor
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("initialize_db")
 
 
-# ------------------------------------------------------------------
-#  2. SPLIT DOCUMENTS
-# ------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────
+#  Helper: banner
+# ──────────────────────────────────────────────────────────────
 
-def split_documents(
-    pages_data: List[Dict[str, Any]],
-    chunk_size: int = 800,
-    chunk_overlap: int = 150,
-) -> List[Document]:
+def _banner(title: str) -> None:
+    logger.info("=" * 60)
+    logger.info(f"  {title}")
+    logger.info("=" * 60)
+
+
+# ──────────────────────────────────────────────────────────────
+#  Step 1: Validate Ollama
+# ──────────────────────────────────────────────────────────────
+
+def _validate_ollama() -> None:
+    """Ensure Ollama is running and the configured model is available."""
+    logger.info("[1/5] Validating Ollama setup...")
+    ollama = OllamaManager()
+    status = ollama.validate_setup()
+
+    if not status["ollama_running"]:
+        logger.error("Ollama is NOT running. Start it with: ollama serve")
+        sys.exit(1)
+
+    if not status["model_available"]:
+        model = status["configured_model"]
+        logger.warning(f"Model '{model}' not found locally. Pulling...")
+        if not ollama.pull_model():
+            logger.error(f"Failed to pull model '{model}'. Run: ollama pull {model}")
+            sys.exit(1)
+
+    logger.info(f"[OK] Ollama ready  (model: {status['configured_model']})")
+
+
+# ──────────────────────────────────────────────────────────────
+#  Step 2: Reset vector store
+# ──────────────────────────────────────────────────────────────
+
+def _reset_vector_store(manager: VectorStoreManager) -> None:
     """
-    Split extracted page text into semantic chunks.
-
-    Uses RecursiveCharacterTextSplitter which preserves paragraph
-    and sentence boundaries for more meaningful retrieval.
-
-    Args:
-        pages_data: Output from load_pdfs().
-        chunk_size: Maximum characters per chunk (default: 800).
-        chunk_overlap: Overlap between consecutive chunks (default: 150).
-
-    Returns:
-        List of LangChain Document objects with metadata.
-
-    Raises:
-        ValueError: If pages_data is empty.
+    Wipe the existing ChromaDB collection and any BM25 cache so that no
+    stale embeddings survive into the new index.
     """
-    if not pages_data:
-        raise ValueError("No page data provided for splitting.")
+    persist_path = Path(manager.persist_directory)
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        length_function=len,
-        separators=["\n\n", "\n", ". ", " ", ""],  # Semantic boundaries
-        keep_separator=True,
+    if not persist_path.exists():
+        logger.info("[2/5] No existing database found -- nothing to delete.")
+        return
+
+    logger.info(f"[2/5] Removing existing vector store at: {persist_path.resolve()}")
+
+    # Delegate to VectorStoreManager for a clean reset
+    try:
+        manager.reset_vectorstore()
+        logger.info("[OK] Vector store deleted successfully.")
+    except Exception as exc:
+        logger.error(f"Failed to delete vector store: {exc}")
+        raise
+
+    # Belt-and-suspenders: remove any leftover BM25 cache
+    bm25_cache = persist_path / "bm25_retriever.pkl"
+    if bm25_cache.exists():
+        bm25_cache.unlink(missing_ok=True)
+        logger.info("[OK] BM25 cache cleared.")
+
+
+# ──────────────────────────────────────────────────────────────
+#  Step 3: Process PDFs
+# ──────────────────────────────────────────────────────────────
+
+def _process_pdfs(use_semantic: bool) -> List[Document]:
+    """
+    Load every PDF from settings.pdf_directory, chunk them with the
+    chunking strategy specified in settings (CHUNK_SIZE / CHUNK_OVERLAP),
+    and return a flat list of LangChain Documents.
+    """
+    strategy = "SemanticChunker" if use_semantic else "RecursiveCharacterTextSplitter"
+    logger.info(
+        f"[3/5] Processing PDFs  "
+        f"(strategy={strategy}, chunk_size={settings.chunk_size}, "
+        f"chunk_overlap={settings.chunk_overlap})"
     )
 
-    documents: List[Document] = []
+    pdf_dir = Path(settings.pdf_directory)
+    if not pdf_dir.exists():
+        logger.error(f"PDF directory not found: {pdf_dir.resolve()}")
+        sys.exit(1)
 
-    for page in pages_data:
-        chunks = splitter.split_text(page["text"])
+    pdf_files = sorted(pdf_dir.glob("*.pdf"))
+    if not pdf_files:
+        logger.error(f"No PDF files found in: {pdf_dir.resolve()}")
+        sys.exit(1)
 
-        for idx, chunk_text in enumerate(chunks):
-            doc = Document(
-                page_content=chunk_text,
-                metadata={
-                    "source": page["source"],
-                    "page": page["page"],
-                    "chunk": idx,
-                    "doc_type": page["doc_type"],
-                },
+    logger.info(f"Found {len(pdf_files)} PDF file(s): {[f.name for f in pdf_files]}")
+
+    processor = DocumentProcessor(use_semantic=use_semantic)
+
+    all_documents: List[Document] = []
+    docs_processed = 0
+    failed_files: List[str] = []
+
+    for pdf_path in pdf_files:
+        try:
+            doc_type = processor._detect_topic("", source=pdf_path.name)
+            docs = processor.process_pdf(pdf_path, doc_type)
+
+            if not docs:
+                logger.warning(f"[SKIP] No extractable text in: {pdf_path.name}")
+                continue
+
+            all_documents.extend(docs)
+            docs_processed += 1
+            logger.info(
+                f"  [{docs_processed}/{len(pdf_files)}] {pdf_path.name} "
+                f"-> {len(docs)} chunk(s)"
             )
-            documents.append(doc)
 
-    # Summary by source
-    source_counts: Dict[str, int] = {}
-    for d in documents:
-        src = d.metadata["source"]
-        source_counts[src] = source_counts.get(src, 0) + 1
+        except Exception as exc:
+            logger.error(f"[FAIL] Error processing {pdf_path.name}: {exc}")
+            failed_files.append(pdf_path.name)
+            # Continue with remaining PDFs; do not abort the full run
 
-    print(f"\n[INFO] Chunking complete  (size={chunk_size}, overlap={chunk_overlap})")
-    for src, count in source_counts.items():
-        print(f"   - {src}: {count} chunks")
-    print(f"   Total chunks: {len(documents)}")
+    # ── Summary ──
+    logger.info("-" * 50)
+    logger.info(f"Documents processed : {docs_processed}/{len(pdf_files)}")
+    logger.info(f"Total chunks created: {len(all_documents)}")
+    if failed_files:
+        logger.warning(f"Failed files ({len(failed_files)}): {failed_files}")
 
-    return documents
-
-
-def create_embeddings(model_name: str) -> HuggingFaceEmbeddings:
-    """Load the HuggingFace embedding model."""
-    print(f"\n[INFO] Loading embedding model: {model_name}")
-    try:
-        return HuggingFaceEmbeddings(model_name=model_name)
-    except Exception as e:
-        raise RuntimeError(f"Failed to load embedding model: {e}")
-
-
-# ------------------------------------------------------------------
-#  4. INITIALIZE VECTOR STORE
-# ------------------------------------------------------------------
-
-def initialize_vector_store(
-    documents: List[Document],
-    embeddings: HuggingFaceEmbeddings,
-    persist_directory: str = "./chroma_db",
-    collection_name: str = "rag_documents",
-) -> Chroma:
-    """
-    Create a persistent ChromaDB vector store from documents.
-
-    Embeds all document chunks and stores them with metadata.
-    The store is persisted to disk so it survives restarts.
-
-    Args:
-        documents: List of LangChain Documents to embed.
-        embeddings: Embedding model instance.
-        persist_directory: Path for ChromaDB persistent storage.
-        collection_name: Name of the Chroma collection.
-
-    Returns:
-        Chroma vector store instance.
-
-    Raises:
-        RuntimeError: If vector store creation fails.
-    """
-    persist_path = Path(persist_directory)
-    persist_path.mkdir(parents=True, exist_ok=True)
-
-    print(f"\n[INFO] Creating vector store at: {persist_path.resolve()}")
-    print(f"   Collection: {collection_name}")
-    print(f"   Documents to embed: {len(documents)}")
-    t0 = time.time()
-
-    try:
-        vectorstore = Chroma.from_documents(
-            documents=documents,
-            embedding=embeddings,
-            persist_directory=str(persist_directory),
-            collection_name=collection_name,
+    if not all_documents:
+        logger.error(
+            "No chunks were produced. Check that your PDFs contain extractable text."
         )
+        sys.exit(1)
+
+    return all_documents
+
+
+# ──────────────────────────────────────────────────────────────
+#  Step 4 + 5: Embed & persist via VectorStoreManager
+# ──────────────────────────────────────────────────────────────
+
+def _build_vector_store(
+    manager: VectorStoreManager,
+    documents: List[Document],
+) -> int:
+    """
+    Embed all chunks and persist them through VectorStoreManager.
+    Returns the total number of vectors stored.
+    """
+    logger.info(f"[4/5] Loading embedding model: {settings.embedding_model}")
+
+    t0 = time.time()
+    logger.info(f"[5/5] Embedding {len(documents)} chunk(s) and persisting to ChromaDB...")
+
+    try:
+        vectorstore = manager.initialize_vectorstore(documents=documents)
         elapsed = time.time() - t0
 
-        # Verify
-        count = vectorstore._collection.count()
-        print(f"   [OK] Vector store created in {elapsed:.1f}s")
-        print(f"   Indexed documents: {count}")
+        # Verify stored count via a direct collection call
+        total_vectors: int = vectorstore._collection.count()
+        logger.info(f"[OK] Vector store built in {elapsed:.1f}s")
+        logger.info(f"Total vectors stored: {total_vectors}")
+        logger.info(f"Persist directory   : {Path(manager.persist_directory).resolve()}")
 
-        return vectorstore
+        return total_vectors
 
-    except Exception as e:
-        raise RuntimeError(f"Failed to create vector store: {e}")
-
-
-# ------------------------------------------------------------------
-#  HELPER: Check if DB already exists
-# ------------------------------------------------------------------
-
-def _db_exists(persist_directory: str) -> bool:
-    """Check if a ChromaDB database already exists on disk."""
-    return (Path(persist_directory) / "chroma.sqlite3").exists()
+    except Exception as exc:
+        logger.error(f"Failed to create vector store: {exc}")
+        raise
 
 
-def _get_existing_stats(
-    persist_directory: str,
-    embeddings: HuggingFaceEmbeddings,
-    collection_name: str = "rag_documents",
-) -> Optional[int]:
-    """Return doc count from an existing vector store, or None on failure."""
-    try:
-        vs = Chroma(
-            persist_directory=persist_directory,
-            embedding_function=embeddings,
-            collection_name=collection_name,
-        )
-        return vs._collection.count()
-    except Exception:
-        return None
-
-
-# ------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────
 #  MAIN ORCHESTRATOR
-# ------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────
 
-def main():
+def main() -> None:
     """Run the full PDF -> ChromaDB initialization pipeline."""
+
     parser = argparse.ArgumentParser(
-        description="Initialize the RAG vector database from PDF files."
+        description="Initialize the RAG vector database from PDF files.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--force",
@@ -215,108 +236,66 @@ def main():
     parser.add_argument(
         "--rebuild",
         action="store_true",
-        help="Alias for --force. Force re-indexing even if the database already exists.",
+        help="Alias for --force.",
     )
     parser.add_argument(
         "--semantic",
         action="store_true",
-        help="Use computationally expensive semantic chunking instead of recursive splitting.",
+        help="Use SemanticChunker instead of RecursiveCharacterTextSplitter (slow).",
     )
     args = parser.parse_args()
 
+    force_rebuild = args.force or args.rebuild
     total_start = time.time()
 
-    print("\n" + "=" * 60)
-    print("  RAG System -- Database Initialization")
-    print("=" * 60)
-
-    # -- Step 1/5: Validate Ollama ----------------------------
-    print("\n[1/5] Validating Ollama setup...")
-    ollama = OllamaManager()
-    status = ollama.validate_setup()
-
-    if not status["ollama_running"]:
-        print("   [FAIL] Ollama is not running!")
-        print("   -> Start it with: ollama serve")
-        sys.exit(1)
-
-    if not status["model_available"]:
-        model = status["configured_model"]
-        print(f"   [!] Model '{model}' not found. Pulling...")
-        if not ollama.pull_model():
-            print(f"   [FAIL] Failed to pull model. Run: ollama pull {model}")
-            sys.exit(1)
-
-    print(f"   [OK] Ollama OK  (model: {status['configured_model']})")
-
-    # -- Step 2/5: Check existing DB --------------------------
-    persist_dir = settings.chroma_persist_directory
-    print(f"\n[2/5] Checking existing database...")
-
-    if _db_exists(persist_dir) and not (args.force or args.rebuild):
-        # Load embeddings just to read stats
-        emb = create_embeddings(settings.embedding_model)
-        count = _get_existing_stats(persist_dir, emb)
-
-        if count and count > 0:
-            print(f"   [OK] Database already exists with {count} documents.")
-            print(f"   Location: {Path(persist_dir).resolve()}")
-            print(f"\n   [INFO] Skipping re-indexing. Use --force to rebuild.")
-            print("\n" + "=" * 60)
-            print("  [OK] Database is ready -- no action needed")
-            print("=" * 60)
-            return
-
-    if (args.force or args.rebuild) and _db_exists(persist_dir):
-        import shutil
-        print(f"   [!] Rebuild flag set. Removing existing database...")
-        shutil.rmtree(persist_dir, ignore_errors=True)
-        print(f"   [OK] Deleted: {persist_dir}")
-
-    # -- Step 3/5: Process PDFs -------------------------------
-    processor = DocumentProcessor(use_semantic=args.semantic)
-    
-    if args.semantic:
-        print(f"\n[3/5] Running HIGH-LOAD Semantic Chunking (this will take time)...")
-    else:
-        print(f"\n[3/5] Running Optimized Fast Chunking...")
-
-    # Auto-create vectorstore persist database path explicitly to avoid issues
-    import os
-    os.makedirs(str(persist_dir), exist_ok=True)
-
-    # Use processor to handle all logic with hard failure logging
-    try:
-        documents = processor.process_all_pdfs()
-    except Exception as e:
-        print("❌ PDF processing failed:", e)
-        raise
-
-    if not documents:
-        raise ValueError("No documents found. Check pdfs folder.")
-
-    # -- Step 4/5: Embed & store ------------------------------
-    print(f"\n[4/5] Loading embedding model...")
-    embeddings = processor.embeddings
-    
-    print(f"\n[5/5] Creating vector store (Computing {len(documents)} embeddings)...")
-    initialize_vector_store(
-        documents=documents,
-        embeddings=embeddings,
-        persist_directory=persist_dir,
+    _banner("RAG System -- Database Initialization")
+    logger.info(
+        f"Config  ->  CHUNK_SIZE={settings.chunk_size}  "
+        f"CHUNK_OVERLAP={settings.chunk_overlap}"
     )
 
-    # -- Done -------------------------------------------------
+    # ── Step 1: Validate Ollama ──────────────────────────────
+    _validate_ollama()
+
+    # ── Step 2: Handle existing DB ───────────────────────────
+    manager = VectorStoreManager()
+    db_sqlite = Path(manager.persist_directory) / "chroma.sqlite3"
+
+    if db_sqlite.exists() and not force_rebuild:
+        # Peek at current count without re-embedding anything
+        stats = manager.get_stats()
+        existing_count = stats.get("total_documents", 0)
+        logger.info(
+            f"[2/5] Existing database found with {existing_count} vector(s)."
+        )
+        logger.info("      Use --force to wipe and rebuild from scratch.")
+        _banner("[OK] Database is already populated -- no action needed")
+        return
+
+    if force_rebuild and db_sqlite.exists():
+        _reset_vector_store(manager)
+    else:
+        logger.info("[2/5] No existing database -- fresh build.")
+
+    # ── Step 3: Process PDFs ─────────────────────────────────
+    documents = _process_pdfs(use_semantic=args.semantic)
+
+    # ── Steps 4 + 5: Embed & store ───────────────────────────
+    total_vectors = _build_vector_store(manager, documents)
+
+    # ── Done ─────────────────────────────────────────────────
     total_elapsed = time.time() - total_start
 
-    print("\n" + "=" * 60)
-    print(f"  [OK] INITIALIZATION COMPLETE  ({total_elapsed:.1f}s)")
-    print("=" * 60)
-    print("\n  Next steps:")
-    print("    1. Start backend:   python main.py")
-    print("    2. API docs:        http://localhost:8000/docs")
-    print("    3. Start frontend:  cd ../frontend && npm run dev")
-    print("=" * 60 + "\n")
+    _banner(f"[OK] INITIALIZATION COMPLETE  ({total_elapsed:.1f}s)")
+    logger.info(f"  Documents processed : {len(set(d.metadata['source'] for d in documents))}")
+    logger.info(f"  Chunks created      : {len(documents)}")
+    logger.info(f"  Vectors stored      : {total_vectors}")
+    logger.info("")
+    logger.info("  Next steps:")
+    logger.info("    1. Start backend :  python main.py")
+    logger.info("    2. API docs      :  http://localhost:8000/docs")
+    logger.info("    3. Start frontend:  cd ../frontend && npm run dev")
+    _banner("=" * 56)
 
 
 if __name__ == "__main__":
