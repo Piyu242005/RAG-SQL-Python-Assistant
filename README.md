@@ -24,24 +24,24 @@
 ## 🤔 Why this project?
 
 ### The Problem
-Traditional documentation search is often frustrating—users struggle with exact keyword matching or get overwhelmed by hundreds of pages of technical manuals. Modern AI chatbots often hallucinate when asked about specific versions or internal documentation.
+Traditional documentation search is often frustrating—users struggle with exact keyword matching or get overwhelmed by technical manuals. Modern AI chatbots often hallucinate when asked about specific enterprise documentation.
 
 ### The Solution
-This project solves this by building a **private, local-first RAG pipeline**. 
-- **Privacy**: No data ever leaves your machine.
-- **Accuracy**: Our hybrid retrieval (Vector + BM25) and reranking ensure the AI only sees the most relevant facts.
-- **Performance**: We've optimized every millisecond—from background query expansion to semantic cache versioning.
+This project provides a **production-grade, local-first RAG pipeline**. 
+- **Privacy**: No data ever leaves your machine, powered by Ollama.
+- **Accuracy**: Hybrid retrieval (Vector + BM25) with RRF and FlashRank reranking.
+- **Performance**: Redis-backed semantic caching and asynchronous document ingestion.
 
 ---
 
 ## ✨ Key Features
 
 - 🧠 **Hybrid Retrieval**: Combines BM25 keyword matching with ChromaDB vector search for maximum recall.
-- ⚡ **Ultra-Low Latency**: Streaming responses via FastAPI SSE with optimized reranking fallbacks.
-- ♻️ **Atomic Cache Versioning**: Redis-backed semantic caching that invalidates instantly on data updates.
-- 🛰️ **Deep Observability**: Full OpenTelemetry tracing across the entire pipeline (Retrieval → Rerank → LLM).
-- 🏗️ **Local First**: Powered by Ollama—keep your data private and avoid expensive API costs.
-- 🛠️ **Production Hardened**: Token-aware context trimming, sliding-window history, and non-blocking query expansion.
+- ⚡ **Ultra-Low Latency**: Real-time streaming responses via FastAPI SSE.
+- ♻️ **Semantic Caching**: Redis-backed caching to avoid redundant LLM calls.
+- 🏗️ **Code-Aware Chunking**: Optimized separators for SQL, Python, and technical docs.
+- ⚛️ **Premium UI**: Modern React frontend with Glassmorphism design and smooth animations.
+- 🐳 **Docker Ready**: Fully orchestrated stack with Docker Compose.
 
 ---
 
@@ -52,15 +52,16 @@ graph TD
     User([User Request]) --> API[FastAPI Entrypoint]
     API --> Cache{Redis Cache}
     Cache -- Hit --> User
-    Cache -- Miss --> QE[Async Query Expansion]
-    QE --> HR[Hybrid Retriever: BM25 + Vector]
-    HR --> RR[FlashRank Reranker]
+    Cache -- Miss --> HR[Hybrid Retriever: BM25 + Vector]
+    HR --> RRF[Rank Fusion: RRF]
+    RRF --> RR[FlashRank Reranker]
     RR --> LLM[Ollama Llama 3.2]
-    LLM --> Stream[Streaming Response]
+    LLM --> Stream[Streaming SSE]
     Stream --> User
     
-    subgraph Observability
-        OTel[OpenTelemetry Tracing]
+    subgraph Storage
+        Chroma[ChromaDB]
+        Redis[Redis Cache/Memory]
     end
 ```
 
@@ -68,76 +69,73 @@ graph TD
 
 ## 🚀 Quick Start
 
-### One-Click Startup (Recommended)
+### The Easiest Way (Docker)
 
-**Windows:**
-```powershell
-./'START APP.bat'
-```
-
-**Linux/macOS:**
-```bash
-./setup.sh
-```
+1. **Clone the repo** and navigate to the root.
+2. **Start the stack**:
+   ```bash
+   docker-compose up --build
+   ```
+3. **Access the UI**: Open `http://localhost:5173`
+4. **Access the API**: Open `http://localhost:8000/docs`
 
 ---
 
 ## ⚙️ Manual Installation
 
 ### 1. Prerequisites
-- [Ollama](https://ollama.ai/) installed and running.
-- [Python](https://www.python.org/) (3.9+)
-- [Redis](https://redis.io/) (Local or Docker)
+- **Ollama** installed and running (`ollama serve`).
+- **Redis** running locally.
+- **Python 3.11+** and **Node.js 20+**.
 
 ### 2. Backend Setup
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
-python initialize_db.py
+uvicorn main:app --reload
 ```
 
 ### 3. Frontend Setup
 ```bash
 cd frontend
-pip install -r requirements.txt
-streamlit run app.py
+npm install
+npm run dev
 ```
 
 ---
 
-## 🔧 Environment Configuration
+## 🔧 Core Components
 
-| Variable | Default | Description |
-|---|---|---|
-| `OLLAMA_MODEL` | `llama3.2` | The local LLM to use |
-| `REDIS_URL` | `redis://localhost:6379/0` | Connection string for Redis |
-| `MAX_CONTEXT_TOKENS` | `3000` | Hard cap for RAG context window |
-| `RERANKER_TIMEOUT_SEC` | `2.0` | Fallback timeout for reranking |
-| `TRACING_BACKEND` | `otlp_console` | Tracing output (console/langsmith/none) |
+| Layer | Technology |
+|---|---|
+| **API** | FastAPI (Python) |
+| **Frontend** | React + Vite + Tailwind CSS |
+| **Vector DB** | ChromaDB |
+| **Embeddings** | BAAI/bge-small-en-v1.5 |
+| **LLM** | Ollama (Llama 3.2) |
+| **Cache/Memory** | Redis |
+| **Reranker** | FlashRank |
 
 ---
 
 ## 🚀 Roadmap
 
 - [ ] **Multi-modal RAG**: Support for images and vision-based document parsing.
-- [ ] **Multi-user Auth**: JWT-based authentication for enterprise teams.
-- [ ] **Deployment Templates**: One-click AWS/Azure/GCP terraform scripts.
 - [ ] **Advanced GraphRAG**: Using Knowledge Graphs for complex relationship queries.
+- [ ] **Multi-tenant Support**: RBAC and session isolation for enterprise teams.
+- [ ] **OpenTelemetry**: Deep tracing across the entire pipeline.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on branch naming and commit messages.
+Contributions are welcome! Feel free to open issues or submit PRs.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ---
 
