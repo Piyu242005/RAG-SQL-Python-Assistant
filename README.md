@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB-blue?style=for-the-badge)](https://www.trychroma.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
@@ -86,7 +86,6 @@ graph TD
 
 ### 1. Prerequisites
 - [Ollama](https://ollama.ai/) installed and running.
-- [Node.js](https://nodejs.org/) (v18+)
 - [Python](https://www.python.org/) (3.9+)
 - [Redis](https://redis.io/) (Local or Docker)
 
@@ -103,8 +102,8 @@ python initialize_db.py
 ### 3. Frontend Setup
 ```bash
 cd frontend
-npm install
-npm run dev
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
 ---

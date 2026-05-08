@@ -1,0 +1,10 @@
+streamlit
+streamlit-chat
+streamlit-extras
+markdown-it-py
+pygments
+requests
+httpx
+pandas
+bleach
+python-dotenv

@@ -10,8 +10,8 @@ The system is built as a modular RAG (Retrieval-Augmented Generation) pipeline, 
 
 ```mermaid
 graph LR
-    User[User] <--> Frontend[React/Vite]
-    Frontend <--> Backend[FastAPI]
+    User[User] <--> Frontend[Streamlit]
+    Backend[FastAPI] <--> Frontend
     Backend <--> Redis[(Redis Cache)]
     Backend <--> Vector[(ChromaDB)]
     Backend <--> Ollama[Ollama LLM]

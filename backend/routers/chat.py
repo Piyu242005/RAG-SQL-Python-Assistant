@@ -1,109 +1,69 @@
 """FastAPI routers for chat endpoints."""
-from fastapi import APIRouter, HTTPException, Request
+import hashlib
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import StreamingResponse
-from models import ChatRequest, ChatResponse, Source
-from rag_pipeline import RAGPipeline
+from schemas.chat import ChatRequest, ChatResponse, SourceMetadata
+from api.deps import get_chat_service
+from services.chat import ChatService
 from limiter import limiter
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
-# Initialize RAG pipeline (singleton)
-rag_pipeline = None
-
-def get_rag_pipeline() -> RAGPipeline:
-    """Get or initialize RAG pipeline."""
-    global rag_pipeline
-    if rag_pipeline is None:
-        try:
-            rag_pipeline = RAGPipeline()
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to initialize RAG pipeline: {str(e)}"
-            )
-    return rag_pipeline
-
-@router.post("/chat", response_model=ChatResponse)
-@limiter.limit("10/minute")
-async def chat(chat_data: ChatRequest, request: Request) -> ChatResponse:
-    """
-    Process a chat query and return answer with sources.
-    
-    Args:
-        chat_data: ChatRequest with query and optional filters
-        request: FastAPI request object for rate limiting
-        
-    Returns:
-        ChatResponse with answer and source documents
-    """
-    try:
-        pipeline = get_rag_pipeline()
-        raw_session = chat_data.conversation_id or "default"
-        api_key = request.headers.get("x-api-key", "")
-        import hashlib
-        key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8] if api_key else "nokey"
-        session_id = f"{key_hash}_{raw_session}"
-        
-        # Query with optional filter
-        if chat_data.doc_type:
-            if chat_data.doc_type not in ['mysql', 'python']:
-                raise HTTPException(
-                    status_code=400,
-                    detail="doc_type must be 'mysql' or 'python'"
-                )
-            result = pipeline.query_with_filter(chat_data.query, chat_data.doc_type, session_id=session_id)
-        else:
-            result = pipeline.query(chat_data.query, session_id=session_id)
-        
-        # Convert sources to Pydantic models
-        sources = [Source(**source) for source in result['sources']]
-        
-        return ChatResponse(
-            answer=result['answer'],
-            sources=sources,
-            success=result['success'],
-            error=result.get('error'),
-            filter_applied=result.get('filter_applied')
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing query: {str(e)}"
-        )
-
 @router.post("/chat/stream")
 @limiter.limit("5/minute")
-async def chat_stream(chat_data: ChatRequest, request: Request):
+async def chat_stream(
+    chat_data: ChatRequest, 
+    request: Request,
+    service: ChatService = Depends(get_chat_service)
+):
     """
     Stream a chat response.
     """
     try:
-        pipeline = get_rag_pipeline()
+        # Session handling logic (consistent with legacy)
+        raw_session = chat_data.conversation_id or "default"
+        api_key = request.headers.get("x-api-key", "")
+        key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8] if api_key else "nokey"
+        session_id = f"{key_hash}_{raw_session}"
         
-        async def event_generator():
-            # Use conversation_id as session_id for in-memory history
-            raw_session = chat_data.conversation_id or "default"
-            api_key = request.headers.get("x-api-key", "")
-            import hashlib
-            key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8] if api_key else "nokey"
-            session_id = f"{key_hash}_{raw_session}"
-            async for chunk in pipeline.stream_query(
-                chat_data.query, chat_data.doc_type, session_id=session_id
-            ):
-                yield chunk
-
         return StreamingResponse(
-            event_generator(),
+            service.stream_chat(chat_data.query, session_id=session_id),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
-                "X-Accel-Buffering": "no",         # Disable nginx buffering
-                "Access-Control-Allow-Origin": "*", # SSE CORS fix
+                "X-Accel-Buffering": "no",
+                "Access-Control-Allow-Origin": "*",
             }
         )
-    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/chat", response_model=ChatResponse)
+@limiter.limit("10/minute")
+async def chat(
+    chat_data: ChatRequest, 
+    request: Request,
+    service: ChatService = Depends(get_chat_service)
+) -> ChatResponse:
+    """
+    Process a chat query and return answer with sources.
+    """
+    # For now, we can use the stream_chat logic and collect it, 
+    # or implement a sync query in ChatService.
+    # To keep it simple and consistent, I'll implement a sync wrapper in ChatService.
+    # But for Phase 3, let's just use the service.
+    try:
+        raw_session = chat_data.conversation_id or "default"
+        api_key = request.headers.get("x-api-key", "")
+        key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8] if api_key else "nokey"
+        session_id = f"{key_hash}_{raw_session}"
+        
+        result = await service.chat(chat_data.query, session_id=session_id)
+        
+        return ChatResponse(
+            answer=result['answer'],
+            sources=[SourceMetadata(**s) for s in result['sources']],
+            success=result['success']
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
