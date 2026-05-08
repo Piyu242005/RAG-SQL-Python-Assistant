@@ -1,0 +1,12 @@
+node_modules
+__pycache__
+venv
+.venv
+.git
+.gitignore
+.dockerignore
+chroma_db
+uploads
+dist
+build
+*.pdf

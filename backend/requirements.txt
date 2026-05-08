@@ -7,10 +7,10 @@ langchain-huggingface==0.1.0
 langchain-ollama==0.2.0
 chromadb==0.5.11
 redis==5.1.1
-flashrank==0.2.19
-pypdf==5.0.1
-python-multipart==0.0.12
-opentelemetry-api==1.27.0
-opentelemetry-sdk==1.27.0
-numpy<2.0.0
-rank_bm25==0.2.2
+flashrank
+pypdf
+python-multipart
+opentelemetry-api
+opentelemetry-sdk
+numpy
+rank_bm25
