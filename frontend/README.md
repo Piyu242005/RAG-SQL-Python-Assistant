@@ -1,42 +1,16 @@
-# Premium RAG Frontend 🚀
+# React + Vite
 
-A state-of-the-art Streamlit interface for the RAG-SQL-Python-Assistant, designed for speed, security, and transparency.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## ✨ Features
+Currently, two official plugins are available:
 
-- **Glassmorphism UI**: Modern "ChatGPT-like" aesthetic with custom CSS.
-- **SSE Streaming**: Real-time token streaming with incremental buffering for smoothness.
-- **RAG Transparency**: Detailed debugging panel showing retrieved/reranked chunks and LLM context.
-- **Secure**: Sensitive keys stored in `.streamlit/secrets.toml`.
-- **Robust**: Request isolation (`request_id`), stop generation logic, and mid-stream error recovery.
-- **Analytics**: Real-time token speed (tok/s) and system status indicators.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## 🛠 Setup
+## React Compiler
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-2. **Configure Secrets**:
-   Edit `frontend/.streamlit/secrets.toml` and add your `X-API-KEY`.
+## Expanding the ESLint configuration
 
-3. **Run the App**:
-   ```bash
-   streamlit run app.py
-   ```
-
-## 🏗 Architecture
-
-- `app.py`: Main entry point and layout.
-- `components/`: Modular UI components (Sidebar, Chat, Debug, Status).
-- `services/`: API communication layer (SSE, Async).
-- `state/`: Streamlit session state management and request isolation.
-- `utils/`: Helpers for sanitization and stats.
-- `styles/`: Custom CSS for premium aesthetics.
-
-## 🔒 Security
-
-- **XSS Protection**: All markdown is sanitized using `bleach`.
-- **API Key**: Not exposed in client-side code; handled via Streamlit secrets.
-- **Isolation**: Each generation request is isolated via `request_id`.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

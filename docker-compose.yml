@@ -1,38 +1,42 @@
-services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    restart: always
+version: '3.9'
 
+services:
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     volumes:
+      - ./backend:/app
       - ./backend/chroma_db:/app/chroma_db
-      - ./*.pdf:/app/
+      - ./backend/uploads:/app/uploads
     environment:
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
-      - REDIS_URL=redis://redis:6379/0
-      - API_KEY=your_secret_key_123
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_HOST=http://ollama:11434
     depends_on:
       - redis
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: always
+      - ollama
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "80:80"
-    depends_on:
-      - backend
-    environment:
-      - VITE_API_URL=http://localhost:8000
-    restart: always
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
-networks:
-  default:
-    name: rag-network
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
